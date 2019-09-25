@@ -24,22 +24,24 @@
     :target: https://pypi.org/project/ckanext-subscribe/
     :alt: License
 
-=============
+=================
 ckanext-subscribe
-=============
+=================
 
-.. Put a description of your extension here:
-   What does it do? What features does it have?
-   Consider including some screenshots or embedding a video!
+CKAN extension that allows users to subscribe to dataset/organization/group
+updates WITHOUT requiring them to login.
 
+This feature is complementary to CKAN's existing "Follow" feature, which allows
+logged in users to subscribe to get update emails. Log-in can be a barrier to
+casual interest in say a handful of datasets. Generating and storing a password
+is a burden on the user, and for casual use just using temporary email links,
+as in this extension, is more appropriate.
 
 ------------
 Requirements
 ------------
 
-For example, you might want to mention here which versions of CKAN this
-extension works with.
-
+Designed for CKAN 2.7+
 
 ------------
 Installation
@@ -108,9 +110,9 @@ coverage installed in your virtualenv (``pip install coverage``) then run::
     nosetests --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests
 
 
-----------------------------------------
+--------------------------------------------
 Releasing a new version of ckanext-subscribe
-----------------------------------------
+--------------------------------------------
 
 ckanext-subscribe should be available on PyPI as https://pypi.org/project/ckanext-subscribe.
 To publish a new version to PyPI follow these steps:
