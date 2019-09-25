@@ -1,0 +1,14 @@
+@media (max-width: 768px) {
+    #subscribe-form .form-group {
+        margin-bottom: 15px;  /* ckan default of 30px is too big */
+    }
+    #subscribe-form label {
+        margin-bottom: 5px;
+    }
+    #subscribe-form.form-inline .btn {
+        margin-left: 0;
+    }
+}
+#subscribe-form .control-label {
+    margin-bottom: 5px;
+}
