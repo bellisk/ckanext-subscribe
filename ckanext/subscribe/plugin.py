@@ -1,13 +1,17 @@
+# encoding: utf-8
+
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
-import blueprint
-import helpers
+from ckanext.subscribe import action
+from ckanext.subscribe import auth
 
 
 class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IRoutes)
+    plugins.implements(plugins.IActions)
+    plugins.implements(plugins.IAuthFunctions)
 
     # IConfigurer
 
@@ -29,6 +33,16 @@ class SubscribePlugin(plugins.SingletonPlugin):
     def after_map(self, map):
         return map
 
+    # IActions
 
-    # def get_blueprint(self):
-    #     return blueprint.subscribe_blueprint
+    def get_actions(self):
+        return {
+            'subscribe_signup': action.subscribe_signup,
+        }
+
+    # IAuthFunctions
+
+    def get_auth_functions(self):
+        return {
+            'subscribe_signup': auth.subscribe_signup,
+        }

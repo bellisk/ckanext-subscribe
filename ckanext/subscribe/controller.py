@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 import re
 
 import ckan.lib.helpers as h
@@ -21,9 +23,6 @@ from ckan.plugins.toolkit import (
 
 class SubscribeController(BaseController):
     def signup(self):
-        # if not request.POST:
-        #     abort(400, _(u'No email address supplied'))
-
         # validate inputs
         email = request.POST.get('email')
         if not email:
@@ -31,8 +30,8 @@ class SubscribeController(BaseController):
         email = email.strip()
         #pattern from https://html.spec.whatwg.org/#e-mail-state-(type=email)
         email_re = ur"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"\
-            "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"\
-            "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+            ur"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"\
+            ur"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
         if not re.match(email_re, email):
             abort(400, _(u'Email supplied is invalid'))
 
