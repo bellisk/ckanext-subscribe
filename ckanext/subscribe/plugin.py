@@ -7,7 +7,7 @@ import helpers
 
 class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IBlueprint)
+    plugins.implements(plugins.IRoutes)
 
     # IConfigurer
 
@@ -16,13 +16,19 @@ class SubscribePlugin(plugins.SingletonPlugin):
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'subscribe')
 
-    # IBlueprint
+    # IRoutes
 
-    def get_blueprint(self):
-        return blueprint.subscribe_blueprint
-        # # Add plugin url rule to Blueprint object
-        # blueprint.add_url_rule('/pylons_and_flask', 'flask_plugin_view',
-        #                        flask_plugin_view)
+    def before_map(self, map):
+        controller = 'ckanext.subscribe.controller:SubscribeController'
+        map.connect('signup', '/subscribe/signup',
+            controller=controller, action='signup')
+        map.connect('manage', '/subscribe/manage',
+            controller=controller, action='manage')
+        return map
 
-        # blueprint.add_url_rule('/simple_flask', 'flask_plugin_view',
-        #                        flask_plugin_view)
+    def after_map(self, map):
+        return map
+
+
+    # def get_blueprint(self):
+    #     return blueprint.subscribe_blueprint
