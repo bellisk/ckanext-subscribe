@@ -24,12 +24,16 @@ class SubscribeController(BaseController):
         # if not request.POST:
         #     abort(400, _(u'No email address supplied'))
 
-        # validate input
+        # validate inputs
         email = request.POST.get('email')
         if not email:
             abort(400, _(u'No email address supplied'))
         email = email.strip()
-        if not re.match(ur'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$', email):
+        #pattern from https://html.spec.whatwg.org/#e-mail-state-(type=email)
+        email_re = ur"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"\
+            "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"\
+            "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+        if not re.match(email_re, email):
             abort(400, _(u'Email supplied is invalid'))
 
         return redirect_to(
