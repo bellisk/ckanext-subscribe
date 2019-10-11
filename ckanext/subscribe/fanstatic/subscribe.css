@@ -1,6 +1,6 @@
 @media (max-width: 768px) {
     #subscribe-form .form-group {
-        margin-bottom: 15px;  /* ckan default of 30px is too big */
+        margin-bottom: 5px;  /* ckan default of 30px is too big */
     }
     #subscribe-form label {
         margin-bottom: 5px;
@@ -11,4 +11,7 @@
 }
 #subscribe-form .control-label {
     margin-bottom: 5px;
+}
+#subscribe-form input {
+    width: 90px;
 }
