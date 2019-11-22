@@ -65,7 +65,7 @@ To install ckanext-subscribe:
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Initialize the subscribe tables in the database:
+4. Initialize the subscribe tables in the database::
 
      paster --plugin=ckanext-subscribe subscribe initdb
 
