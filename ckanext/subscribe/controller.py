@@ -28,7 +28,7 @@ class SubscribeController(BaseController):
         if not email:
             abort(400, _(u'No email address supplied'))
         email = email.strip()
-        #pattern from https://html.spec.whatwg.org/#e-mail-state-(type=email)
+        # pattern from https://html.spec.whatwg.org/#e-mail-state-(type=email)
         email_re = ur"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9]"\
             ur"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9]"\
             ur"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
