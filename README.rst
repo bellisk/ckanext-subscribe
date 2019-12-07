@@ -87,6 +87,22 @@ None at present
    ckanext.subscribe.some_setting = some_default_value
 
 
+---------------
+Troubleshooting
+---------------
+
+**NameError: global name 'Subscription' is not defined**
+
+You need to initialize the subscribe tables in the database.  See
+'Installation' section above to do this.
+
+
+**KeyError: "Action 'subscribe_signup' not found"**
+
+You need to enable the `subscribe` plugin in your CKAN config. See
+'Installation' section above to do this.
+
+
 ----------------------
 Developer installation
 ----------------------

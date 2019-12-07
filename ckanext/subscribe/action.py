@@ -3,24 +3,26 @@
 import logging
 
 import ckan.plugins as p
-import ckan.lib.navl.dictization_functions
+from ckan.logic import validate  # put in toolkit?
 
 from ckanext.subscribe import schema
+from ckanext.subscribe.model import Subscription
 
 
 log = logging.getLogger(__name__)
-_validate = ckan.lib.navl.dictization_functions.validate
 _check_access = p.toolkit.check_access
 NotFound = p.toolkit.ObjectNotFound
 
 
+@validate(schema.subscribe_schema)
 def subscribe_signup(context, data_dict):
     '''Signup to get notifications of email
 
     :param email: Email address to get notifications to
-    :param dataset: Dataset name or id to get notifications about
-    :param group: Group or organization name or id to get notifications about
-                  (specify dataset or group - not both)
+    :param package_id: Package name or id to get notifications about
+                       (specify package_id or group_id - not both)
+    :param group_id: Group or organization name or id to get notifications
+                     about (specify package_id or group_id - not both)
 
     :returns: the newly created subscription
     :rtype: dictionary
@@ -29,26 +31,28 @@ def subscribe_signup(context, data_dict):
     model = context['model']
     user = context['user']
 
-    schema = schema.subscribe_schema()
-    data, errors = _validate(data_dict, schema, context)
     _check_access(u'subscribe_signup', context, data_dict)
 
     data = {
-        'email': email,
+        'email': data_dict['email'],
         'user': context['user']
     }
-    if dataset:
-        data['object_type'] = 'package'
-        dataset_obj = model.Package.get(dataset)
+    if data_dict.get('dataset_id'):
+        data['object_type'] = 'dataset'
+        dataset_obj = model.Package.get(data_dict['dataset_id'])
         data['object_id'] = dataset_obj.id
     else:
         data['object_type'] = 'group'
-        group_obj = model.Group.get(group)
+        group_obj = model.Group.get(data_dict['group_id'])
         data['object_id'] = group_obj.id
 
-    existing_subscription = model.Session.query(Subscription)
+    # existing_subscription = model.Session.query(Subscription)
+    subscription = model_save.package_dict_save(data, context)
+
+
     rev = model.repo.new_revision()
     rev.author = user
+
 
     dictized_jobs = []
     queues = data_dict.get(u'queues')

@@ -35,7 +35,7 @@ def setup():
         log.debug('Subscription tables created')
 
 
-class SubscribeDomainObject(DomainObject):
+class _DomainObject(DomainObject):
     '''Convenience methods for searching objects
     '''
     key_attr = 'id'
@@ -58,7 +58,7 @@ class SubscribeDomainObject(DomainObject):
         return query.filter_by(**kwds)
 
 
-class Subscription(SubscribeDomainObject):
+class Subscription(_DomainObject):
     '''A subscription is a record of a user saying they want to get
     notifications about a particular domain object.
     '''
@@ -87,3 +87,5 @@ def define_tables():
         Subscription,
         subscription_table,
     )
+
+define_tables()
