@@ -78,7 +78,7 @@ def define_tables():
         'subscription',
         metadata,
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-        Column('user_id', types.UnicodeText, nullable=False),
+        Column('email', types.UnicodeText, nullable=False),
         Column('object_type', types.UnicodeText, nullable=False),
         Column('object_id', types.UnicodeText, nullable=False),
     )

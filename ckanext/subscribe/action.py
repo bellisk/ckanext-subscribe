@@ -7,6 +7,7 @@ from ckan.logic import validate  # put in toolkit?
 
 from ckanext.subscribe import schema
 from ckanext.subscribe.model import Subscription
+from ckanext.subscribe import dictization
 
 
 log = logging.getLogger(__name__)
@@ -46,21 +47,14 @@ def subscribe_signup(context, data_dict):
         group_obj = model.Group.get(data_dict['group_id'])
         data['object_id'] = group_obj.id
 
-    # existing_subscription = model.Session.query(Subscription)
-    subscription = model_save.package_dict_save(data, context)
+    if p.toolkit.check_ckan_version(max_version='2.8.99'):
+        rev = model.repo.new_revision()
+        rev.author = user
 
+    subscription = dictization.subscription_save(data, context)
 
-    rev = model.repo.new_revision()
-    rev.author = user
+    if not context.get('defer_commit'):
+        model.repo.commit()
 
-
-    dictized_jobs = []
-    queues = data_dict.get(u'queues')
-    if queues:
-        queues = [jobs.get_queue(q) for q in queues]
-    else:
-        queues = jobs.get_all_queues()
-    for queue in queues:
-        for job in queue.jobs:
-            dictized_jobs.append(jobs.dictize_job(job))
-    return dictized_jobs
+    dictized_subscription = dictization.dictize_subscription
+    return dictized_subscription(subscription, context)

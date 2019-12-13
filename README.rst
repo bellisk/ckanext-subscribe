@@ -115,6 +115,8 @@ do::
     python setup.py develop
     pip install -r dev-requirements.txt
 
+Now continue Installation steps from step 3
+
 
 -----
 Tests
