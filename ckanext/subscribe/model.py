@@ -80,6 +80,7 @@ def define_tables():
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
         Column('email', types.UnicodeText, nullable=False),
         Column('object_type', types.UnicodeText, nullable=False),
+            # object_type is: dataset or group
         Column('object_id', types.UnicodeText, nullable=False),
     )
 
