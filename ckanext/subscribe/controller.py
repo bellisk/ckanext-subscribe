@@ -62,7 +62,7 @@ class SubscribeController(BaseController):
         return self._redirect_back_to_subscribe_page(context, data_dict)
 
     def verify_subscription(self):
-        data_dict = {'code': request.POST.get('code')}
+        data_dict = {'code': request.params.get('code')}
         context = {
             u'model': model,
             u'session': model.Session,
@@ -75,10 +75,14 @@ class SubscribeController(BaseController):
         except ValidationError as err:
             h.flash_error(_('Error subscribing: {}'
                             .format(err.error_dict['message'])))
+            return redirect_to('home')
+
+        h.flash_success(
+            _('Subscription confirmed'))
 
         return redirect_to(
             controller='ckanext.subscribe.controller:SubscribeController',
-            action='manage'
+            action='manage',
         )
 
     def manage(self):

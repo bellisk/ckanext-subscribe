@@ -38,7 +38,7 @@ class TestEmailVerification(object):
         assert_equal(email_vars['object_type'], 'dataset')
         assert_equal(email_vars['email'], 'bob@example.com')
         assert_equal(email_vars['verification_link'],
-                     'http://test.ckan.net/packages?code=testcode')
+                     'http://test.ckan.net/subscribe/verify?code=testcode')
         assert_equal(email_vars['object_link'],
                      'http://test.ckan.net/dataset/{}'.format(dataset['id']))
 
@@ -48,7 +48,9 @@ class TestEmailVerification(object):
             dataset_id=dataset['id'], return_object=True)
         subscription.verification_code = 'testcode'
 
-        subject, body = get_verification_email_contents(subscription)
+        subject, body_plain_text, body_html = \
+            get_verification_email_contents(subscription)
 
         assert_equal(subject, 'Confirm CKAN subscription')
-        assert body.strip().startswith('CKAN subscription requested:')
+        assert body_plain_text.strip().startswith('CKAN subscription requested:')
+        assert body_html.strip().startswith('<p>CKAN subscription requested:')

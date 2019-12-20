@@ -85,51 +85,47 @@ def subscribe_signup(context, data_dict):
     return dictization.dictize_subscription(subscription, context)
 
 
-def subscribe_validate(context, data_dict):
-    '''Validate (confirm) a subscription
+def subscribe_verify(context, data_dict):
+    '''Verify (confirm) a subscription
 
-    :param code: Validation code, supplied in the email sent on sign-up
+    :param code: Verfication code, supplied in the email sent on sign-up
 
     :returns: the updated subscription
     :rtype: dictionary
 
     '''
+    # This design follows this OWASP guidance:
+    # https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#semantic-validation
+
     model = context['model']
     user = context['user']
 
-    _check_access(u'subscribe_validate', context, data_dict)
+    _check_access(u'subscribe_verify', context, data_dict)
 
+    if not data_dict.get('code'):
+        raise p.toolkit.ValidationError(
+            'Validation code has not been supplied')
     data = {
         'code': data_dict['code'],
     }
-    subscription = Subscription.get(data_dict['code'])
+    subscription = model.Session.query(Subscription) \
+        .filter_by(verification_code=data['code']) \
+        .first()
     if not subscription:
         raise p.toolkit.ValidationError(
             'That validation code is not recognized')
-    if subscription.expiry > datetime.datetime.now():
+    if subscription.verification_code_expires < datetime.datetime.now():
         raise p.toolkit.ValidationError(
             'That validation code has expired')
 
-    # must be unique combination of email/object_type/object_id
-    existing = model.Session.query(Subscription) \
-        .filter_by(email=data['email']) \
-        .filter_by(object_type=data['object_type']) \
-        .filter_by(object_id=data['object_id']) \
-        .first()
-    if existing:
-        # reuse existing subscription
-        subscription = existing
-    else:
-        # create subscription
+    # Verify the subscription
+    if p.toolkit.check_ckan_version(max_version='2.8.99'):
+        rev = model.repo.new_revision()
+        rev.author = user
+    subscription.verified = True
+    subscription.verification_code = None  # it can't be used again
+    subscription.verification_code_expires = None
+    if not context.get('defer_commit'):
+        model.repo.commit()
 
-        if p.toolkit.check_ckan_version(max_version='2.8.99'):
-            rev = model.repo.new_revision()
-            rev.author = user
-
-        subscription = dictization.subscription_save(data, context)
-
-        if not context.get('defer_commit'):
-            model.repo.commit()
-
-    dictized_subscription = dictization.dictize_subscription
-    return dictized_subscription(subscription, context)
+    return dictization.dictize_subscription(subscription, context)

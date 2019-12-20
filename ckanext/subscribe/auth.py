@@ -37,3 +37,8 @@ def subscribe_signup(context, data_dict):
                 'msg': _(u'Not authorized to skip verification')}
 
     return {'success': True}
+
+
+@auth_allow_anonymous_access
+def subscribe_verify(context, data_dict):
+    return {'success': True}

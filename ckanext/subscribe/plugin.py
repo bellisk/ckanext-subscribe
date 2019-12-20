@@ -26,6 +26,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
         controller = 'ckanext.subscribe.controller:SubscribeController'
         map.connect('signup', '/subscribe/signup',
             controller=controller, action='signup')
+        map.connect('verify', '/subscribe/verify',
+            controller=controller, action='verify_subscription')
         map.connect('manage', '/subscribe/manage',
             controller=controller, action='manage')
         return map
@@ -38,6 +40,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
     def get_actions(self):
         return {
             'subscribe_signup': action.subscribe_signup,
+            'subscribe_verify': action.subscribe_verify,
         }
 
     # IAuthFunctions
@@ -45,4 +48,5 @@ class SubscribePlugin(plugins.SingletonPlugin):
     def get_auth_functions(self):
         return {
             'subscribe_signup': auth.subscribe_signup,
+            'subscribe_verify': auth.subscribe_verify,
         }
