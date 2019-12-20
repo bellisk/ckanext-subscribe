@@ -41,7 +41,16 @@ as in this extension, is more appropriate.
 Requirements
 ------------
 
-Designed for CKAN 2.7+
+Compatibility with core CKAN versions:
+
+=============== =============
+CKAN version    Compatibility
+=============== =============
+2.6 and earlier no
+2.7             yes
+2.8             yes
+2.9             not yet
+=============== =============
 
 ------------
 Installation
