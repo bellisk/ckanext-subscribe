@@ -10,11 +10,13 @@ group_id_or_name_exists = get_validator('group_id_or_name_exists')
 ignore_missing = get_validator('ignore_missing')
 boolean_validator = get_validator('boolean_validator')
 
+
 def one_package_or_group(key, data, errors, context):
     if data[('dataset_id',)] and data[('group_id',)]:
         raise Invalid(_('Must not specify both "dataset_id" and "group_id"'))
     if not data[('dataset_id',)] and not data[('group_id',)]:
         raise Invalid(_('Must specify either "dataset_id" or "group_id"'))
+
 
 def subscribe_schema():
     return {

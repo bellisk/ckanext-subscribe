@@ -1,8 +1,6 @@
 # encoding: utf-8
 
-import uuid
 import datetime
-import six
 import random
 import string
 

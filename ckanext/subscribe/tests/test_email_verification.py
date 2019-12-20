@@ -3,7 +3,6 @@
 from nose.tools import assert_equal
 
 from ckan import plugins as p
-from ckan import model
 from ckan.tests import factories as ckan_factories
 from ckan.tests import helpers
 

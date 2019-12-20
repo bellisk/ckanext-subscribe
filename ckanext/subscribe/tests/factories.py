@@ -1,7 +1,5 @@
 # encoding: utf-8
 
-import datetime
-
 import factory
 
 import ckan.plugins as p
@@ -14,15 +12,6 @@ class Subscription(factory.Factory):
     '''A factory class for creating subscriptions.'''
 
     FACTORY_FOR = ckanext.subscribe.model.Subscription
-
-        # Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
-        # Column('email', types.UnicodeText, nullable=False),
-        # Column('object_type', types.UnicodeText, nullable=False),
-        #     # object_type is: dataset, group or organization
-        # Column('object_id', types.UnicodeText, nullable=False),
-        # Column('verified', types.Boolean, default=False),
-        # Column('verification_code', types.UnicodeText),
-        # Column('verification_code_expires', types.DateTime),
 
     id = factory.Sequence(lambda n: 'test_sub_{n}'.format(n=n))
     email = 'bob@example.com'

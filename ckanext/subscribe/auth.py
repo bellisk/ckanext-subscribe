@@ -23,8 +23,8 @@ def subscribe_signup(context, data_dict):
                 'msg': _(u'No object specified')}
 
     if skip_verification and \
-        skip_verification not in (None, 0, False) and \
-        skip_verification not in ('false', 'f', 'no', 'n', '0'):
+            skip_verification not in (None, 0, False) and \
+            skip_verification not in ('false', 'f', 'no', 'n', '0'):
         # sysadmins only
         return {'success': False,
                 'msg': _(u'Not authorized to skip verification')}

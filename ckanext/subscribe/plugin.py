@@ -25,11 +25,11 @@ class SubscribePlugin(plugins.SingletonPlugin):
     def before_map(self, map):
         controller = 'ckanext.subscribe.controller:SubscribeController'
         map.connect('signup', '/subscribe/signup',
-            controller=controller, action='signup')
+                    controller=controller, action='signup')
         map.connect('verify', '/subscribe/verify',
-            controller=controller, action='verify_subscription')
+                    controller=controller, action='verify_subscription')
         map.connect('manage', '/subscribe/manage',
-            controller=controller, action='manage')
+                    controller=controller, action='manage')
         return map
 
     def after_map(self, map):
