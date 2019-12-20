@@ -53,8 +53,15 @@ class SubscribeController(BaseController):
         try:
             get_action(u'subscribe_signup')(context, data_dict)
         except ValidationError as err:
+            error_messages = []
+            for key_ignored in ('message', '__before', 'dataset_id',
+                                'group_id'):
+                if key_ignored in err.error_dict:
+                    error_messages.extend(err.error_dict.pop(key_ignored))
+            if err.error_dict:
+                error_messages.append(repr(err.error_dict))
             h.flash_error(_('Error subscribing: {}'
-                            .format(err.error_dict['message'])))
+                            .format('; '.join(error_messages))))
         else:
             h.flash_success(
                 _('Subscription requested. Please confirm, by clicking in the '
@@ -92,9 +99,12 @@ class SubscribeController(BaseController):
         if data_dict.get('dataset_id'):
             return redirect_to(controller='package', action='read',
                                id=data_dict['dataset_id'])
-        else:
+        elif data_dict.get('group_id'):
             group_obj = model.Group.get(data_dict['group_id'])
-            controller = 'organization' if group_obj.is_organization \
+            controller = 'organization' \
+                if group_obj and group_obj.is_organization \
                 else 'group'
             return redirect_to(controller=controller, action='read',
                                id=data_dict['group_id'])
+        else:
+            return redirect_to('home')

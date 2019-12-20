@@ -20,8 +20,8 @@ class TestSubscribeSignupToDataset(object):
 
         with assert_raises(logic.NotAuthorized) as cm:
             helpers.call_auth('subscribe_signup', context=context,
-                              package_id=dataset['name'])
-        assert_in('requires an authenticated user',
+                              dataset_id=dataset['name'])
+        assert_in('not authorized to read package',
                   cm.exception.message)
 
     def test_deleted_dataset_not_subscribable(self):
@@ -32,7 +32,7 @@ class TestSubscribeSignupToDataset(object):
 
         with assert_raises(logic.NotAuthorized) as cm:
             helpers.call_auth('subscribe_signup', context=context,
-                              package_id=dataset['name'])
+                              dataset_id=dataset['name'])
         assert_in('User fred not authorized to read package',
                   cm.exception.message)
 
@@ -45,7 +45,7 @@ class TestSubscribeSignupToDataset(object):
         context['user'] = 'fred'
 
         ret = helpers.call_auth('subscribe_signup', context=context,
-                                package_id=dataset['name'])
+                                dataset_id=dataset['name'])
         assert ret
 
     def test_private_dataset_is_not_subscribable_to_public(self):
@@ -57,6 +57,6 @@ class TestSubscribeSignupToDataset(object):
 
         with assert_raises(logic.NotAuthorized) as cm:
             helpers.call_auth('subscribe_signup', context=context,
-                              package_id=dataset['name'])
+                              dataset_id=dataset['name'])
         assert_in('User fred not authorized to read package',
                   cm.exception.message)

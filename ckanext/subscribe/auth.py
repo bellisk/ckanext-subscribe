@@ -13,18 +13,11 @@ def subscribe_signup(context, data_dict):
     # check dataset can be read
     if dataset_id:
         pkg = model.Package.get(dataset_id)
-        authorized = check_access('package_show', context, {'id': pkg.id})
-        if not authorized:
-            return {'success': False,
-                    'msg': _(u'Not authorized to read dataset {}')
-                        .format(dataset_id)}
+        check_access('package_show', context, {'id': pkg.id})
+
     elif group_id:
         group = model.Group.get(group_id)
-        authorized = check_access('group_show', context, {'id': group.id})
-        if not authorized:
-            return {'success': False,
-                    'msg': _(u'Not authorized to read group {}')
-                        .format(dataset_id)}
+        check_access('group_show', context, {'id': group.id})
     else:
         return {'success': False,
                 'msg': _(u'No object specified')}

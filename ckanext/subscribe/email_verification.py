@@ -54,7 +54,7 @@ To confirm this email subscription, click this link:
 def get_verification_email_vars(subscription):
     verification_link = p.toolkit.url_for(
         controller='ckanext.subscribe.controller:SubscribeController',
-        action='verify',
+        action='verify_subscription',
         code=subscription.verification_code,
         qualified=True)
     if subscription.object_type == 'dataset':
