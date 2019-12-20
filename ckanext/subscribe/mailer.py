@@ -55,7 +55,10 @@ def _mail_recipient(recipient_name, recipient_email,
     msg['X-Mailer'] = "CKAN %s" % ckan.__version__
     if reply_to and reply_to != '':
         msg['Reply-to'] = reply_to
+    _mail_payload(msg, mail_from, recipient_email)
 
+
+def _mail_payload(msg, mail_from, recipient_email):
     # Send the email using Python's smtplib.
     smtp_connection = smtplib.SMTP()
     if 'smtp.test_server' in config:

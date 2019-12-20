@@ -6,7 +6,6 @@ import ckan.tests.helpers as helpers
 import ckan.tests.factories as factories
 import ckan.logic as logic
 from ckan import model
-from ckanext.subscribe import model as subscribe_model
 
 
 class TestSubscribeSignupToDataset(object):

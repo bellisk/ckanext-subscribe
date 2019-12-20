@@ -23,7 +23,7 @@ class subscribeCommand(cli.CkanCommand):
 
     def command(self):
         if not self.args:
-            print self.usage
+            print(self.usage)
             sys.exit(1)
         if self.args[0] == 'initdb':
             self._load_config()

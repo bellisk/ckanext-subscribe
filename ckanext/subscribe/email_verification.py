@@ -3,6 +3,7 @@
 import datetime
 import random
 import string
+from six import text_type
 
 import ckan.plugins as p
 from ckan import model
@@ -78,7 +79,7 @@ def get_verification_email_vars(subscription):
 
 
 def create_code(subscription):
-    subscription.verification_code = unicode(make_code())
+    subscription.verification_code = text_type(make_code())
     subscription.verification_code_expires = \
         datetime.datetime.now() + datetime.timedelta(hours=8)
     model.repo.commit_and_remove()
