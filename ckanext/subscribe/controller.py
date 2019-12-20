@@ -9,6 +9,7 @@ from ckan.plugins.toolkit import (
     Invalid,
     ObjectNotFound,
     NotAuthorized,
+    ValidationError,
     get_action,
     get_validator,
     _,
@@ -49,8 +50,31 @@ class SubscribeController(BaseController):
             u'user': g.user,
             u'auth_user_obj': g.userobj
         }
-        query = get_action(u'subscribe_signup')(context, data_dict)
+        try:
+            get_action(u'subscribe_signup')(context, data_dict)
+        except ValidationError as err:
+            h.flash_error(_('Error subscribing: {}'
+                            .format(err.error_dict['message'])))
+        else:
+            h.flash_success(
+                _('Subscription requested. Please confirm, by clicking in the '
+                  'link in the email just sent to you'))
+        return self._redirect_back_to_subscribe_page(context, data_dict)
 
+    def validate_subscription(self):
+        data_dict = {'code': request.POST.get('code')}
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user,
+            u'auth_user_obj': g.userobj
+        }
+
+        try:
+            get_action(u'subscribe_validate')(context, data_dict)
+        except ValidationError as err:
+            h.flash_error(_('Error subscribing: {}'
+                            .format(err.error_dict['message'])))
 
         return redirect_to(
             controller='ckanext.subscribe.controller:SubscribeController',
@@ -59,3 +83,14 @@ class SubscribeController(BaseController):
 
     def manage(self):
         return render(u'subscribe/manage.html', extra_vars={})
+
+    def _redirect_back_to_subscribe_page(self, context, data_dict):
+        if data_dict.get('dataset_id'):
+            return redirect_to(controller='package', action='read',
+                               id=data_dict['dataset_id'])
+        else:
+            group_obj = model.Group.get(data_dict['group_id'])
+            controller = 'organization' if group_obj.is_organization \
+                else 'group'
+            return redirect_to(controller=controller, action='read',
+                               id=data_dict['group_id'])

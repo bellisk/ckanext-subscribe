@@ -47,6 +47,17 @@ def subscribe_signup(context, data_dict):
         group_obj = model.Group.get(data_dict['group_id'])
         data['object_id'] = group_obj.id
 
+    # must be unique combination of email/object_type/object_id
+    existing = model.Session.query(Subscription) \
+        .filter_by(email=data['email']) \
+        .filter_by(object_type=data['object_type']) \
+        .filter_by(object_id=data['object_id']) \
+        .first()
+    if existing:
+        raise p.toolkit.ValidationError(
+            'That email is already subscribed to that {}'
+            .format(data['object_type']))
+
     if p.toolkit.check_ckan_version(max_version='2.8.99'):
         rev = model.repo.new_revision()
         rev.author = user
