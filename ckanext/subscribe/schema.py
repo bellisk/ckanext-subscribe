@@ -7,6 +7,8 @@ email = get_validator('email_validator')
 ignore_empty = get_validator('ignore_empty')
 package_id_or_name_exists = get_validator('package_id_or_name_exists')
 group_id_or_name_exists = get_validator('group_id_or_name_exists')
+ignore_missing = get_validator('ignore_missing')
+boolean_validator = get_validator('boolean_validator')
 
 def one_package_or_group(key, data, errors, context):
     if data[('dataset_id',)] and data[('group_id',)]:
@@ -20,4 +22,5 @@ def subscribe_schema():
         u'dataset_id': [ignore_empty, package_id_or_name_exists],
         u'group_id': [ignore_empty, group_id_or_name_exists],
         u'email': [email],
+        u'skip_verification': [boolean_validator],
     }

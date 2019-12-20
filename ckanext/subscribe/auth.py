@@ -8,6 +8,7 @@ def subscribe_signup(context, data_dict):
     model = context['model']
     dataset_id = data_dict.get('dataset_id')
     group_id = data_dict.get('group_id')
+    skip_verification = data_dict.get('skip_verification')
 
     # check dataset can be read
     if dataset_id:
@@ -27,5 +28,12 @@ def subscribe_signup(context, data_dict):
     else:
         return {'success': False,
                 'msg': _(u'No object specified')}
+
+    if skip_verification and \
+        skip_verification not in (None, 0, False) and \
+        skip_verification not in ('false', 'f', 'no', 'n', '0'):
+        # sysadmins only
+        return {'success': False,
+                'msg': _(u'Not authorized to skip verification')}
 
     return {'success': True}

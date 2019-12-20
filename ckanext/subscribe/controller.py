@@ -61,7 +61,7 @@ class SubscribeController(BaseController):
                   'link in the email just sent to you'))
         return self._redirect_back_to_subscribe_page(context, data_dict)
 
-    def validate_subscription(self):
+    def verify_subscription(self):
         data_dict = {'code': request.POST.get('code')}
         context = {
             u'model': model,
@@ -71,7 +71,7 @@ class SubscribeController(BaseController):
         }
 
         try:
-            get_action(u'subscribe_validate')(context, data_dict)
+            get_action(u'subscribe_verify')(context, data_dict)
         except ValidationError as err:
             h.flash_error(_('Error subscribing: {}'
                             .format(err.error_dict['message'])))
