@@ -4,11 +4,18 @@ import mock
 
 from nose.tools import assert_equal
 
-from ckan.tests.helpers import FunctionalTestBase
+from ckan.tests.helpers import FunctionalTestBase, reset_db
 from ckan.tests.factories import Dataset, Group, Organization
+
+from ckanext.subscribe import model as subscribe_model
 
 
 class TestSignupSubmit(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        super(TestSignupSubmit, cls).setup_class()
+        subscribe_model.setup()
 
     @mock.patch('ckanext.subscribe.mailer.mail_recipient')
     def test_signup_to_dataset_ok(self, mock_mailer):

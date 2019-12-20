@@ -91,6 +91,3 @@ def define_tables():
         Subscription,
         subscription_table,
     )
-
-
-define_tables()
