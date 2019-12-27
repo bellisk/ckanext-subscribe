@@ -63,8 +63,8 @@ class Subscription(_DomainObject):
     notifications about a particular domain object.
     '''
     def __repr__(self):
-        return '<Subscription id=%s title=%s url=%s active=%r>' % \
-               (self.id, self.title, self.url, self.active)
+        return '<Subscription id=%s email=%s object_type=%s verified=%s>' % \
+               (self.id, self.email, self.object_type, self.verified)
 
     def __str__(self):
         return self.__repr__().encode('ascii', 'ignore')

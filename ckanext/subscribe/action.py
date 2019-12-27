@@ -25,10 +25,10 @@ def subscribe_signup(context, data_dict):
     containing a verification link.
 
     :param email: Email address to get notifications to
-    :param package_id: Package name or id to get notifications about
-                       (specify package_id or group_id - not both)
+    :param dataset_id: Dataset name or id to get notifications about
+                       (specify dataset_id or group_id - not both)
     :param group_id: Group or organization name or id to get notifications
-                     about (specify package_id or group_id - not both)
+                     about (specify dataset_id or group_id - not both)
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
@@ -82,7 +82,11 @@ def subscribe_signup(context, data_dict):
     else:
         email_verification.send_confirmation_email(subscription)
 
-    return dictization.dictize_subscription(subscription, context)
+    subscription_dict = dictization.dictize_subscription(subscription, context)
+    # user needs to get the code from the email, to show consent, so there's no
+    # exception given for admins to sign someone up on their behalf
+    subscription_dict.pop('verification_code')
+    return subscription_dict
 
 
 def subscribe_verify(context, data_dict):

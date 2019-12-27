@@ -32,6 +32,7 @@ class TestSubscribeSignup(object):
         eq(subscription['object_id'], dataset['id'])
         eq(subscription['email'], 'bob@example.com')
         eq(subscription['verified'], False)
+        assert 'verification_code' not in subscription
 
     @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
     def test_dataset_name(self, send_confirmation_email):
@@ -132,6 +133,36 @@ class TestSubscribeSignup(object):
         eq(subscription['verified'], True)
 
     @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
+    def test_resend_verification(self, send_confirmation_email):
+        dataset = factories.Dataset()
+        existing_subscription = Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=False,
+            verification_code='original_code',
+        )
+
+        subscription = helpers.call_action(
+            "subscribe_signup",
+            {},
+            email='bob@example.com',
+            dataset_id=dataset["id"],
+        )
+
+        send_confirmation_email.assert_called_once
+        eq(send_confirmation_email.call_args[0][0].id,
+            existing_subscription['id'])
+        eq(send_confirmation_email.call_args[0][0].object_type, 'dataset')
+        eq(send_confirmation_email.call_args[0][0].object_id, dataset['id'])
+        eq(send_confirmation_email.call_args[0][0].email, 'bob@example.com')
+        assert send_confirmation_email.call_args[0][0].verification_code != \
+            'original_code'
+        eq(subscription['object_type'], 'dataset')
+        eq(subscription['object_id'], dataset['id'])
+        eq(subscription['email'], 'bob@example.com')
+        eq(subscription['verified'], False)
+
+    @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
     def test_dataset_doesnt_exist(self, send_confirmation_email):
         with assert_raises(ValidationError) as cm:
             helpers.call_action(
@@ -155,6 +186,24 @@ class TestSubscribeSignup(object):
                 group_id='doesnt-exist',
             )
         assert_in("group_id': [u'That group name or ID does not exist",
+                  str(cm.exception.error_dict))
+
+        assert not send_confirmation_email.called
+
+    @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
+    def test_dataset_and_group_at_same_time(self, send_confirmation_email):
+        dataset = factories.Dataset()
+        group = factories.Group()
+
+        with assert_raises(ValidationError) as cm:
+            helpers.call_action(
+                "subscribe_signup",
+                {},
+                email='bob@example.com',
+                dataset_id=dataset["id"],
+                group_id=group["id"],
+            )
+        assert_in('Must not specify both "dataset_id" and "group_id"',
                   str(cm.exception.error_dict))
 
         assert not send_confirmation_email.called

@@ -60,3 +60,19 @@ class TestSubscribeSignupToDataset(object):
                               dataset_id=dataset['name'])
         assert_in('User fred not authorized to read package',
                   cm.exception.message)
+
+    def test_admin_cant_skip_verification(self):
+        # (only sysadmin can)
+        fred = factories.User(name='fred')
+        fred['capacity'] = 'editor'
+        org = factories.Organization(users=[fred])
+        dataset = factories.Dataset(owner_org=org['id'])
+        context = {'model': model}
+        context['user'] = 'fred'
+
+        with assert_raises(logic.NotAuthorized) as cm:
+            helpers.call_auth('subscribe_signup', context=context,
+                              dataset_id=dataset['name'],
+                              skip_verification=True)
+        assert_in('Not authorized to skip verification',
+                  cm.exception.message)
