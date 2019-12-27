@@ -32,17 +32,15 @@ def get_verification_email_contents(subscription):
     subject = subject.split('\n')[0]
 
     html_body = '''
-<p>{site_title} subscription requested:<br/>
+<p>{site_title} subscription requested<br/>
+    {object_type}: "{object_title}" ({object_name})</p>
 
-{object_type}: <a href="{object_link}">{object_title}</a></p>
-
-<p>        To confirm this email subscription, click this link:<br/>
+<p>To confirm this email subscription, click this link:<br/>
 <a href="{verification_link}">{verification_link}</a></p>
 '''.format(**email_vars)
     plain_text_body = '''
 {site_title} subscription requested:
-
-{object_type}: {object_title} - {object_link}
+{object_type}: {object_title} ({object_name})
 
 To confirm this email subscription, click this link:
 {verification_link}
@@ -71,6 +69,7 @@ def get_verification_email_vars(subscription):
         site_url=config.get('ckan.site_url'),
         object_type=subscription.object_type,
         object_title=subscription_object.title or subscription_object.name,
+        object_name=subscription_object.name,
         object_link=object_link,
         verification_link=verification_link,
         email=subscription.email,
