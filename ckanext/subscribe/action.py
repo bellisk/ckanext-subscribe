@@ -82,11 +82,7 @@ def subscribe_signup(context, data_dict):
     else:
         email_verification.send_confirmation_email(subscription)
 
-    subscription_dict = dictization.dictize_subscription(subscription, context)
-    # user needs to get the code from the email, to show consent, so there's no
-    # exception given for admins to sign someone up on their behalf
-    subscription_dict.pop('verification_code')
-    return subscription_dict
+    return dictization.dictize_subscription(subscription, context)
 
 
 def subscribe_verify(context, data_dict):

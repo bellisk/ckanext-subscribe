@@ -1,12 +1,19 @@
 # encoding: utf-8
 
+import datetime
+
 import mock
 from nose.tools import assert_equal as eq
 from nose.tools import assert_raises, assert_in
 
 from ckan.tests import helpers, factories
 from ckan.plugins.toolkit import ValidationError
-from ckanext.subscribe.tests.factories import Subscription
+
+from ckanext.subscribe.tests.factories import (
+    Subscription,
+    SubscriptionLowLevel,
+    )
+from ckanext.subscribe import model as subscribe_model
 
 
 class TestSubscribeSignup(object):
@@ -207,3 +214,77 @@ class TestSubscribeSignup(object):
                   str(cm.exception.error_dict))
 
         assert not send_confirmation_email.called
+
+
+class TestSubscribeVerify(object):
+    def setup(self):
+        helpers.reset_db()
+
+    def test_basic(self):
+        dataset = factories.Dataset()
+        SubscriptionLowLevel(
+            object_id=dataset['id'],
+            object_type='dataset',
+            email='bob@example.com',
+            verification_code='the_code',
+            verification_code_expires=datetime.datetime.now() \
+                + datetime.timedelta(hours=1)
+        )
+
+        subscription = helpers.call_action(
+            "subscribe_verify",
+            {},
+            code='the_code',
+        )
+
+        eq(subscription['verified'], True)
+        eq(subscription['object_type'], 'dataset')
+        eq(subscription['object_id'], dataset['id'])
+        eq(subscription['email'], 'bob@example.com')
+        assert 'verification_code' not in subscription
+
+    def test_wrong_code(self):
+        dataset = factories.Dataset()
+        subscription = SubscriptionLowLevel(
+            object_id=dataset['id'],
+            object_type='dataset',
+            email='bob@example.com',
+            verification_code='the_code',
+            verification_code_expires=datetime.datetime.now() \
+                + datetime.timedelta(hours=1)
+        )
+
+        with assert_raises(ValidationError) as cm:
+            subscription = helpers.call_action(
+                "subscribe_verify",
+                {},
+                code='wrong_code',
+            )
+        assert_in('That validation code is not recognized',
+                  str(cm.exception.error_dict))
+
+        subscription = subscribe_model.Subscription.get(subscription['id'])
+        eq(subscription.verified, False)
+
+    def test_code_expired(self):
+        dataset = factories.Dataset()
+        subscription = SubscriptionLowLevel(
+            object_id=dataset['id'],
+            object_type='dataset',
+            email='bob@example.com',
+            verification_code='the_code',
+            verification_code_expires=datetime.datetime.now() \
+                - datetime.timedelta(hours=1)  # in the past
+        )
+
+        with assert_raises(ValidationError) as cm:
+            subscription = helpers.call_action(
+                "subscribe_verify",
+                {},
+                code='the_code',
+            )
+        assert_in('That validation code has expired',
+                  str(cm.exception.error_dict))
+
+        subscription = subscribe_model.Subscription.get(subscription['id'])
+        eq(subscription.verified, False)

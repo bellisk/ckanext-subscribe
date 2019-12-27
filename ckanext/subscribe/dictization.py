@@ -15,4 +15,8 @@ def subscription_save(subscription_dict, context):
 
 
 def dictize_subscription(subscription_obj, context):
-    return table_dictize(subscription_obj, context)
+    subscription_dict = table_dictize(subscription_obj, context)
+    # user needs to get the code from the email, to show consent, so there's no
+    # exception given for admins to sign someone up on their behalf
+    subscription_dict.pop('verification_code')
+    return subscription_dict
