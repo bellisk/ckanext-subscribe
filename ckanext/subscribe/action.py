@@ -80,6 +80,7 @@ def subscribe_signup(context, data_dict):
         subscription.verified = True
         model.repo.commit()
     else:
+        email_verification.create_code(subscription)
         email_verification.send_confirmation_email(subscription)
 
     return dictization.dictize_subscription(subscription, context)

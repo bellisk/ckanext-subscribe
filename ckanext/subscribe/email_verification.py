@@ -13,7 +13,6 @@ config = p.toolkit.config
 
 
 def send_confirmation_email(subscription):
-    create_code(subscription)
     subject, plain_text_body, html_body = \
         get_verification_email_contents(subscription)
     mailer.mail_recipient(recipient_name=subscription.email,

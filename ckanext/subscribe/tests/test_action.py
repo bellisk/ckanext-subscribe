@@ -288,3 +288,36 @@ class TestSubscribeVerify(object):
 
         subscription = subscribe_model.Subscription.get(subscription['id'])
         eq(subscription.verified, False)
+
+
+class TestSubscribeAndVerify(object):
+    def setup(self):
+        helpers.reset_db()
+
+    @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
+    def test_basic(self, send_confirmation_email):
+        dataset = factories.Dataset()
+
+        # subscribe
+        subscription = helpers.call_action(
+            "subscribe_signup",
+            {},
+            email='bob@example.com',
+            dataset_id=dataset["id"],
+        )
+        code = send_confirmation_email.call_args[0][0].verification_code
+        # verify
+        subscription = helpers.call_action(
+            "subscribe_verify",
+            {},
+            code=code,
+        )
+
+        send_confirmation_email.assert_called_once
+        eq(send_confirmation_email.call_args[0][0].object_type, 'dataset')
+        eq(send_confirmation_email.call_args[0][0].object_id, dataset['id'])
+        eq(send_confirmation_email.call_args[0][0].email, 'bob@example.com')
+        eq(subscription['object_type'], 'dataset')
+        eq(subscription['object_id'], dataset['id'])
+        eq(subscription['email'], 'bob@example.com')
+        eq(subscription['verified'], True)
