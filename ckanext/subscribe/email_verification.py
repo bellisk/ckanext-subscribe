@@ -11,6 +11,8 @@ from ckanext.subscribe import mailer
 
 config = p.toolkit.config
 
+CODE_EXPIRY = datetime.timedelta(hours=8)
+
 
 def send_confirmation_email(subscription):
     subject, plain_text_body, html_body = \
@@ -53,6 +55,10 @@ def get_verification_email_vars(subscription):
         action='verify_subscription',
         code=subscription.verification_code,
         qualified=True)
+    manage_link = p.toolkit.url_for(
+        controller='ckanext.subscribe.controller:SubscribeController',
+        action='manage',
+        qualified=True)
     if subscription.object_type == 'dataset':
         subscription_object = model.Package.get(subscription.object_id)
     else:
@@ -72,6 +78,7 @@ def get_verification_email_vars(subscription):
         object_link=object_link,
         verification_link=verification_link,
         email=subscription.email,
+        manage_link=manage_link,
     )
     return extra_vars
 
@@ -79,7 +86,7 @@ def get_verification_email_vars(subscription):
 def create_code(subscription):
     subscription.verification_code = text_type(make_code())
     subscription.verification_code_expires = \
-        datetime.datetime.now() + datetime.timedelta(hours=8)
+        datetime.datetime.now() + CODE_EXPIRY
     model.repo.commit_and_remove()
 
 

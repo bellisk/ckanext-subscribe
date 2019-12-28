@@ -94,3 +94,6 @@ class TestSignupSubmit(FunctionalTestBase):
             params={'email': 'invalid email', 'dataset': dataset['id']},
             status=400)
         response.mustcontain(u'Email supplied is invalid')
+
+
+class TestManage(object):

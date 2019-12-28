@@ -1,5 +1,15 @@
 {% extends "page.html" %}
 
 {% block primary_content %}
-MANAGE
+<h1>Manage subscriptions</h1>
+
+<p>Email: {{ email }}</p>
+
+<p>Subscriptions:</p>
+<table>
+  {% for subscription in subscriptions %}
+    <tr>{{ subscription }}</tr>
+  {% endfor %}
+</table>
+
 {% endblock %}

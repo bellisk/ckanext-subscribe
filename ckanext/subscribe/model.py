@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from sqlalchemy import Table, Column, types
 
@@ -14,6 +15,7 @@ __all__ = [
 ]
 
 subscription_table = None
+login_code_table = None
 
 
 def setup():
@@ -31,6 +33,7 @@ def setup():
         # Create each table individually rather than
         # using metadata.create_all()
         subscription_table.create()
+        login_code_table.create()
 
         log.debug('Subscription tables created')
 
@@ -70,9 +73,34 @@ class Subscription(_DomainObject):
         return self.__repr__().encode('ascii', 'ignore')
 
 
+class LoginCode(_DomainObject):
+    '''A login code is sent out in an email to let the user click to login
+    without password. A user can have multiple codes at once - new ones don't
+    invalidate or overwrite each other (to avoid confusion, acknowledging this
+    is at the expense of some security).
+    '''
+    def __repr__(self):
+        return '<Logincode id=%s email=%s code=%s... expires=>' % \
+               (self.id, self.email, self.code[:4], self.expires)
+
+    def __str__(self):
+        return self.__repr__().encode('ascii', 'ignore')
+
+    @classmethod
+    def validate_code(cls, code):
+        login_code = model.Session.query(cls) \
+            .filter_by(code=code) \
+            .first()
+        if not login_code:
+            raise ValueError('No code supplied')
+        if datetime.datetime.now() > login_code.expires:
+            raise ValueError('Code expired')
+        return login_code
+
+
 def define_tables():
 
-    global subscription_table
+    global subscription_table, login_code_table
 
     subscription_table = Table(
         'subscription',
@@ -87,7 +115,20 @@ def define_tables():
         Column('verification_code_expires', types.DateTime),
     )
 
+    login_code_table = Table(
+        'subscribe_login_code',
+        metadata,
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('email', types.UnicodeText, nullable=False),
+        Column('code', types.UnicodeText, nullable=False),
+        Column('expires', types.DateTime),
+    )
+
     mapper(
         Subscription,
         subscription_table,
+    )
+    mapper(
+        LoginCode,
+        login_code_table,
     )

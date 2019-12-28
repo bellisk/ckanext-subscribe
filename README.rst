@@ -112,6 +112,15 @@ You need to enable the `subscribe` plugin in your CKAN config. See
 'Installation' section above to do this.
 
 
+**ProgrammingError: (ProgrammingError) relation "subscription" does not exist**
+
+You're running the tests with `--reset-db` and this extension doesn't work with
+that. Instead, if you need to wipe the tables before running tests, do it this
+way::
+
+    sudo -u postgres psql ckan_test -c 'drop table if exists subscription; drop table if exists subscribe_login_code;'
+
+
 ----------------------
 Developer installation
 ----------------------

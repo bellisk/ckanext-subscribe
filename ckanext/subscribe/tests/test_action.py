@@ -321,3 +321,23 @@ class TestSubscribeAndVerify(object):
         eq(subscription['object_id'], dataset['id'])
         eq(subscription['email'], 'bob@example.com')
         eq(subscription['verified'], True)
+
+
+class TestSubscribeListSubscriptions(object):
+    def setup(self):
+        helpers.reset_db()
+
+    def test_basic(self):
+        dataset = factories.Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+
+        eq([sub['object_id'] for sub in sub_list], [dataset['id']])

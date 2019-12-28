@@ -16,6 +16,10 @@ from ckan.plugins.toolkit import (
     redirect_to,
 )
 
+from ckanext.subscribe import email_login
+
+log = __import__('logging').getLogger(__name__)
+
 
 class SubscribeController(BaseController):
     def signup(self):
@@ -71,7 +75,7 @@ class SubscribeController(BaseController):
         }
 
         try:
-            get_action(u'subscribe_verify')(context, data_dict)
+            subscription = get_action(u'subscribe_verify')(context, data_dict)
         except ValidationError as err:
             h.flash_error(_('Error subscribing: {}'
                             .format(err.error_dict['message'])))
@@ -79,6 +83,7 @@ class SubscribeController(BaseController):
 
         h.flash_success(
             _('Subscription confirmed'))
+        email_login.login(subscription['email'])
 
         return redirect_to(
             controller='ckanext.subscribe.controller:SubscribeController',
@@ -86,7 +91,38 @@ class SubscribeController(BaseController):
         )
 
     def manage(self):
-        return render(u'subscribe/manage.html', extra_vars={})
+        email = email_login.get_session_email()
+        if not email:
+            log.debug('No current session')
+            code = request.params.get('code')
+            if not code:
+                log.debug('No code supplied')
+                return render(u'subscribe/order_code.html', extra_vars={})
+            try:
+                email_login.login_with_code(code)
+            except ValueError as exp:
+                h.flash_error('Code is invalid: {}'.format(exp))
+                log.debug('Code is invalid: {}'.format(exp))
+                return render(u'subscribe/order_code.html', extra_vars={})
+
+        # user has done auth, but it's not an email rather than a ckan user, so
+        # use site_user
+        site_user = get_action('get_site_user')({
+            'model': model,
+            'ignore_auth': True},
+            {}
+        )
+        context = {
+            u'model': model,
+            u'user': site_user['name'],
+        }
+        subscriptions = \
+            get_action(u'subscribe_list_subscriptions')(
+                context, {'email': email})
+        return render(u'subscribe/manage.html', extra_vars={
+            'email': email,
+            'suscriptions': subscriptions,
+        })
 
     def _redirect_back_to_subscribe_page(self, context, data_dict):
         if data_dict.get('dataset_id'):

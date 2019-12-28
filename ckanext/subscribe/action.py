@@ -130,3 +130,25 @@ def subscribe_verify(context, data_dict):
         model.repo.commit()
 
     return dictization.dictize_subscription(subscription, context)
+
+
+def subscribe_list_subscriptions(context, data_dict):
+    '''For a given email address, list the subscriptions
+
+    :param email: email address of the user to get the subscriptions for
+
+    :rtype: list of subscription dicts
+    '''
+    model = context['model']
+
+    _check_access(u'subscribe_list_subscriptions', context, data_dict)
+    email = p.toolkit.get_or_bust(data_dict, 'email')
+
+    subscription_objs = model.Session.query(Subscription) \
+        .filter_by(email=email) \
+        .all()
+    subscriptions = [
+        dictization.dictize_subscription(subscription_obj, context)
+        for subscription_obj in subscription_objs
+    ]
+    return subscriptions
