@@ -8,6 +8,7 @@ from nose.tools import assert_raises, assert_in
 
 from ckan.tests import helpers, factories
 from ckan.plugins.toolkit import ValidationError
+from ckan import model
 
 from ckanext.subscribe.tests.factories import (
     Subscription,
@@ -40,6 +41,9 @@ class TestSubscribeSignup(object):
         eq(subscription['email'], 'bob@example.com')
         eq(subscription['verified'], False)
         assert 'verification_code' not in subscription
+        subscription_obj = model.Session.query(subscribe_model.Subscription) \
+            .get(subscription['id'])
+        assert subscription_obj
 
     @mock.patch('ckanext.subscribe.email_verification.send_confirmation_email')
     def test_dataset_name(self, send_confirmation_email):

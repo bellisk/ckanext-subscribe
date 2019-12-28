@@ -1,16 +1,19 @@
 # encoding: utf-8
 
 '''
-"Email login" is a casual way to login to ckanext-subscribe. It is for changing
-your subscription options. Rather than using a password, the user clicks on a
-link containing a code in an email, thus proving they have access to the email
-address. It's designed to be low fuss for occasionaly use.
+"Email auth" is a way to authenticate to access certain pages to
+ckanext-subscribe. It is used for changing your subscription options. Rather
+than using a password, the user clicks on a link containing a code in an email,
+thus proving they have access to the email address. It's designed to be low
+fuss for occasional use.
 
 The security is comparable to passwords, as they tend to fall back to emailed
 links anyway. The links time-out so you don't have live links kicking around
-your inbox for all time. Still, people do forward emails. And there is no
-'log-out' button for people on shared computers. But arguably there's not a lot
-of harm that an attacker could do, messing with your subscriptions.
+your inbox for all time. Still, people do forward emails. The code just exists
+in the URL - it is not saved in a cookie or session, so there's no 'log-out'
+button. People on shared computers would find that others can find the page in
+the history. But arguably there's not a lot of harm that an attacker could do,
+messing with your subscriptions.
 
 This login is separate to CKAN's normal login, which uses a password.
 '''
@@ -30,9 +33,6 @@ log = __import__('logging').getLogger(__name__)
 config = p.toolkit.config
 
 CODE_EXPIRY = datetime.timedelta(days=7)
-SESSION_LENGTH = datetime.timedelta(days=1)
-EMAIL_SESSION_KEY = 'ckanext-subscribe-email'
-EXPIRY_SESSION_KEY = 'ckanext-subscribe-expiry'
 
 
 def send_login_email(email, code):
@@ -143,10 +143,11 @@ def create_code(email):
     if p.toolkit.check_ckan_version(max_version='2.8.99'):
         model.repo.new_revision()
     code = text_type(make_code())
-    model.LoginCode(
+    model.Session.add(LoginCode(
+        email=email,
         code=code,
         expires=datetime.datetime.now() + CODE_EXPIRY,
-    )
+    ))
     model.repo.commit_and_remove()
     return code
 
@@ -158,22 +159,12 @@ def make_code():
         for _ in range(32))
 
 
-def get_session_email():
-    if not session.get(EXPIRY_SESSION_KEY):
-        return
-    if datetime.datetime.now() > session.get(EXPIRY_SESSION_KEY):
-        log.debug('Session expired')
-        session.pop(EMAIL_SESSION_KEY)
-        return
-    return session.get(EMAIL_SESSION_KEY)
-
-
-def login_with_code(code):
+def authenticate_with_code(code):
     # check the code is valid
     try:
         login_code = LoginCode.validate_code(code)
     except ValueError:
         raise
     # do the login
-    login(login_code.email)
+    return login_code.email
 

@@ -88,11 +88,13 @@ class LoginCode(_DomainObject):
 
     @classmethod
     def validate_code(cls, code):
+        if not code:
+            raise ValueError('No code supplied')
         login_code = model.Session.query(cls) \
             .filter_by(code=code) \
             .first()
         if not login_code:
-            raise ValueError('No code supplied')
+            raise ValueError('Code not recognized')
         if datetime.datetime.now() > login_code.expires:
             raise ValueError('Code expired')
         return login_code

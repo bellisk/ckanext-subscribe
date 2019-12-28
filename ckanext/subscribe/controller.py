@@ -16,7 +16,7 @@ from ckan.plugins.toolkit import (
     redirect_to,
 )
 
-from ckanext.subscribe import email_login
+from ckanext.subscribe import email_auth
 
 log = __import__('logging').getLogger(__name__)
 
@@ -83,27 +83,25 @@ class SubscribeController(BaseController):
 
         h.flash_success(
             _('Subscription confirmed'))
-        email_login.login(subscription['email'])
+        code = email_auth.create_code(subscription['email'])
 
         return redirect_to(
             controller='ckanext.subscribe.controller:SubscribeController',
             action='manage',
+            code=code,
         )
 
     def manage(self):
-        email = email_login.get_session_email()
-        if not email:
-            log.debug('No current session')
-            code = request.params.get('code')
-            if not code:
-                log.debug('No code supplied')
-                return render(u'subscribe/order_code.html', extra_vars={})
-            try:
-                email_login.login_with_code(code)
-            except ValueError as exp:
-                h.flash_error('Code is invalid: {}'.format(exp))
-                log.debug('Code is invalid: {}'.format(exp))
-                return render(u'subscribe/order_code.html', extra_vars={})
+        code = request.params.get('code')
+        if not code:
+            log.debug('No code supplied')
+            return render(u'subscribe/order_code.html', extra_vars={})
+        try:
+            email = email_auth.authenticate_with_code(code)
+        except ValueError as exp:
+            h.flash_error('Code is invalid: {}'.format(exp))
+            log.debug('Code is invalid: {}'.format(exp))
+            return render(u'subscribe/order_code.html', extra_vars={})
 
         # user has done auth, but it's not an email rather than a ckan user, so
         # use site_user
