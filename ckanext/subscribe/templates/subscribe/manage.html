@@ -1,15 +1,42 @@
 {% extends "page.html" %}
 
+{% block styles %}
+  {{ super() }}
+  {% resource 'subscribe/subscribe.css' %}
+{% endblock styles %}
+
 {% block primary_content %}
+
 <h1>Manage subscriptions</h1>
 
 <p>Email: {{ email }}</p>
 
 <p>Subscriptions:</p>
-<table>
-  {% for subscription in subscriptions %}
-    <tr>{{ subscription }}</tr>
-  {% endfor %}
-</table>
+{% if subscriptions %}
+  <table id="subscriptions">
+    {% for subscription in subscriptions %}
+      <tr>
+        <td>{{ subscription.object_type |capitalize }}</td>
+        <td><a href="{{ subscription.object_link }}">{{ subscription.object_title }}</a></td>
+        <td>
+          {% if not subscription.verified %}Unverified{% endif %}
+        </td>
+        <td>
+          {% if not subscription.verified %}
+            <form method='post' action="{{ h.url_for('/subscribe/signup') }}" id="subscribe-form" enctype="multipart/form-data" class="form-inline">
+              <!-- (Bootstrap 3) <div class="form-group input-group-sm"> -->
+                <input id="subscribe-email" type="hidden" name="email" value="{{ email }}" />
+                <input id="subscribe-{{ subscription.object_type }}" type="hidden" name="{{ subscription.object_type }}" value="{{ subscription.object_name }}"` />
+              <!-- </div> -->
+              <button type="submit" class="btn btn-default" name="save">{{ _('Resend verification email') }}</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% else %}
+  (None)
+{% endif %}
 
 {% endblock %}

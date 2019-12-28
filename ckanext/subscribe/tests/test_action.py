@@ -214,7 +214,8 @@ class TestSubscribeSignup(object):
                 dataset_id=dataset["id"],
                 group_id=group["id"],
             )
-        assert_in('Must not specify both "dataset_id" and "group_id"',
+        assert_in('Must not specify more than one of: "dataset_id", "group_id"'
+                  ' or "organization_id"',
                   str(cm.exception.error_dict))
 
         assert not send_confirmation_email.called
@@ -345,3 +346,38 @@ class TestSubscribeListSubscriptions(object):
         )
 
         eq([sub['object_id'] for sub in sub_list], [dataset['id']])
+
+    def test_dataset_details(self):
+        dataset = factories.Dataset()
+        group = factories.Group()
+        org = factories.Organization()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            group_id=group['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            group_id=org['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+
+        eq(set(sub['object_id'] for sub in sub_list),
+           set([dataset['id'], group['id'], org['id']]))
+        eq(set(sub['object_link'] for sub in sub_list),
+           set(['/dataset/{}'.format(dataset['name']),
+                '/group/{}'.format(group['name']),
+                '/organization/{}'.format(org['name']),
+                ]))
+        eq(set(sub.get('object_name') for sub in sub_list),
+           set([dataset['name'], group['name'], org['name']]))

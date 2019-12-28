@@ -39,7 +39,8 @@ class SubscribeController(BaseController):
         data_dict = {
             'email': email,
             'dataset_id': request.POST.get('dataset'),
-            'group_id': request.POST.get('group')
+            'group_id': request.POST.get('group'),
+            'organization_id': request.POST.get('organization'),
         }
         context = {
             u'model': model,
@@ -119,7 +120,7 @@ class SubscribeController(BaseController):
                 context, {'email': email})
         return render(u'subscribe/manage.html', extra_vars={
             'email': email,
-            'suscriptions': subscriptions,
+            'subscriptions': subscriptions,
         })
 
     def _redirect_back_to_subscribe_page(self, context, data_dict):

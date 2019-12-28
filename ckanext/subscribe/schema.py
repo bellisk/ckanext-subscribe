@@ -11,18 +11,24 @@ ignore_missing = get_validator('ignore_missing')
 boolean_validator = get_validator('boolean_validator')
 
 
-def one_package_or_group(key, data, errors, context):
-    if data[('dataset_id',)] and data[('group_id',)]:
-        raise Invalid(_('Must not specify both "dataset_id" and "group_id"'))
-    if not data[('dataset_id',)] and not data[('group_id',)]:
-        raise Invalid(_('Must specify either "dataset_id" or "group_id"'))
+def one_package_or_group_or_org(key, data, errors, context):
+    num_objects_specified = len(filter(None, [data[('dataset_id',)],
+                                              data[('group_id',)],
+                                              data[('organization_id',)]]))
+    if num_objects_specified > 1:
+        raise Invalid(_('Must not specify more than one of: "dataset_id", '
+                        '"group_id" or "organization_id"'))
+    if num_objects_specified < 1:
+        raise Invalid(_('Must specify one of: "dataset_id", '
+                        '"group_id" or "organization_id"'))
 
 
 def subscribe_schema():
     return {
-        u'__before': [one_package_or_group],
+        u'__before': [one_package_or_group_or_org],
         u'dataset_id': [ignore_empty, package_id_or_name_exists],
         u'group_id': [ignore_empty, group_id_or_name_exists],
+        u'organization_id': [ignore_empty, group_id_or_name_exists],
         u'email': [email],
         u'skip_verification': [boolean_validator],
     }

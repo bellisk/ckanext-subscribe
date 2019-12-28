@@ -26,9 +26,11 @@ def subscribe_signup(context, data_dict):
 
     :param email: Email address to get notifications to
     :param dataset_id: Dataset name or id to get notifications about
-                       (specify dataset_id or group_id - not both)
+        (specify only one of: dataset_id or group_id or organization_id)
     :param group_id: Group or organization name or id to get notifications
-                     about (specify dataset_id or group_id - not both)
+        about (specify only one of: dataset_id or group_id or organization_id)
+    :param organization_id: Organization name or id to get notifications
+        about (specify only one of: dataset_id or group_id or organization_id)
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
@@ -144,11 +146,30 @@ def subscribe_list_subscriptions(context, data_dict):
     _check_access(u'subscribe_list_subscriptions', context, data_dict)
     email = p.toolkit.get_or_bust(data_dict, 'email')
 
-    subscription_objs = model.Session.query(Subscription) \
+    subscription_objs = \
+        model.Session.query(Subscription, model.Package, model.Group) \
         .filter_by(email=email) \
+        .outerjoin(model.Package, Subscription.object_id == model.Package.id) \
+        .outerjoin(model.Group, Subscription.object_id == model.Group.id) \
         .all()
-    subscriptions = [
-        dictization.dictize_subscription(subscription_obj, context)
-        for subscription_obj in subscription_objs
-    ]
+    subscriptions = []
+    for subscription_obj, package, group in subscription_objs:
+        subscription = \
+            dictization.dictize_subscription(subscription_obj, context)
+        if package:
+            subscription['object_name'] = package.name
+            subscription['object_title'] = package.title
+            subscription['object_link'] = p.toolkit.url_for(
+                controller='package', action='read', id=package.name)
+        elif group and not group.is_organization:
+            subscription['object_name'] = group.name
+            subscription['object_title'] = group.title
+            subscription['object_link'] = p.toolkit.url_for(
+                controller='group', action='read', id=group.name)
+        elif group and group.is_organization:
+            subscription['object_name'] = group.name
+            subscription['object_title'] = group.title
+            subscription['object_link'] = p.toolkit.url_for(
+                controller='organization', action='read', id=group.name)
+        subscriptions.append(subscription)
     return subscriptions
