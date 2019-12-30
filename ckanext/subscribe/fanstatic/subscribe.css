@@ -28,6 +28,6 @@ table#subscriptions {
     text-align: left;
     padding: 4px;
 }
-#subscriptions #subscribe-form {
+#subscriptions form {
     margin: 0;
 }

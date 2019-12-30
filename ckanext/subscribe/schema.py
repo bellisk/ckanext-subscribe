@@ -32,3 +32,13 @@ def subscribe_schema():
         u'email': [email],
         u'skip_verification': [boolean_validator],
     }
+
+
+def unsubscribe_schema():
+    return {
+        u'__before': [one_package_or_group_or_org],
+        u'dataset_id': [ignore_empty, package_id_or_name_exists],
+        u'group_id': [ignore_empty, group_id_or_name_exists],
+        u'organization_id': [ignore_empty, group_id_or_name_exists],
+        u'email': [email],
+    }

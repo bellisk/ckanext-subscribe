@@ -34,7 +34,8 @@ class Subscription(factory.Factory):
         if 'skip_verification' not in kwargs:
             kwargs['skip_verification'] = True
 
-        if not (kwargs.get('dataset_id') or kwargs.get('group_id')):
+        if not (kwargs.get('dataset_id') or kwargs.get('group_id') or
+                kwargs.get('organization_id')):
             kwargs['dataset_id'] = ckan_factories.Dataset()['id']
 
         subscription_dict = \

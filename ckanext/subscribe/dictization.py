@@ -1,7 +1,9 @@
 import uuid
 
-from ckanext.subscribe.model import Subscription
 from ckan.lib.dictization import table_dict_save, table_dictize
+from ckan import model
+
+from ckanext.subscribe.model import Subscription
 
 
 def subscription_save(subscription_dict, context):
@@ -14,9 +16,19 @@ def subscription_save(subscription_dict, context):
     return subscription_obj
 
 
-def dictize_subscription(subscription_obj, context):
+def dictize_subscription(subscription_obj, context, include_name=False):
     subscription_dict = table_dictize(subscription_obj, context)
+
     # user needs to get the code from the email, to show consent, so there's no
     # exception given for admins to sign someone up on their behalf
     subscription_dict.pop('verification_code')
+
+    if include_name:
+        if subscription_dict['object_type'] == 'dataset':
+            subscription_dict['object_name'] = \
+                model.Package.get(subscription_dict['object_id']).id
+        else:
+            subscription_dict['object_name'] = \
+                model.Group.get(subscription_dict['object_id']).id
+
     return subscription_dict

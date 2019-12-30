@@ -76,3 +76,39 @@ class TestSubscribeSignupToDataset(object):
                               skip_verification=True)
         assert_in('Not authorized to skip verification',
                   cm.exception.message)
+
+
+class TestSubscribeListSubscriptions(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    def test_admin_cant_use_it(self):
+        # (only sysadmin can)
+        fred = factories.User(name='fred')
+        fred['capacity'] = 'editor'
+        factories.Organization(users=[fred])
+        context = {'model': model}
+        context['user'] = 'fred'
+
+        with assert_raises(logic.NotAuthorized):
+            helpers.call_auth('subscribe_list_subscriptions', context=context,
+                              email=fred['email'])
+
+
+class TestSubscribeUnsubscribe(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    def test_admin_cant_use_it(self):
+        # (only sysadmin can)
+        fred = factories.User(name='fred')
+        fred['capacity'] = 'editor'
+        factories.Organization(users=[fred])
+        context = {'model': model}
+        context['user'] = 'fred'
+
+        with assert_raises(logic.NotAuthorized):
+            helpers.call_auth('subscribe_unsubscribe', context=context,
+                              email=fred['email'])

@@ -101,7 +101,7 @@ class TestSubscribeSignup(object):
             "subscribe_signup",
             {},
             email='bob@example.com',
-            group_id=org["id"],
+            organization_id=org["id"],
         )
 
         send_request_email.assert_called_once()
@@ -117,7 +117,7 @@ class TestSubscribeSignup(object):
             "subscribe_signup",
             {},
             email='bob@example.com',
-            group_id=org["name"],
+            organization_id=org["name"],
         )
 
         send_request_email.assert_called_once()
@@ -396,3 +396,87 @@ class TestSubscribeListSubscriptions(object):
                 ]))
         eq(set(sub.get('object_name') for sub in sub_list),
            set([dataset['name'], group['name'], org['name']]))
+
+
+class TestUnsubscribe(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    def test_basic(self):
+        dataset = factories.Dataset()
+        dataset2 = factories.Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            dataset_id=dataset2['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_unsubscribe', {},
+            email='bob@example.com',
+            dataset_id=dataset['id'],
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+        eq([sub['object_id'] for sub in sub_list], [dataset2['id']])
+
+    def test_group(self):
+        group = factories.Group()
+        group2 = factories.Group()
+        Subscription(
+            group_id=group['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            group_id=group2['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_unsubscribe', {},
+            email='bob@example.com',
+            group_id=group['id'],
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+        eq([sub['object_id'] for sub in sub_list], [group2['id']])
+
+    def test_org(self):
+        org = factories.Organization()
+        org2 = factories.Organization()
+        Subscription(
+            organization_id=org['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            organization_id=org2['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_unsubscribe', {},
+            email='bob@example.com',
+            organization_id=org['id'],
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+        eq([sub['object_id'] for sub in sub_list], [org2['id']])

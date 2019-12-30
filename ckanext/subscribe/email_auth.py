@@ -126,7 +126,7 @@ def get_manage_email_contents(code, subscription=None, email=None):
 
 
 def get_footer_contents(code, subscription=None, email=None):
-    email_vars = get_email_vars(code, subscription=None, email=None)
+    email_vars = get_email_vars(code, subscription=subscription, email=email)
 
     html_lines = []
     if subscription:
@@ -137,7 +137,7 @@ def get_footer_contents(code, subscription=None, email=None):
     html_lines.append('<a href="{manage_link}">Manage settings</a>')
     html_footer = '\n'.join(
         '<p style="font-size:10px;line-height:200%;text-align:center;'
-        'color:#9EA3A8=;padding-top:0px">{msg}</p>'.format(line)
+        'color:#9EA3A8=;padding-top:0px">{line}</p>'.format(line=line)
         for line in html_lines).format(**email_vars)
 
     plain_text_footer = '''
@@ -184,11 +184,19 @@ def get_email_vars(code, subscription=None, email=None):
             action='read',
             id=subscription.object_id,
             qualified=True)
+        unsubscribe_link = p.toolkit.url_for(
+            controller='ckanext.subscribe.controller:SubscribeController',
+            action='unsubscribe',
+            code=code,
+            qualified=True,
+            **{subscription.object_type: subscription.object_id}
+            )
         extra_vars.update(
             object_type=subscription.object_type,
             object_title=subscription_object.title or subscription_object.name,
             object_name=subscription_object.name,
             object_link=object_link,
+            unsubscribe_link=unsubscribe_link,
         )
 
     return extra_vars

@@ -7,6 +7,7 @@ from ckan import model
 from ckan.common import g
 from ckan.plugins.toolkit import (
     ValidationError,
+    ObjectNotFound,
     get_action,
     _,
     request,
@@ -49,7 +50,7 @@ class SubscribeController(BaseController):
             u'auth_user_obj': g.userobj
         }
         try:
-            get_action(u'subscribe_signup')(context, data_dict)
+            subscription = get_action(u'subscribe_signup')(context, data_dict)
         except ValidationError as err:
             error_messages = []
             for key_ignored in ('message', '__before', 'dataset_id',
@@ -60,11 +61,13 @@ class SubscribeController(BaseController):
                 error_messages.append(repr(err.error_dict))
             h.flash_error(_('Error subscribing: {}'
                             .format('; '.join(error_messages))))
+            return self._redirect_back_to_subscribe_page_from_request(data_dict)
         else:
             h.flash_success(
                 _('Subscription requested. Please confirm, by clicking in the '
                   'link in the email just sent to you'))
-        return self._redirect_back_to_subscribe_page(context, data_dict)
+            return self._redirect_back_to_subscribe_page(
+                subscription['object_name'], subscription['object_type'])
 
     def verify_subscription(self):
         data_dict = {'code': request.params.get('code')}
@@ -104,7 +107,7 @@ class SubscribeController(BaseController):
             log.debug('Code is invalid: {}'.format(exp))
             return render(u'subscribe/order_code.html', extra_vars={})
 
-        # user has done auth, but it's not an email rather than a ckan user, so
+        # user has done auth, but it's an email rather than a ckan user, so
         # use site_user
         site_user = get_action('get_site_user')({
             'model': model,
@@ -120,19 +123,89 @@ class SubscribeController(BaseController):
                 context, {'email': email})
         return render(u'subscribe/manage.html', extra_vars={
             'email': email,
+            'code': code,
             'subscriptions': subscriptions,
         })
 
-    def _redirect_back_to_subscribe_page(self, context, data_dict):
-        if data_dict.get('dataset_id'):
+    def unsubscribe(self):
+        # allow a GET or POST to do this, so that we can trigger it from a link
+        # in an email or a web form
+        code = request.params.get('code')
+        if not code:
+            log.debug('No code supplied')
+            return render(u'subscribe/order_code.html', extra_vars={})
+        try:
+            email = email_auth.authenticate_with_code(code)
+        except ValueError as exp:
+            h.flash_error('Code is invalid: {}'.format(exp))
+            log.debug('Code is invalid: {}'.format(exp))
+            return render(u'subscribe/order_code.html', extra_vars={})
+
+        # user has done auth, but it's an email rather than a ckan user, so
+        # use site_user
+        site_user = get_action('get_site_user')({
+            'model': model,
+            'ignore_auth': True},
+            {}
+        )
+        context = {
+            u'model': model,
+            u'user': site_user['name'],
+        }
+        data_dict = {
+            'email': email,
+            'dataset_id': request.params.get('dataset'),
+            'group_id': request.params.get('group'),
+            'organization_id': request.params.get('organization'),
+        }
+        try:
+            object_name, object_type = \
+                get_action(u'subscribe_unsubscribe')(context, data_dict)
+        except ValidationError as err:
+            error_messages = []
+            for key_ignored in ('message', '__before', 'dataset_id',
+                                'group_id'):
+                if key_ignored in err.error_dict:
+                    error_messages.extend(err.error_dict.pop(key_ignored))
+            if err.error_dict:
+                error_messages.append(repr(err.error_dict))
+            h.flash_error(_('Error unsubscribing: {}'
+                            .format('; '.join(error_messages))))
+        except ObjectNotFound as err:
+            h.flash_error(_('Error unsubscribing: {}'.format(err)))
+        else:
+            h.flash_success(
+                _('You are no longer subscribed to this {}'
+                  .format(object_type)))
+        return self._redirect_back_to_subscribe_page(object_name, object_type)
+
+    def _redirect_back_to_subscribe_page(self, object_name, object_type):
+        if object_type == 'dataset':
             return redirect_to(controller='package', action='read',
-                               id=data_dict['dataset_id'])
+                               id=object_name)
+        elif object_type == 'group':
+            return redirect_to(controller='group', action='read',
+                               id=object_name)
+        elif object_type == 'organization':
+            return redirect_to(controller='organization', action='read',
+                               id=object_name)
+        else:
+            return redirect_to('home')
+
+    def _redirect_back_to_subscribe_page_from_request(self, data_dict):
+        if data_dict.get('dataset_id'):
+            dataset_obj = model.Package.get(data_dict['dataset_id'])
+            return redirect_to(
+                controller='package', action='read',
+                id=dataset_obj.name if dataset_obj else data_dict['dataset_id']
+            )
         elif data_dict.get('group_id'):
             group_obj = model.Group.get(data_dict['group_id'])
             controller = 'organization' \
                 if group_obj and group_obj.is_organization \
                 else 'group'
-            return redirect_to(controller=controller, action='read',
-                               id=data_dict['group_id'])
+            return redirect_to(
+                controller=controller, action='read',
+                id=group_obj.name if group_obj else data_dict['group_id'])
         else:
             return redirect_to('home')

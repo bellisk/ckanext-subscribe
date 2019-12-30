@@ -53,13 +53,16 @@ def subscribe_signup(context, data_dict):
         data['object_type'] = 'dataset'
         dataset_obj = model.Package.get(data_dict['dataset_id'])
         data['object_id'] = dataset_obj.id
+        data['object_name'] = dataset_obj.name
     else:
-        group_obj = model.Group.get(data_dict['group_id'])
+        group_obj = model.Group.get(data_dict.get('group_id') or
+                                    data_dict.get('organization_id'))
         if group_obj.is_organization:
             data['object_type'] = 'organization'
         else:
             data['object_type'] = 'group'
         data['object_id'] = group_obj.id
+        data['object_name'] = group_obj.name
 
     # must be unique combination of email/object_type/object_id
     existing = model.Session.query(Subscription) \
@@ -86,7 +89,9 @@ def subscribe_signup(context, data_dict):
         email_verification.create_code(subscription)
         email_verification.send_request_email(subscription)
 
-    return dictization.dictize_subscription(subscription, context)
+    subscription_dict = dictization.dictize_subscription(subscription, context)
+    subscription_dict['object_name'] = data['object_name']
+    return subscription_dict
 
 
 def subscribe_verify(context, data_dict):
@@ -106,14 +111,9 @@ def subscribe_verify(context, data_dict):
 
     _check_access(u'subscribe_verify', context, data_dict)
 
-    if not data_dict.get('code'):
-        raise p.toolkit.ValidationError(
-            'Validation code has not been supplied')
-    data = {
-        'code': data_dict['code'],
-    }
+    code = p.toolkit.get_or_bust(data_dict, 'code')
     subscription = model.Session.query(Subscription) \
-        .filter_by(verification_code=data['code']) \
+        .filter_by(verification_code=code) \
         .first()
     if not subscription:
         raise p.toolkit.ValidationError(
@@ -179,3 +179,56 @@ def subscribe_list_subscriptions(context, data_dict):
                 controller='organization', action='read', id=group.name)
         subscriptions.append(subscription)
     return subscriptions
+
+
+@validate(schema.unsubscribe_schema)
+def subscribe_unsubscribe(context, data_dict):
+    '''Unsubscribe from notifications on a given object
+
+    :param email: Email address to unsubscribe
+    :param dataset_id: Dataset name or id to unsubscribe from
+        (specify only one of: dataset_id or group_id or organization_id)
+    :param group_id: Group or organization name or id to unsubscribe from
+        about (specify only one of: dataset_id or group_id or organization_id)
+    :param organization_id: Organization name or id to unsubscribe from
+        about (specify only one of: dataset_id or group_id or organization_id)
+
+    :returns: (object_name, object_type) where object_type is: dataset, group
+        or organization
+    :rtype: (str, str)
+
+    '''
+    model = context['model']
+
+    _check_access(u'subscribe_unsubscribe', context, data_dict)
+
+    data = {
+        'email': p.toolkit.get_or_bust(data_dict, 'email'),
+        'user': context['user']
+    }
+    if data_dict.get('dataset_id'):
+        data['object_type'] = 'dataset'
+        dataset_obj = model.Package.get(data_dict['dataset_id'])
+        data['object_id'] = dataset_obj.id
+        data['object_name'] = dataset_obj.name
+    else:
+        group_obj = model.Group.get(data_dict.get('group_id') or
+                                    data_dict.get('organization_id'))
+        if group_obj.is_organization:
+            data['object_type'] = 'organization'
+        else:
+            data['object_type'] = 'group'
+        data['object_id'] = group_obj.id
+        data['object_name'] = group_obj.name
+
+    subscription = model.Session.query(Subscription) \
+        .filter_by(email=data['email']) \
+        .filter_by(object_id=data['object_id']) \
+        .first()
+    if not subscription:
+        raise p.toolkit.ObjectNotFound(
+            'That user is not subscribed to that object')
+    model.Session.delete(subscription)
+    model.repo.commit()
+
+    return data['object_name'], data['object_type']

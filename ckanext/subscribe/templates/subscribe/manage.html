@@ -23,16 +23,25 @@
         </td>
         <td>
           {% if not subscription.verified %}
-            <form method='post' action="{{ h.url_for('/subscribe/signup') }}" id="subscribe-form" enctype="multipart/form-data" class="form-inline">
+            <form method='post' action="{{ h.url_for(controller='ckanext.subscribe.controller:SubscribeController', action='signup') }}" id="subscribe-form" enctype="multipart/form-data" class="form-inline">
               <!-- (Bootstrap 3) <div class="form-group input-group-sm"> -->
                 <input id="subscribe-email" type="hidden" name="email" value="{{ email }}" />
-                <input id="subscribe-{{ subscription.object_type }}" type="hidden" name="{{ subscription.object_type }}" value="{{ subscription.object_name }}"` />
+                <input id="subscribe-{{ subscription.object_type }}" type="hidden" name="{{ subscription.object_type }}" value="{{ subscription.object_name }}" />
               <!-- </div> -->
               <button type="submit" class="btn btn-default" name="save">{{ _('Resend verification email') }}</button>
             </form>
           {% endif %}
         </td>
-      </tr>
+        <td>
+            <form method='post' action="{{ h.url_for(controller='ckanext.subscribe.controller:SubscribeController', action='unsubscribe') }}" id="unsubscribe-form" enctype="multipart/form-data" class="form-inline">
+              <!-- (Bootstrap 3) <div class="form-group input-group-sm"> -->
+                <input id="unsubscribe-code" type="hidden" name="code" value="{{ code }}" />
+                <input id="unsubscribe-{{ subscription.object_type }}" type="hidden" name="{{ subscription.object_type }}" value="{{ subscription.object_name }}" />
+              <!-- </div> -->
+              <button type="submit" class="btn btn-default" name="save">{{ _('Unsubscribe') }}</button>
+            </form>
+          </td>
+        </tr>
     {% endfor %}
   </table>
 {% else %}
