@@ -62,8 +62,8 @@ class TestSignupSubmit(FunctionalTestBase):
             '/subscribe/signup',
             params={'email': 'bob@example.com'},  # no dataset or group
             status=302).follow()
-        response.mustcontain(u'Error subscribing: Must specify either '
-                             '&#34;dataset_id&#34; or &#34;group_id&#34;')
+        response.mustcontain(u'Error subscribing: Must specify one of: '
+                             '&#34;dataset_id&#34;')
 
     def test_dataset_missing(self):
         response = self._get_test_app().post(
@@ -94,6 +94,3 @@ class TestSignupSubmit(FunctionalTestBase):
             params={'email': 'invalid email', 'dataset': dataset['id']},
             status=400)
         response.mustcontain(u'Email supplied is invalid')
-
-
-class TestManage(object):

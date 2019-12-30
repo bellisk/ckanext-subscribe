@@ -44,8 +44,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
         return {
             'subscribe_signup': action.subscribe_signup,
             'subscribe_verify': action.subscribe_verify,
-            'subscribe_list_subscriptions': \
-                action.subscribe_list_subscriptions,
+            'subscribe_list_subscriptions':
+            action.subscribe_list_subscriptions,
         }
 
     # IAuthFunctions
@@ -54,6 +54,6 @@ class SubscribePlugin(plugins.SingletonPlugin):
         return {
             'subscribe_signup': auth.subscribe_signup,
             'subscribe_verify': auth.subscribe_verify,
-            'subscribe_list_subscriptions': \
-                action.subscribe_list_subscriptions,
+            'subscribe_list_subscriptions':
+            action.subscribe_list_subscriptions,
         }

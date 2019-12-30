@@ -50,7 +50,7 @@ class TestEmailVerification(object):
         subject, body_plain_text, body_html = \
             get_verification_email_contents(subscription)
 
-        assert_equal(subject, 'Confirm CKAN subscription')
+        assert_equal(subject, 'Confirm your request for CKAN subscription')
         assert body_plain_text.strip().startswith(
             'CKAN subscription requested'), body_plain_text.strip()
         assert body_html.strip().startswith(

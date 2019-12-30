@@ -12,6 +12,7 @@ from ckanext.subscribe import (
     dictization,
     email_verification,
 )
+from ckanext.subscribe import email_auth
 
 
 log = logging.getLogger(__name__)
@@ -77,13 +78,13 @@ def subscribe_signup(context, data_dict):
         subscription = dictization.subscription_save(data, context)
         model.repo.commit()
 
-    # send confirmation/verification email
+    # send 'confirm your request' email
     if data_dict['skip_verification']:
         subscription.verified = True
         model.repo.commit()
     else:
         email_verification.create_code(subscription)
-        email_verification.send_confirmation_email(subscription)
+        email_verification.send_request_email(subscription)
 
     return dictization.dictize_subscription(subscription, context)
 
@@ -91,7 +92,7 @@ def subscribe_signup(context, data_dict):
 def subscribe_verify(context, data_dict):
     '''Verify (confirm) a subscription
 
-    :param code: Verfication code, supplied in the email sent on sign-up
+    :param code: Verification code, supplied in the email sent on sign-up
 
     :returns: the updated subscription
     :rtype: dictionary
@@ -130,6 +131,11 @@ def subscribe_verify(context, data_dict):
     subscription.verification_code_expires = None
     if not context.get('defer_commit'):
         model.repo.commit()
+
+    # Email the user confirmation and so they have a link to manage it
+    manage_code = email_auth.create_code(subscription.email)
+    email_auth.send_subscription_confirmation_email(
+        manage_code, subscription=subscription)
 
     return dictization.dictize_subscription(subscription, context)
 

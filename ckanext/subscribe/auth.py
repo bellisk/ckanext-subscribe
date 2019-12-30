@@ -36,9 +36,11 @@ def subscribe_signup(context, data_dict):
 def subscribe_verify(context, data_dict):
     return {'success': True}
 
+
 def subscribe_list_subscriptions(context, data_dict):
     # sysadmins only
     return {'success': False}
+
 
 @auth_allow_anonymous_access
 def subscribe_manage(context, data_dict):

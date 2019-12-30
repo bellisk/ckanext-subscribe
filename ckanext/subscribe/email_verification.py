@@ -14,7 +14,7 @@ config = p.toolkit.config
 CODE_EXPIRY = datetime.timedelta(hours=8)
 
 
-def send_confirmation_email(subscription):
+def send_request_email(subscription):
     subject, plain_text_body, html_body = \
         get_verification_email_contents(subscription)
     mailer.mail_recipient(recipient_name=subscription.email,
@@ -28,7 +28,7 @@ def send_confirmation_email(subscription):
 def get_verification_email_contents(subscription):
     email_vars = get_verification_email_vars(subscription)
 
-    subject = 'Confirm {site_title} subscription'.format(**email_vars)
+    subject = 'Confirm your request for {site_title} subscription'.format(**email_vars)
     # Make sure subject is only one line
     subject = subject.split('\n')[0]
 

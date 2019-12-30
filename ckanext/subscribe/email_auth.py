@@ -25,7 +25,6 @@ from six import text_type
 
 import ckan.plugins as p
 from ckan import model
-from ckan.common import session
 from ckanext.subscribe import mailer
 from ckanext.subscribe.model import LoginCode
 
@@ -35,9 +34,57 @@ config = p.toolkit.config
 CODE_EXPIRY = datetime.timedelta(days=7)
 
 
-def send_login_email(email, code):
+def send_subscription_confirmation_email(code, subscription=None):
     subject, plain_text_body, html_body = \
-        get_login_email_contents(email, code)
+        get_subscription_confirmation_email_contents(
+            code=code, subscription=subscription)
+    mailer.mail_recipient(recipient_name=subscription.email,
+                          recipient_email=subscription.email,
+                          subject=subject,
+                          body=plain_text_body,
+                          body_html=html_body,
+                          headers={})
+
+
+def get_subscription_confirmation_email_contents(code, subscription):
+    email_vars = get_email_vars(subscription=subscription, code=code)
+    plain_text_footer, html_footer = \
+        get_footer_contents(code, subscription=subscription)
+    email_vars['plain_text_footer'] = plain_text_footer
+    email_vars['html_footer'] = html_footer
+
+    subject = '{site_title} subscription confirmed'.format(**email_vars)
+    # Make sure subject is only one line
+    subject = subject.split('\n')[0]
+
+    html_body = '''
+<p>You have subscribed to notifications about:<br/>
+{object_type}: <a href="{object_link}">{object_title} ({object_name})</a></p>
+<br/>
+
+<p>To manage subscriptions for {email}, click this link:<br/>
+{manage_link}
+
+--
+{html_footer}
+'''.format(**email_vars)
+    plain_text_body = '''
+You have subscribed to notifications about:
+{object_type}: {object_title} ({object_name})
+{object_link}
+
+To manage subscriptions for {email}, click this link:
+{manage_link}
+
+--
+{plain_text_footer}
+'''.format(**email_vars)
+    return subject, plain_text_body, html_body
+
+
+def send_manage_email(code, subscription=None, email=None):
+    subject, plain_text_body, html_body = \
+        get_manage_email_contents(code, subscription=subscription, email=email)
     mailer.mail_recipient(recipient_name=email,
                           recipient_email=email,
                           subject=subject,
@@ -48,6 +95,10 @@ def send_login_email(email, code):
 
 def get_manage_email_contents(code, subscription=None, email=None):
     email_vars = get_email_vars(subscription=subscription, code=code)
+    plain_text_footer, html_footer = \
+        get_footer_contents(code, subscription=subscription, email=email)
+    email_vars['plain_text_footer'] = plain_text_footer
+    email_vars['html_footer'] = html_footer
 
     subject = 'Manage {site_title} subscription'.format(**email_vars)
     # Make sure subject is only one line
@@ -60,14 +111,7 @@ def get_manage_email_contents(code, subscription=None, email=None):
 <a href="{manage_link}">{manage_link}</a></p>
 
 --
-<p style="font-size:10px;line-height:200%;text-align:center;color:#9EA3A8=
-;padding-top:0px">
-You can <a href="{unsubscribe_link}">unsubscribe</a> from notifications emails for {object_type}: "{object_title}".
-</p>
-<p style="font-size:10px;line-height:200%;text-align:center;color:#9EA3A8=
-;padding-top:0px">
-<a href="{manage_link}">Manage settings</a>.
-</p>
+{html_footer}
 '''.format(**email_vars)
     plain_text_body = '''
 {site_title} subscription requested:
@@ -76,8 +120,7 @@ You can <a href="{unsubscribe_link}">unsubscribe</a> from notifications emails f
 {manage_link}
 
 --
-You can unsubscribe from notifications emails for {object_type}: "{object_title}" by going to {unsubscribe_link}.
-Manage your settings at {manage_link}.
+{plain_text_footer}
 '''.format(**email_vars)
     return subject, plain_text_body, html_body
 
@@ -105,6 +148,18 @@ Manage your settings at {manage_link}.
 
 
 def get_email_vars(code, subscription=None, email=None):
+    '''
+    Get the variables to substitute into email templates.
+
+    If you have a subscription object, not just an email address, then you get
+    the object_* variables which allow you to link to the object subscribed to.
+
+    :param code: the email auth code (required)
+    :param subscription: subscription object (optional)
+    :param email: email address of the user (supply a value if subscription is
+        not available)
+    '''
+    assert code
     assert subscription or email
     manage_link = p.toolkit.url_for(
         controller='ckanext.subscribe.controller:SubscribeController',
@@ -167,4 +222,3 @@ def authenticate_with_code(code):
         raise
     # do the login
     return login_code.email
-
