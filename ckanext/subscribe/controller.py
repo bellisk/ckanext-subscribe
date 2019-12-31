@@ -16,6 +16,7 @@ from ckan.plugins.toolkit import (
     render,
     redirect_to,
 )
+from ckan.lib.mailer import MailerException
 
 from ckanext.subscribe import email_auth
 
@@ -62,6 +63,10 @@ class SubscribeController(BaseController):
             h.flash_error(_('Error subscribing: {}'
                             .format('; '.join(error_messages))))
             return self._redirect_back_to_subscribe_page_from_request(data_dict)
+        except MailerException:
+            h.flash_error(_('Error sending email - please contact an '
+                            'administrator for help'))
+            return self._redirect_back_to_subscribe_page_from_request(data_dict)
         else:
             h.flash_success(
                 _('Subscription requested. Please confirm, by clicking in the '
@@ -98,14 +103,15 @@ class SubscribeController(BaseController):
     def manage(self):
         code = request.params.get('code')
         if not code:
+            h.flash_error('Code not supplied')
             log.debug('No code supplied')
-            return render(u'subscribe/order_code.html', extra_vars={})
+            return self._request_manage_code_form()
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
             h.flash_error('Code is invalid: {}'.format(exp))
             log.debug('Code is invalid: {}'.format(exp))
-            return render(u'subscribe/order_code.html', extra_vars={})
+            return self._request_manage_code_form()
 
         # user has done auth, but it's an email rather than a ckan user, so
         # use site_user
@@ -132,14 +138,15 @@ class SubscribeController(BaseController):
         # in an email or a web form
         code = request.params.get('code')
         if not code:
+            h.flash_error('Code not supplied')
             log.debug('No code supplied')
-            return render(u'subscribe/order_code.html', extra_vars={})
+            return self._request_manage_code_form()
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
             h.flash_error('Code is invalid: {}'.format(exp))
             log.debug('Code is invalid: {}'.format(exp))
-            return render(u'subscribe/order_code.html', extra_vars={})
+            return self._request_manage_code_form()
 
         # user has done auth, but it's an email rather than a ckan user, so
         # use site_user
@@ -209,3 +216,42 @@ class SubscribeController(BaseController):
                 id=group_obj.name if group_obj else data_dict['group_id'])
         else:
             return redirect_to('home')
+
+    def _request_manage_code_form(self):
+        return redirect_to(
+            controller='ckanext.subscribe.controller:SubscribeController',
+            action='request_manage_code',
+        )
+
+    def request_manage_code(self):
+        email = request.POST.get('email')
+        if not email:
+            return render(u'subscribe/request_manage_code.html', extra_vars={})
+
+        context = {
+            u'model': model,
+        }
+        try:
+            get_action(u'subscribe_request_manage_code')(
+                context, dict(email=email))
+        except ValidationError as err:
+            error_messages = []
+            for key_ignored in ('message', '__before'):
+                if key_ignored in err.error_dict:
+                    error_messages.extend(err.error_dict.pop(key_ignored))
+            if err.error_dict:
+                error_messages.append(repr(err.error_dict))
+            h.flash_error(_('Error requesting code: {}'
+                            .format('; '.join(error_messages))))
+        except ObjectNotFound as err:
+            h.flash_error(_('Error requesting code: {}'.format(err)))
+        except MailerException:
+            h.flash_error(_('Error sending email - please contact an '
+                            'administrator for help'))
+        else:
+            h.flash_success(
+                _('An access link has been emailed to: {}'
+                  .format(email)))
+            return redirect_to('home')
+        return render(u'subscribe/request_manage_code.html',
+                      extra_vars={'email': email})

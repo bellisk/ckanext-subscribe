@@ -3,9 +3,9 @@
 import mock
 import datetime
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_in
 
-from ckan.tests.helpers import FunctionalTestBase, reset_db
+from ckan.tests.helpers import FunctionalTestBase, reset_db, submit_and_follow
 from ckan.tests.factories import Dataset, Group, Organization
 
 from ckanext.subscribe import model as subscribe_model
@@ -14,6 +14,8 @@ from ckanext.subscribe.tests.factories import (
     SubscriptionLowLevel,
 )
 from ckanext.subscribe import email_auth
+
+eq = assert_equal
 
 
 class TestSignupSubmit(FunctionalTestBase):
@@ -129,6 +131,55 @@ class TestVerifySubscription(FunctionalTestBase):
         assert response.location.startswith(
             'http://test.ckan.net/subscribe/manage?code=')
 
+    def test_wrong_code(self):
+        response = self._get_test_app().post(
+            '/subscribe/verify',
+            params={'code': 'unknown_code'},
+            status=302)
+        eq(response.location, 'http://test.ckan.net/?__no_cache__=True')
+
+
+class TestManage(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        super(TestManage, cls).setup_class()
+        subscribe_model.setup()
+
+    def test_basic(self):
+        dataset = Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/manage',
+            params={'code': code},
+            status=200)
+
+        assert_in(dataset['title'], response.body.decode('utf8'))
+
+    def test_no_code(self):
+        response = self._get_test_app().get(
+            '/subscribe/manage',
+            params={'code': ''},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_bad_code(self):
+        response = self._get_test_app().get(
+            '/subscribe/manage',
+            params={'code': 'bad-code'},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
 
 class TestUnsubscribe(FunctionalTestBase):
     @classmethod
@@ -154,3 +205,74 @@ class TestUnsubscribe(FunctionalTestBase):
         assert_equal(response.location,
                      'http://test.ckan.net/dataset/{}?__no_cache__=True'
                      .format(dataset['name']))
+
+    def test_no_code(self):
+        dataset = Dataset()
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': '', 'dataset': dataset['id']},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_bad_code(self):
+        dataset = Dataset()
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': 'bad-code', 'dataset': dataset['id']},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+
+class TestRequestManageCode(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        super(TestRequestManageCode, cls).setup_class()
+        subscribe_model.setup()
+
+    @mock.patch('ckanext.subscribe.mailer.mail_recipient')
+    def test_basic(self, mail_recipient):
+        dataset = Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        response = self._get_test_app().get('/subscribe/request_manage_code')
+        form = response.forms["request-manage-code-form"]
+        form["email"] = u"bob@example.com"
+
+        response = submit_and_follow(self._get_test_app(), form, {}, "save")
+
+        mail_recipient.assert_called_once()
+        assert_equal(response.request.path, '/')
+
+    def test_no_email(self):
+        self._get_test_app().post(
+            '/subscribe/request_manage_code',
+            params={'email': ''},
+            status=200)
+        # user is simply asked for the email
+
+    def test_malformed_email(self):
+        response = self._get_test_app().post(
+            '/subscribe/request_manage_code',
+            params={'email': 'malformed-email'},
+            status=200)
+
+        assert_in('Email malformed-email is not a valid format',
+                  response.body.decode('utf8'))
+
+    def test_unknown_email(self):
+        response = self._get_test_app().post(
+            '/subscribe/request_manage_code',
+            params={'email': 'unknown@example.com'},
+            status=200)
+
+        assert_in('That email address does not have any subscriptions',
+                  response.body.decode('utf8'))

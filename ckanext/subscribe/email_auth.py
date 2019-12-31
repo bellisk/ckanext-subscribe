@@ -94,7 +94,7 @@ def send_manage_email(code, subscription=None, email=None):
 
 
 def get_manage_email_contents(code, subscription=None, email=None):
-    email_vars = get_email_vars(subscription=subscription, code=code)
+    email_vars = get_email_vars(code, subscription=subscription, email=email)
     plain_text_footer, html_footer = \
         get_footer_contents(code, subscription=subscription, email=email)
     email_vars['plain_text_footer'] = plain_text_footer
@@ -140,8 +140,12 @@ def get_footer_contents(code, subscription=None, email=None):
         'color:#9EA3A8=;padding-top:0px">{line}</p>'.format(line=line)
         for line in html_lines).format(**email_vars)
 
-    plain_text_footer = '''
+    plain_text_footer = ''
+    if subscription:
+        plain_text_footer += '''
 You can unsubscribe from notifications emails for {object_type}: "{object_title}" by going to {unsubscribe_link}.
+'''.format(**email_vars)
+    plain_text_footer += '''
 Manage your settings at {manage_link}.
 '''.format(**email_vars)
     return plain_text_footer, html_footer

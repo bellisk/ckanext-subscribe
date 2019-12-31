@@ -5,6 +5,7 @@ import datetime
 
 import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
+from ckan.lib.mailer import MailerException
 
 from ckanext.subscribe.model import Subscription
 from ckanext.subscribe import (
@@ -41,13 +42,11 @@ def subscribe_signup(context, data_dict):
 
     '''
     model = context['model']
-    user = context['user']
 
     _check_access(u'subscribe_signup', context, data_dict)
 
     data = {
         'email': data_dict['email'],
-        'user': context['user']
     }
     if data_dict.get('dataset_id'):
         data['object_type'] = 'dataset'
@@ -77,7 +76,7 @@ def subscribe_signup(context, data_dict):
         # create subscription object
         if p.toolkit.check_ckan_version(max_version='2.8.99'):
             rev = model.repo.new_revision()
-            rev.author = user
+            rev.author = context['user']
         subscription = dictization.subscription_save(data, context)
         model.repo.commit()
 
@@ -87,7 +86,11 @@ def subscribe_signup(context, data_dict):
         model.repo.commit()
     else:
         email_verification.create_code(subscription)
-        email_verification.send_request_email(subscription)
+        try:
+            email_verification.send_request_email(subscription)
+        except MailerException as exc:
+            log.error('Could not email manage code: {}'.format(exc))
+            raise
 
     subscription_dict = dictization.dictize_subscription(subscription, context)
     subscription_dict['object_name'] = data['object_name']
@@ -103,9 +106,6 @@ def subscribe_verify(context, data_dict):
     :rtype: dictionary
 
     '''
-    # This design follows this OWASP guidance:
-    # https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#semantic-validation
-
     model = context['model']
     user = context['user']
 
@@ -232,3 +232,37 @@ def subscribe_unsubscribe(context, data_dict):
     model.repo.commit()
 
     return data['object_name'], data['object_type']
+
+
+@validate(schema.request_manage_code_schema)
+def subscribe_request_manage_code(context, data_dict):
+    '''Request a code for managing existing subscriptions. Causes a email to be
+    sent, containing a manage link.
+
+    :param email: Email address to get a code for
+
+    :returns: null
+    '''
+    model = context['model']
+
+    _check_access(u'subscribe_request_manage_code', context, data_dict)
+
+    email = data_dict['email']
+
+    # check they have a subscription
+    subscription = model.Session.query(Subscription) \
+        .filter_by(email=email) \
+        .first()
+    if not subscription:
+        raise p.toolkit.ObjectNotFound(
+            'That email address does not have any subscriptions')
+
+    # create and send a code
+    manage_code = email_auth.create_code(subscription.email)
+    try:
+        email_auth.send_manage_email(manage_code, email=email)
+    except MailerException as exc:
+        log.error('Could not email manage code: {}'.format(exc))
+        raise
+
+    return None

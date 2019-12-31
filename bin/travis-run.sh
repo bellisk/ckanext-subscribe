@@ -11,8 +11,4 @@ nosetests --ckan \
           --with-coverage \
           --cover-package=ckanext.subscribe \
           --cover-inclusive \
-          --cover-erase \
-          --cover-tests
-
-# strict linting
-flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --exclude ckan,ckanext-subscribe
+          --cover-erase

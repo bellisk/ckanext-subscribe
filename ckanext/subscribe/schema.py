@@ -42,3 +42,9 @@ def unsubscribe_schema():
         u'organization_id': [ignore_empty, group_id_or_name_exists],
         u'email': [email],
     }
+
+
+def request_manage_code_schema():
+    return {
+        u'email': [email],
+    }

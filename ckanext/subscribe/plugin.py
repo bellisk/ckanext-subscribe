@@ -35,6 +35,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
                     controller=controller, action='manage')
         map.connect('unsubscribe', '/subscribe/unsubscribe',
                     controller=controller, action='unsubscribe')
+        map.connect('request_manage_code', '/subscribe/request_manage_code',
+                    controller=controller, action='request_manage_code')
         return map
 
     def after_map(self, map):
@@ -49,6 +51,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_list_subscriptions':
             action.subscribe_list_subscriptions,
             'subscribe_unsubscribe': action.subscribe_unsubscribe,
+            'subscribe_request_manage_code':
+            action.subscribe_request_manage_code,
         }
 
     # IAuthFunctions
@@ -60,4 +64,6 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_list_subscriptions':
             auth.subscribe_list_subscriptions,
             'subscribe_unsubscribe': auth.subscribe_unsubscribe,
+            'subscribe_request_manage_code':
+            auth.subscribe_request_manage_code,
         }

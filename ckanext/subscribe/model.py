@@ -65,6 +65,19 @@ class Subscription(_DomainObject):
     '''A subscription is a record of a user saying they want to get
     notifications about a particular domain object.
     '''
+    # Note on codes:
+    #
+    # The Subscription.code is emailed and the user clicks to signify that they
+    # are willing to receive emails. They are then emailed a LoginCode.code for
+    # other interactions of that subscription (manage, unsubscribe).
+    #
+    # The Subscription.code design aims to follows this OWASP guidance:
+    # https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#semantic-validation
+    # Subsequent codes invalidate previous ones, although arguably this level
+    # of security is not necessary for a subscription.
+    #
+    # The LoginCode.code does not invalidate previous ones, for convenience.
+
     def __repr__(self):
         return '<Subscription id=%s email=%s object_type=%s verified=%s>' % \
                (self.id, self.email, self.object_type, self.verified)

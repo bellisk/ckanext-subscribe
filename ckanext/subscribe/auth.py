@@ -51,3 +51,8 @@ def subscribe_unsubscribe(context, data_dict):
 def subscribe_manage(context, data_dict):
     # code auth is done in the action function, to allow you to request a code
     return {'success': True}
+
+
+@auth_allow_anonymous_access
+def subscribe_request_manage_code(context, data_dict):
+    return {'success': True}

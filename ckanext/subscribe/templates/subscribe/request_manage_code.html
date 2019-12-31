@@ -1,0 +1,24 @@
+{% extends "page.html" %}
+
+{% block styles %}
+  {{ super() }}
+  {% resource 'subscribe/subscribe.css' %}
+{% endblock styles %}
+
+{% block primary_content %}
+
+<h1>Email check</h1>
+
+<p>To access this functionality, please provide your email address, so we can
+   send you a fresh access link to the subscription management page.</p>
+
+<p>
+  <form method='post' action="{{ h.url_for(controller='ckanext.subscribe.controller:SubscribeController', action='request_manage_code') }}" id="request-manage-code-form" enctype="multipart/form-data" class="form-inline">
+    <!-- (Bootstrap 3) <div class="form-group input-group-sm"> -->
+    Email: <input id="subscribe-email" type="email" name="email" class="form-control input-large" value="{{ email }}" placeholder="" />
+    <!-- </div> -->
+    <button type="submit" class="btn btn-default" name="save">{{ _('Send access link') }}</button>
+  </form>
+</p>
+
+{% endblock %}
