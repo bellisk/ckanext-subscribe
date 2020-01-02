@@ -5,6 +5,7 @@ import factory
 import ckan.plugins as p
 import ckan.tests.factories as ckan_factories
 from ckan import model
+from ckan.lib.dictization import table_dictize
 
 import ckanext.subscribe.model
 from ckanext.subscribe import dictization
@@ -86,3 +87,76 @@ class SubscriptionLowLevel(factory.Factory):
         subscription_dict = \
             dictization.dictize_subscription(subscription_obj, context)
         return subscription_dict
+
+
+# because the core ckan one is not fully featured
+class Activity(factory.Factory):
+    """A factory class for creating CKAN activity objects."""
+
+    FACTORY_FOR = model.Activity
+
+    @classmethod
+    def _build(cls, target_class, *args, **kwargs):
+        raise NotImplementedError(".build() isn't supported in CKAN")
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+
+        context = {'user': ckan_factories._get_action_user_name(kwargs),
+                   'model': model}
+
+        if not kwargs.get('user_id'):
+            kwargs['user_id'] = ckan_factories.User()['id']
+
+        return p.toolkit.get_action('activity_create')(context, kwargs)
+
+
+class DatasetActivity(factory.Factory):
+    """A factory class for creating a CKAN dataset and associated activity
+    object."""
+
+    FACTORY_FOR = model.Activity
+
+    @classmethod
+    def _build(cls, target_class, *args, **kwargs):
+        raise NotImplementedError(".build() isn't supported in CKAN")
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+
+        context = {'user': ckan_factories._get_action_user_name(kwargs),
+                   'model': model}
+
+        if not kwargs.get('user_id'):
+            kwargs['user_id'] = ckan_factories.User()['id']
+
+        dataset = ckan_factories.Dataset()
+        # the activity object is made as a byproduct
+
+        activity_obj = model.Session.query(model.Activity) \
+            .filter_by(object_id=dataset['id']) \
+            .first()
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(activity_obj, k, v)
+            model.repo.commit_and_remove()
+
+        activity = activity_show(context, activity_obj)
+
+        return dataset, activity
+
+
+# 'activity_show' action
+def activity_show(context, activity_obj):
+    if p.toolkit.check_ckan_version(max_version='2.8.99'):
+        # basic version
+        activity_dict = table_dictize(activity_obj, context)
+    else:
+        activity_dict = p.toolkit.get_action('activity_show')(
+            context, {'id': activity_obj.id})
+    return activity_dict

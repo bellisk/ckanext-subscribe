@@ -130,8 +130,9 @@ def get_footer_contents(code, subscription=None, email=None):
     html_lines = []
     if subscription:
         html_lines.append(
-            'You can <a href="{unsubscribe_link}">unsubscribe</a> from '
-            'notifications emails for {object_type}: "{object_title}".'
+            'To stop receiving emails of this type:'
+            '<a href="{unsubscribe_link}">'
+            'unsubscribe from {object_type} "{object_title}"</a>'
         )
     html_lines.append('<a href="{manage_link}">Manage settings</a>')
     html_footer = '\n'.join(
