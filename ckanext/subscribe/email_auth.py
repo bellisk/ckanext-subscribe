@@ -60,10 +60,9 @@ def get_subscription_confirmation_email_contents(code, subscription):
     html_body = '''
 <p>You have subscribed to notifications about:<br/>
 {object_type}: <a href="{object_link}">{object_title} ({object_name})</a></p>
-<br/>
 
 <p>To manage subscriptions for {email}, click this link:<br/>
-{manage_link}
+{manage_link}</p>
 
 --
 {html_footer}

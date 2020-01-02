@@ -184,7 +184,9 @@ class SubscribeController(BaseController):
             h.flash_success(
                 _('You are no longer subscribed to this {}'
                   .format(object_type)))
-        return self._redirect_back_to_subscribe_page(object_name, object_type)
+            return self._redirect_back_to_subscribe_page(object_name,
+                                                         object_type)
+        return self._redirect_back_to_subscribe_page_from_request(data_dict)
 
     def _redirect_back_to_subscribe_page(self, object_name, object_type):
         if object_type == 'dataset':

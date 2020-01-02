@@ -206,6 +206,42 @@ class TestUnsubscribe(FunctionalTestBase):
                      'http://test.ckan.net/dataset/{}?__no_cache__=True'
                      .format(dataset['name']))
 
+    def test_group(self):
+        group = Group()
+        Subscription(
+            group_id=group['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': code, 'group': group['id']},
+            status=302)
+
+        assert_equal(response.location,
+                     'http://test.ckan.net/group/{}?__no_cache__=True'
+                     .format(group['name']))
+
+    def test_org(self):
+        org = Organization()
+        Subscription(
+            organization_id=org['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': code, 'organization': org['id']},
+            status=302)
+
+        assert_equal(response.location,
+                     'http://test.ckan.net/organization/{}?__no_cache__=True'
+                     .format(org['name']))
+
     def test_no_code(self):
         dataset = Dataset()
         response = self._get_test_app().get(
@@ -225,6 +261,15 @@ class TestUnsubscribe(FunctionalTestBase):
 
         assert response.location.startswith(
            'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_no_object(self):
+        code = email_auth.create_code('bob@example.com')
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': code, 'dataset': ''},
+            status=302)
+
+        eq(response.location, 'http://test.ckan.net/?__no_cache__=True')
 
 
 class TestRequestManageCode(FunctionalTestBase):
