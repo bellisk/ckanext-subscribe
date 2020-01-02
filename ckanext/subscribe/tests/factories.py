@@ -6,6 +6,7 @@ import ckan.plugins as p
 import ckan.tests.factories as ckan_factories
 from ckan import model
 from ckan.lib.dictization import table_dictize
+import ckan.lib.dictization.model_dictize as model_dictize
 
 import ckanext.subscribe.model
 from ckanext.subscribe import dictization
@@ -110,7 +111,16 @@ class Activity(factory.Factory):
         if not kwargs.get('user_id'):
             kwargs['user_id'] = ckan_factories.User()['id']
 
-        return p.toolkit.get_action('activity_create')(context, kwargs)
+        activity_dict = \
+            p.toolkit.get_action('activity_create')(context, kwargs)
+
+        # to set the timestamp we need to edit the object
+        activity = model.Session.query(model.Activity).get(activity_dict['id'])
+        if kwargs.get('timestamp'):
+            activity.timestamp = kwargs['timestamp']
+            model.repo.commit()
+
+        return model_dictize.activity_dictize(activity, context)
 
 
 class DatasetActivity(factory.Factory):
@@ -128,9 +138,6 @@ class DatasetActivity(factory.Factory):
         if args:
             assert False, "Positional args aren't supported, use keyword args."
 
-        context = {'user': ckan_factories._get_action_user_name(kwargs),
-                   'model': model}
-
         if not kwargs.get('user_id'):
             kwargs['user_id'] = ckan_factories.User()['id']
 
@@ -146,9 +153,7 @@ class DatasetActivity(factory.Factory):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
-        activity = activity_show(context, activity_obj)
-
-        return dataset, activity
+        return dataset
 
 
 # 'activity_show' action

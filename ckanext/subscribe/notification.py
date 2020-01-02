@@ -10,12 +10,13 @@ from ckan.lib.dictization import model_dictize
 from ckanext.subscribe import dictization
 from ckanext.subscribe.model import Subscription
 
+# real time options
 NOTIFY_WHEN_OBJECT_NOT_CHANGED_FOR = datetime.timedelta(minutes=5)
 MAX_TIME_TO_WAIT_BEFORE_NOTIFYING = datetime.timedelta(minutes=60)
 POLL_TIME_PERIOD = datetime.timedelta(minutes=1)
 
 
-def get_notifications():
+def get_real_time_notifications():
     '''Work out what notifications need sending out, based on activity,
     subscriptions and past notifications.
     '''
@@ -25,7 +26,7 @@ def get_notifications():
     )
     now = datetime.datetime.now()
     object_activity_oldest_newest = model.Session.query(
-        Activity.object_id, func.max(Activity.timestamp), func.min(Activity.timestamp)) \
+        Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
         .filter(Activity.timestamp > (now - MAX_TIME_TO_WAIT_BEFORE_NOTIFYING
                                       - 2 * POLL_TIME_PERIOD)) \
         .filter(Activity.object_id.in_(objects_subscribed_to)) \
