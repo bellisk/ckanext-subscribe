@@ -68,8 +68,9 @@ class Subscription(_DomainObject):
     # Note on codes:
     #
     # The Subscription.code is emailed and the user clicks to signify that they
-    # are willing to receive emails. They are then emailed a LoginCode.code for
-    # other interactions of that subscription (manage, unsubscribe).
+    # are willing to receive emails for a particular subscription. (They are
+    # then emailed a LoginCode.code for other interactions of any of their
+    # subscriptions - manage, unsubscribe etc.)
     #
     # The Subscription.code design aims to follows this OWASP guidance:
     # https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html#semantic-validation

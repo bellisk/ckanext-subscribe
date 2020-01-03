@@ -6,6 +6,7 @@ import ckan.plugins.toolkit as toolkit
 from ckanext.subscribe import action
 from ckanext.subscribe import auth
 from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe import notification
 
 
 class SubscribePlugin(plugins.SingletonPlugin):
@@ -20,6 +21,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'subscribe')
+
+        notification.set_schedule()
 
         subscribe_model.setup()
 

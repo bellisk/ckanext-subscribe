@@ -1,82 +1,115 @@
+from jinja2 import Template
+
 from ckan import plugins as p
 from ckan import model
 
+from ckanext.subscribe import mailer
 from ckanext.subscribe.email_auth import get_footer_contents
 
 config = p.toolkit.config
 
 
-def get_notification_email_contents(subscription):
-    email_vars = get_notification_email_vars(subscription)
+def send_notification_email(code, email, notifications):
+    subject, plain_text_body, html_body = \
+        get_notification_email_contents(code, email, notifications)
+    mailer.mail_recipient(recipient_name=email,
+                          recipient_email=email,
+                          subject=subject,
+                          body=plain_text_body,
+                          body_html=html_body,
+                          headers={})
+
+
+def get_notification_email_contents(code, email, notifications):
+    email_vars = get_notification_email_vars(email, notifications)
     plain_text_footer, html_footer = \
-        get_footer_contents(code=None, subscription=subscription, email=None)
+        get_footer_contents(code=code, email=email)
     email_vars['plain_text_footer'] = plain_text_footer
     email_vars['html_footer'] = html_footer
 
-    subject = 'Confirm {site_title} subscription'.format(**email_vars)
+    subject = '{site_title} notification'.format(**email_vars)
     # Make sure subject is only one line
     subject = subject.split('\n')[0]
 
-    html_body = '''
-<p>{site_title} subscription requested<br/>
-    {object_type}: "{object_title}" ({object_name})</p>
+    html_body = Template('''
+<p>Changes have occurred in relation to your subscription(s)</p>
 
-<p>To confirm this email subscription, click this link:<br/>
-<a href="{verification_link}">{verification_link}</a></p>
+{% for notification in notifications %}
 
---
-<p style="font-size:10px;line-height:200%;text-align:center;color:#9EA3A8=
-;padding-top:0px">
-You can <a href="{unsubscribe_link}">unsubscribe</a> from notifications emails for {object_type}: "{object_title}".
-</p>
-<p style="font-size:10px;line-height:200%;text-align:center;color:#9EA3A8=
-;padding-top:0px">
-Or unsubscribe from <strong>all</strong> emails, please update your <a href="{manage_link}">settings</a>.
-</p>
-'''.format(**email_vars)
-    plain_text_body = '''
-{site_title} subscription requested:
-{object_type}: {object_title} ({object_name})
+  <h3><a href="{{ notification.object_link }}">"{{ notification.object_title }}" ({{ notification.object_name }})</a>:</h3>
 
-To confirm this email subscription, click this link:
-{verification_link}
+  {% for activity in notification.activities %}
+    <p>
+      * {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} -
+      {{ activity.activity_type }}
+    </p>
+  {% endfor %}
+{% endfor %}
 
 --
-You can unsubscribe from notifications emails for {object_type}: "{object_title}" going to {unsubscribe_link}.
-Or unsubscribe from *all* emails by updating your settings at {manage_link}.
-'''.format(**email_vars)
+{{ html_footer }}
+''').render(**email_vars)
+    plain_text_body = Template('''
+Changes have occurred in relation to your subscription(s)
+
+{% for notification in notifications %}
+  "{{ notification.object_title }}" - {{ notification.object_link }}
+
+  {% for activity in notification.activities %}
+      * {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }}
+  {% endfor %}
+{% endfor %}
+
+--
+{{ plain_text_footer }}
+''').render(**email_vars)
     return subject, plain_text_body, html_body
 
 
-def get_notification_email_vars(subscription):
-    manage_link = p.toolkit.url_for(
-        controller='ckanext.subscribe.controller:SubscribeController',
-        action='manage',
-        qualified=True)
-    if subscription.object_type == 'dataset':
-        subscription_object = model.Package.get(subscription.object_id)
-    else:
-        subscription_object = model.Group.get(subscription.object_id)
-    object_link = p.toolkit.url_for(
-        controller='package' if subscription.object_type == 'dataset'
-        else subscription.object_type,
-        action='read',
-        id=subscription.object_id,  # prefer id because it is invariant
-        qualified=True)
-    unsubscribe_link = p.toolkit.url_for(
-        controller='ckanext.subscribe.controller:SubscribeController',
-        action='unsubscribe',
-        object_id=subscription_object.id,
-        qualified=True)
+def get_notification_email_vars(email, notifications):
+    notifications_vars = []
+    for notification in notifications:
+        subscription = notification['subscription']
+        activities = notification['activities']
+        activities_vars = []
+        for activity in activities:
+            activities_vars.append(dict(
+                activity_type=activity['activity_type'].replace('package', 'dataset'),
+                timestamp=p.toolkit.h.date_str_to_datetime(activity['timestamp']),
+            ))
+        # get the package/group's name & title
+        object_type_ = \
+            subscription['object_type'].replace('dataset', 'package')
+        try:
+            # activity['data'] should have the package/group table
+            obj = notification['activities'][0]['data'][object_type_]
+            object_name = obj['name']
+            object_title = obj['title']
+        except KeyError:
+            # activity['data'] has gone missing - resort to the db
+            if subscription['object_type'] == 'dataset':
+                obj = model.Package.get(subscription['object_id'])
+            else:
+                obj = model.Group.get(subscription['object_id'])
+            object_name = obj.name
+            object_title = obj.title
+        object_link = p.toolkit.url_for(
+            controller=object_type_,
+            action='read',
+            id=subscription['object_id'],  # prefer id because it is invariant
+            qualified=True)
+        notifications_vars.append(dict(
+            activities=activities_vars,
+            object_type=subscription['object_type'],
+            object_title=object_title or object_name,
+            object_name=object_name,
+            object_link=object_link,
+        ))
+
     extra_vars = dict(
         site_title=config.get('ckan.site_title'),
         site_url=config.get('ckan.site_url'),
-        object_type=subscription.object_type,
-        object_title=subscription_object.title or subscription_object.name,
-        object_name=subscription_object.name,
-        object_link=object_link,
-        unsubscribe_link=unsubscribe_link,
-        email=subscription.email,
-        manage_link=manage_link,
+        email=email,
+        notifications=notifications_vars,
     )
     return extra_vars

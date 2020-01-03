@@ -2,12 +2,17 @@
 
 import datetime
 
-from nose.tools import assert_equal
+import mock
+from nose.tools import assert_equal, assert_in
 
 from ckan.tests import helpers
 
 from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe.notification import get_real_time_notifications
+from ckanext.subscribe.notification import (
+    get_real_time_notifications,
+    send_emails,
+    dictize_notifications,
+)
 from ckanext.subscribe.tests import factories
 
 eq = assert_equal
@@ -28,7 +33,7 @@ class TestGetRealTimeNotifications(object):
 
         notifies = get_real_time_notifications()
 
-        eq([notify['subscription']['email'] for notify in notifies],
+        eq(notifies.keys(),
            [subscription['email']])
         eq(_get_activities(notifies),
            [(u'bob@example.com', u'new package', dataset['id'])])
@@ -76,7 +81,7 @@ class TestGetRealTimeNotifications(object):
 
         notifies = get_real_time_notifications()
 
-        eq(set(notify['subscription']['email'] for notify in notifies),
+        eq(set(notifies.keys()),
            set(('user@a.com', 'user@b.com', 'user@b.com')))
         from pprint import pprint
         pprint(_get_activities(notifies))
@@ -107,13 +112,44 @@ def _create_dataset_and_activity(activity_in_minutes_ago=[]):
     return dataset
 
 
-def _get_activities(notifications):
+def _get_activities(notifications_by_email):
     activities = []
-    for notification in notifications:
-        for activity in notification['activities']:
-            activities.append((
-                notification['subscription']['email'],
-                activity['activity_type'],
-                activity['object_id'],
-                ))
+    for email, notifications in notifications_by_email.items():
+        for notification in notifications:
+            for activity in notification['activities']:
+                activities.append((
+                    email,
+                    activity['activity_type'],
+                    activity['object_id'],
+                    ))
     return activities
+
+
+class TestSendEmails(object):
+
+    def setup(self):
+        helpers.reset_db()
+        subscribe_model.setup()
+
+    @mock.patch('ckanext.subscribe.mailer.mail_recipient')
+    def test_basic(self, mail_recipient):
+        dataset, activity = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
+            return_activity=True
+        )
+        # {subscription: [activity, ...], ...}
+        subscription_activities = {
+            factories.Subscription(dataset_id=dataset['id'],
+                                   return_object=True):
+            [activity]
+        }
+        notifications_by_email = {
+            'bob@example.com': dictize_notifications(subscription_activities)
+        }
+
+        send_emails(notifications_by_email)
+
+        mail_recipient.assert_called_once()
+        body = mail_recipient.call_args[1]['body']
+        print(body)
+        assert_in('new dataset', body)

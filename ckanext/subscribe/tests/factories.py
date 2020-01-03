@@ -138,6 +138,9 @@ class DatasetActivity(factory.Factory):
         if args:
             assert False, "Positional args aren't supported, use keyword args."
 
+        return_activity = kwargs.pop('return_activity') \
+            if 'return_activity' in kwargs else False
+
         if not kwargs.get('user_id'):
             kwargs['user_id'] = ckan_factories.User()['id']
 
@@ -153,7 +156,85 @@ class DatasetActivity(factory.Factory):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
+        if return_activity:
+            return dataset, activity_obj
         return dataset
+
+
+class GroupActivity(factory.Factory):
+    """A factory class for creating a CKAN group and associated activity
+    object."""
+
+    FACTORY_FOR = model.Activity
+
+    @classmethod
+    def _build(cls, target_class, *args, **kwargs):
+        raise NotImplementedError(".build() isn't supported in CKAN")
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+
+        return_activity = kwargs.pop('return_activity') \
+            if 'return_activity' in kwargs else False
+
+        if not kwargs.get('user_id'):
+            kwargs['user_id'] = ckan_factories.User()['id']
+
+        group = ckan_factories.Group()
+        # the activity object is made as a byproduct
+
+        activity_obj = model.Session.query(model.Activity) \
+            .filter_by(object_id=group['id']) \
+            .first()
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(activity_obj, k, v)
+            model.repo.commit_and_remove()
+
+        if return_activity:
+            return group, activity_obj
+        return group
+
+
+class OrganizationActivity(factory.Factory):
+    """A factory class for creating a CKAN org and associated activity
+    object."""
+
+    FACTORY_FOR = model.Activity
+
+    @classmethod
+    def _build(cls, target_class, *args, **kwargs):
+        raise NotImplementedError(".build() isn't supported in CKAN")
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+
+        return_activity = kwargs.pop('return_activity') \
+            if 'return_activity' in kwargs else False
+
+        if not kwargs.get('user_id'):
+            kwargs['user_id'] = ckan_factories.User()['id']
+
+        org = ckan_factories.Organization()
+        # the activity object is made as a byproduct
+
+        activity_obj = model.Session.query(model.Activity) \
+            .filter_by(object_id=org['id']) \
+            .first()
+
+        if kwargs:
+            for k, v in kwargs.items():
+                setattr(activity_obj, k, v)
+            model.repo.commit_and_remove()
+
+        if return_activity:
+            return org, activity_obj
+        return org
 
 
 # 'activity_show' action

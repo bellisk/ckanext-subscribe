@@ -70,6 +70,9 @@ To install ckanext-subscribe:
 
      pip install ckanext-subscribe
 
+   Note: This causes python packages 'rq-scheduler', 'rq' and 'redis' to be
+   installed or upgraded.
+
 3. Add ``subscribe`` to the ``ckan.plugins`` setting in your CKAN
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
@@ -81,6 +84,40 @@ To install ckanext-subscribe:
 5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
      sudo service apache2 reload
+
+6. Ensure CKAN's background tasks worker is running. First test it on the
+   command-line:
+
+     paster --plugin=ckan jobs worker -c=/etc/ckan/default/development.ini
+
+   You can leave that running for development purposes. Or for production, run
+   it automatically by using supervisor. For more information, see:
+   <https://docs.ckan.org/en/2.8/maintaining/background-tasks.html#running-background-jobs>
+
+7. Setup the RQ Scheduler. Create a config file:
+
+     echo "[Unit]
+Description=RQScheduler
+After=network.target
+
+[Service]
+ExecStart=/usr/lib/ckan/default/bin/python \
+    /usr/lib/ckan/default/local/lib/python2.7/site-packages/rq_scheduler/scripts/rqscheduler.py
+
+[Install]
+WantedBy=multi-user.target" | sudo tee -a /etc/systemd/system/rqscheduler.service
+
+   Start it (ubuntu):
+
+     sudo systemctl start rqscheduler.service
+
+   Configure it to start every boot:
+
+     sudo systemctl enable rqscheduler.service
+
+   You can also check it:
+
+     sudo systemctl status rqscheduler.service
 
 
 ---------------
