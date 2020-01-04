@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 echo "This is travis-build.bash..."
 
@@ -60,7 +60,10 @@ paster db init -c test-core.ini
 cd -
 
 echo "Installing ckanext-subscribe and its requirements..."
-python setup.py develop
+# use 'pip install -e' instead of 'python setup.py develop' because it manages
+# to uninstall ckan's older version of rq, avoiding both installed and a
+# conflict error when we run nosetests
+pip install -e .
 pip install -r dev-requirements.txt
 
 echo "Moving test.ini into a subdir..."
