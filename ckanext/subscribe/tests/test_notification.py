@@ -40,7 +40,7 @@ class TestGetContinousNotifications(object):
 
     def test_old_activity_not_notified(self):
         dataset = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=70))
+            timestamp=datetime.datetime.now() - datetime.timedelta(hours=25))
         factories.Subscription(dataset_id=dataset['id'])
 
         notifies = get_continuous_notifications()

@@ -162,6 +162,11 @@ ckanext.subscribe.continuous_notification_grace_period_max_minutes = 60
 # Units: seconds
 ckanext.subscribe.continuous_notification_poll_interval_seconds = 60
 
+# After a pause in the sending of emails, when it restarts it ignores activity
+# older than the catch-up period.
+# Units: hours
+ckanext.subscribe.catch_up_period_hours = 24
+
 ---------------
 Troubleshooting
 ---------------

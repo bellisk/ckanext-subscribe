@@ -29,7 +29,9 @@ CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES = int(
 CONTINUOUS_NOTIFICATION_POLL_INTERVAL_SECONDS = int(
     config.get('ckanext.subscribe.continuous_notification_poll_interval_seconds',
         60))
-
+CATCH_UP_PERIOD_HOURS = int(
+        config.get('ckanext.subscribe.catch_up_period_hours',
+        24))
 
 class SubscribeJob(Job):
     '''This is for differentiating our scheduled jobs from any not created by
@@ -127,10 +129,10 @@ def get_continuous_notifications():
     grace = datetime.timedelta(minutes=CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MINUTES)
     grace_max = datetime.timedelta(minutes=CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES)
     poll_interval = datetime.timedelta(seconds=CONTINUOUS_NOTIFICATION_POLL_INTERVAL_SECONDS)
+    catch_up_period = datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
     object_activity_oldest_newest = model.Session.query(
         Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
-        .filter(Activity.timestamp > (now - grace
-                                      - 2 * poll_interval)) \
+        .filter(Activity.timestamp > (now - catch_up_period)) \
         .filter(Activity.object_id.in_(objects_subscribed_to)) \
         .group_by(Activity.object_id) \
         .all()
