@@ -1,5 +1,6 @@
 import sys
 import datetime
+import time
 
 import ckan.lib.cli as cli
 import ckan.plugins as p
@@ -10,20 +11,14 @@ class subscribeCommand(cli.CkanCommand):
 
     Usage:
 
-        subscribe init
-            Initialize the ckanext-subscribe's database table and schedule
-
         subscribe initdb
             Initialize the the ckanext-subscribe's database table
 
-        subscribe schedule
-            Show the ckanext-subscribe's schedule
-
-        subscribe schedule init
-            Initialize the ckanext-subscribe's schedule
-
-        subscribe schedule delete
-            Delete the ckanext-subscribe's schedule
+        subscribe send-any-notifications [-r] [-i
+            Check for activity and for any subscribers, send emails with the
+            notifications.
+            Option:
+              -r --repeatedly - does it repeatedly every 10s
 
         subscribe create-test-activity {package-name|group-name|org-name}
             Create some activity for testing purposes, for a given existing
@@ -40,34 +35,23 @@ class subscribeCommand(cli.CkanCommand):
     min_args = 1
 
     def __init__(self, name):
+        self.parser.add_option('-r', '--repeatedly', dest='repeatedly',
+                               action='store_true', default=False,
+                               help='Repeat every 10s')
         super(subscribeCommand, self).__init__(name)
 
     def command(self):
         if not self.args:
             print(self.usage)
             sys.exit(1)
-        if self.args[0] == 'init':
+        if self.options.repeatedly:
+            assert self.args[0] == 'send-any-notifications'
+        if self.args[0] == 'initdb':
             self._load_config()
             self._initdb()
-            print('--')
-            self._subscribe_init()
-        elif self.args[0] == 'initdb':
+        elif self.args[0] == 'send-any-notifications':
             self._load_config()
-            self._initdb()
-        elif self.args[0] == 'schedule':
-            args = self.args[1:]
-            if not args:
-                self._load_config()
-                self._initdb()
-                self._subscribe_list()
-            elif args[0] == 'init':
-                self._load_config()
-                self._subscribe_init()
-            elif args[0] == 'delete':
-                self._load_config()
-                self._subscribe_delete()
-            else:
-                self.parser.error('Unrecognized schedule sub-command')
+            self._send_any_notifications()
         elif self.args[0] == 'create-test-activity':
             self._load_config()
             object_id = self.args[1]
@@ -84,18 +68,15 @@ class subscribeCommand(cli.CkanCommand):
 
         print('DB tables created')
 
-    def _subscribe_list(self):
+    def _send_any_notifications(self):
+        log = __import__('logging').getLogger(__name__)
         from ckanext.subscribe import notification
-        notification.list_schedule()
-
-    def _subscribe_init(self):
-        from ckanext.subscribe import notification
-        notification.set_schedule()
-        notification.list_schedule()
-
-    def _subscribe_delete(self):
-        from ckanext.subscribe import notification
-        notification.delete_schedule()
+        notification.do_continuous_notifications()
+        if self.options.repeatedly:
+            while True:
+                log.debug('Repeating in 10s')
+                time.sleep(10)
+                notification.do_continuous_notifications()
 
     def _create_test_activity(self, object_id):
         from ckan import model
@@ -129,4 +110,5 @@ class subscribeCommand(cli.CkanCommand):
         test_activity = model.Session.query(model.Activity) \
             .filter_by(activity_type='test activity') \
             .all()
-        model.Session.delete(test_activity)
+        for activity in test_activity:
+            model.Session.delete(activity)

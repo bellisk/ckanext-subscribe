@@ -77,55 +77,37 @@ To install ckanext-subscribe:
    config file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Initialize the subscribe tables in the database and create the schedule for
-   sending emails::
+4. Initialize the subscribe tables in the database::
 
-     paster --plugin=ckanext-subscribe subscribe init
-
-   Note the schedule is stored as an RQ job, so if you clear jobs then you'll
-   need to re-initialize this schedule.
+     paster --plugin=ckanext-subscribe subscribe initdb
 
 5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
      sudo service apache2 reload
 
-6. Ensure CKAN's background tasks worker is running. First test it on the
-   command-line::
+6. You need to run the 'send-any-notifications' command regularly. You can see
+   it running on the command-line::
 
-     paster --plugin=ckan jobs worker -c=/etc/ckan/default/development.ini
+     paster --plugin=ckanext-subscribe subscribe send-any-notifications -c=/etc/ckan/default/development.ini
 
-   You can leave that running for development purposes. Or for production, run
-   it automatically by using supervisor. For more information, see:
-   <https://docs.ckan.org/en/2.8/maintaining/background-tasks.html#running-background-jobs>
+   But you'll probably want a cron job setup to run it every minute or so.
+   We're going to edit the cron table -
+   development machine just do this for your user:
 
-7. Setup the RQ Scheduler. First test it on the command-line::
+     crontab -e
 
-     python /usr/lib/ckan/default/local/lib/python2.7/site-packages/rq_scheduler/scripts/rqscheduler.py -i 10 -v
+   Or a production machine use the 'ckan' user, instead of checking for notifications on the
+   command-line, create CRON job. To do so, edit the cron table with the
+   following command (it may ask you to choose an editor)::
 
-   Create a config file by running::
+     sudo crontab -e -u ckan
 
-     echo "[Unit]
-     Description=RQScheduler
-     After=network.target
+   Paste this line into your crontab, again replacing the paths to paster and the ini file with yours:
 
-     [Service]
-     ExecStart=/usr/lib/ckan/default/bin/python \
-        /usr/lib/ckan/default/local/lib/python2.7/site-packages/rq_scheduler/scripts/rqscheduler.py
+     # m h  dom mon dow   command
+     *   *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini
 
-     [Install]
-     WantedBy=multi-user.target" | sudo tee /etc/systemd/system/rqscheduler.service
-
-   Start it::
-
-     sudo systemctl start rqscheduler.service
-
-   Configure it to start every boot::
-
-     sudo systemctl enable rqscheduler.service
-
-   You can also check it::
-
-     sudo systemctl status rqscheduler.service
+   This particular example will check for notifications every minute.
 
 
 ---------------
@@ -145,22 +127,11 @@ ckanext.subscribe.queue = ckan:default:default
 # further changes to the object subcribed to.
 # Applies only to subscriptions which are set to frequency 'continuous'.
 # The default values are shown. If you set these to 0, it will send
-# notifications as soon as a change is made (subject to waiting for the regular
-# running of rqscheduler and continuous_notification_poll_interval_seconds
-# setting).
+# notifications as soon as a change is made (well, as soon as
+# send-any-notifications is called next).
 # Units: minutes
 ckanext.subscribe.continuous_notification_grace_period_minutes = 5
 ckanext.subscribe.continuous_notification_grace_period_max_minutes = 60
-
-# Interval between checks for activity, and therefore potentially sending
-# notifications.
-# NB when you adjust this setting, for it to take effect you need to
-# reinitialize the scheduler by running:
-#     paster --plugin=ckanext-subscribe subscribe scheduler init
-# Note: if the value is less than 60s then you'll also need to decrease the
-# interval that rqscheduler.py runs (e.g. "-i 30"), because it defaults to 60s.
-# Units: seconds
-ckanext.subscribe.continuous_notification_poll_interval_seconds = 60
 
 # After a pause in the sending of emails, when it restarts it ignores activity
 # older than the catch-up period.
@@ -173,56 +144,7 @@ Troubleshooting
 
 **Notification emails not being sent**
 
-1. Check your schedule is initialized (this can be wiped if you clear
-Background Jobs). To ensure it is initialized::
-
-    paster --plugin=ckanext-subscribe subscribe scheduler init
-
-   Check the interval (in seconds)
-
-1. Check the RQ Scheduler is running::
-
-     sudo systemctl status rqscheduler.service
-
-   It should be::
-
-      Active: active (running)
-
-1. Check the RQ Scheduler logs::
-
-      sudo journalctl -u rqscheduler.service -f
-
-   It should show::
-
-      Jan 06 16:51:34 ubuntu-xenial python[24487]: 16:51:34 Registering birth
-
-   What's useful is to add to the (ExecStart) the commandline option `-v` to
-   see the scheduling every minute::
-
-     Jan 06 16:52:45 ubuntu-xenial python[24584]: 16:52:45 Entering run loop
-     Jan 06 16:52:45 ubuntu-xenial python[24584]: 16:52:45 Checking for scheduled jobs
-     Jan 06 16:52:45 ubuntu-xenial python[24584]: 16:52:45 Pushing 956161f2-9a3b-4af3-98a8-d1392840303a to ckan:default:default
-     Jan 06 16:52:45 ubuntu-xenial python[24584]: 16:52:45 Sleeping 60.00 seconds
-
-   If the 'Pushing' line is missing, it's because the schedule is not
-   initialized or not ready to be queued yet - compare with the "enqueued_at"
-   value of the schedule.
-
-1. If your worker is run with supervisor, check it is running:
-
-     sudo supervisorctl status
-
-1. Check your worker log. If you're developing it may be running in a terminal
-   with `paster --plugin=ckan jobs worker` or if it is running with
-   supervisor, follow it like this::
-
-     tail -f /var/log/ckan-worker.log
-
-   Every interval You should get logs like this::
-
-     2020-01-06 16:31:30,025 INFO  [rq.worker] ckan:default:default: ckanext.subscribe.notification.do_continuous_notifications() (956161f2-9a3b-4af3-98a8-d1392840303a)
-     2020-01-06 16:31:30,509 DEBUG [ckanext.subscribe.notification] do_continuous_notifications
-     2020-01-06 16:31:30,520 DEBUG [ckanext.subscribe.notification] no emails to send (continuous frequency)
+1. Check your cron schedule is working: TODO
 
 1. Create a test activity for a dataset/group/org you are subscribed to::
 
