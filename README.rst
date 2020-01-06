@@ -125,13 +125,13 @@ ckanext.subscribe.queue = ckan:default:default
 # to this period after the latest change. However there is also a maximum grace
 # period, after which the notification will be sent, no matter if there are
 # further changes to the object subcribed to.
-# Applies only to subscriptions which are set to frequency 'continuous'.
+# Applies only to subscriptions which are set to frequency 'immediate'.
 # The default values are shown. If you set these to 0, it will send
 # notifications as soon as a change is made (well, as soon as
 # send-any-notifications is called next).
 # Units: minutes
-ckanext.subscribe.continuous_notification_grace_period_minutes = 5
-ckanext.subscribe.continuous_notification_grace_period_max_minutes = 60
+ckanext.subscribe.immediate_notification_grace_period_minutes = 5
+ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
 
 # After a pause in the sending of emails, when it restarts it ignores activity
 # older than the catch-up period.
@@ -152,8 +152,8 @@ Troubleshooting
 
    You should in the worker log the email being sent::
 
-     2020-01-06 16:30:40,591 DEBUG [ckanext.subscribe.notification] do_continuous_notifications
-     2020-01-06 16:30:40,628 DEBUG [ckanext.subscribe.notification] sending 1 emails (continuous frequency)
+     2020-01-06 16:30:40,591 DEBUG [ckanext.subscribe.notification] do_immediate_notifications
+     2020-01-06 16:30:40,628 DEBUG [ckanext.subscribe.notification] sending 1 emails (immediate frequency)
      2020-01-06 16:30:42,116 INFO  [ckanext.subscribe.mailer] Sent email to david.read@hackneyworkshop.com
 
 1. Clean up all test activity afterwards (it is visible to users in the

@@ -71,12 +71,12 @@ class subscribeCommand(cli.CkanCommand):
     def _send_any_notifications(self):
         log = __import__('logging').getLogger(__name__)
         from ckanext.subscribe import notification
-        notification.do_continuous_notifications()
+        notification.do_immediate_notifications()
         if self.options.repeatedly:
             while True:
                 log.debug('Repeating in 10s')
                 time.sleep(10)
-                notification.do_continuous_notifications()
+                notification.do_immediate_notifications()
 
     def _create_test_activity(self, object_id):
         from ckan import model
@@ -86,7 +86,7 @@ class subscribeCommand(cli.CkanCommand):
         obj = model.Package.get(object_id) or model.Group.get(object_id)
         assert obj, 'Object could not be found'
         grace = datetime.timedelta(
-            minutes=notification.CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MINUTES)
+            minutes=notification.IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES)
         site_user = p.toolkit.get_action('get_site_user')({
             'model': model,
             'ignore_auth': True},

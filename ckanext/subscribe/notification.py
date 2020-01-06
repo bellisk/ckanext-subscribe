@@ -16,29 +16,29 @@ from ckanext.subscribe import email_auth
 log = __import__('logging').getLogger(__name__)
 config = toolkit.config
 
-CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MINUTES = int(
-    config.get('ckanext.subscribe.continuous_notification_grace_period_minutes',
+IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES = int(
+    config.get('ckanext.subscribe.immediate_notification_grace_period_minutes',
                5))
-CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES = int(
-    config.get('ckanext.subscribe.continuous_notification_grace_period_max_minutes',
+IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES = int(
+    config.get('ckanext.subscribe.immediate_notification_grace_period_max_minutes',
                60))
 CATCH_UP_PERIOD_HOURS = int(
     config.get('ckanext.subscribe.catch_up_period_hours', 24))
 
 
-def do_continuous_notifications():
-    log.debug('do_continuous_notifications')
-    notifications_by_email = get_continuous_notifications()
+def do_immediate_notifications():
+    log.debug('do_immediate_notifications')
+    notifications_by_email = get_immediate_notifications()
     if not notifications_by_email:
-        log.debug('no emails to send (continuous frequency)')
+        log.debug('no emails to send (immediate frequency)')
         return
-    log.debug('sending {} emails (continuous frequency)'
+    log.debug('sending {} emails (immediate frequency)'
               .format(len(notifications_by_email)))
     send_emails(notifications_by_email)
 
 
 # TODO make this an action function
-def get_continuous_notifications():
+def get_immediate_notifications():
     '''Work out what notifications need sending out, based on activity,
     subscriptions and past notifications.
     '''
@@ -49,8 +49,8 @@ def get_continuous_notifications():
     if not objects_subscribed_to:
         return {}
     now = datetime.datetime.now()
-    grace = datetime.timedelta(minutes=CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MINUTES)
-    grace_max = datetime.timedelta(minutes=CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES)
+    grace = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES)
+    grace_max = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES)
     catch_up_period = datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
     object_activity_oldest_newest = model.Session.query(
         Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
