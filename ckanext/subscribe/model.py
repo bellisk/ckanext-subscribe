@@ -15,6 +15,7 @@ __all__ = [
 ]
 
 subscription_table = None
+activity_notified_table = None
 login_code_table = None
 
 
@@ -33,6 +34,7 @@ def setup():
         # Create each table individually rather than
         # using metadata.create_all()
         subscription_table.create()
+        activity_notified_table.create()
         login_code_table.create()
 
         log.debug('Subscription tables created')
@@ -60,6 +62,9 @@ class _DomainObject(DomainObject):
         query = Session.query(cls).autoflush(False)
         return query.filter_by(**kwds)
 
+    def __str__(self):
+        return self.__repr__().encode('ascii', 'ignore')
+
 
 class Subscription(_DomainObject):
     '''A subscription is a record of a user saying they want to get
@@ -80,11 +85,18 @@ class Subscription(_DomainObject):
     # The LoginCode.code does not invalidate previous ones, for convenience.
 
     def __repr__(self):
-        return '<Subscription id=%s email=%s object_type=%s verified=%s>' % \
-               (self.id, self.email, self.object_type, self.verified)
+        return '<Subscription id={} email={} object_type={} verified={}>'\
+            .format(self.id, self.email, self.object_type, self.verified)
 
-    def __str__(self):
-        return self.__repr__().encode('ascii', 'ignore')
+
+class ActivityNotified(_DomainObject):
+    '''A table of all the activities that have been notified to subscribers
+    already (immediate frequency only). Once their timestamp passes out of the
+    catch-up period they can be removed from this table.
+    '''
+    def __repr__(self):
+        return '<ActivityNotified activity_id={} timestamp={}>' \
+            .format(self.activity_id, self.timestamp)
 
 
 class LoginCode(_DomainObject):
@@ -94,11 +106,8 @@ class LoginCode(_DomainObject):
     is at the expense of some security).
     '''
     def __repr__(self):
-        return '<Logincode id=%s email=%s code=%s... expires=>' % \
-               (self.id, self.email, self.code[:4], self.expires)
-
-    def __str__(self):
-        return self.__repr__().encode('ascii', 'ignore')
+        return '<Logincode id={} email={} code={}... expires={}>'.format(
+            self.id, self.email, self.code[:4], self.expires)
 
     @classmethod
     def validate_code(cls, code):
@@ -116,7 +125,7 @@ class LoginCode(_DomainObject):
 
 def define_tables():
 
-    global subscription_table, login_code_table
+    global subscription_table, activity_notified_table, login_code_table
 
     subscription_table = Table(
         'subscription',
@@ -131,6 +140,13 @@ def define_tables():
         Column('verification_code_expires', types.DateTime),
     )
 
+    activity_notified_table = Table(
+        'activity_notified',
+        metadata,
+        Column('activity_id', types.UnicodeText, primary_key=True),
+        Column('timestamp', types.DateTime),
+    )
+
     login_code_table = Table(
         'subscribe_login_code',
         metadata,
@@ -143,6 +159,10 @@ def define_tables():
     mapper(
         Subscription,
         subscription_table,
+    )
+    mapper(
+        ActivityNotified,
+        activity_notified_table,
     )
     mapper(
         LoginCode,

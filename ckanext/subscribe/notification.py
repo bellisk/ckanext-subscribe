@@ -1,7 +1,7 @@
 import datetime
 from collections import defaultdict
 
-from sqlalchemy import func
+from sqlalchemy import func, select, exists, literal
 
 from ckan import model
 from ckan.model import Activity
@@ -9,7 +9,7 @@ from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
 
 from ckanext.subscribe import dictization
-from ckanext.subscribe.model import Subscription
+from ckanext.subscribe.model import Subscription, ActivityNotified, activity_notified_table
 from ckanext.subscribe import notification_email
 from ckanext.subscribe import email_auth
 
@@ -35,6 +35,7 @@ def do_immediate_notifications():
     log.debug('sending {} emails (immediate frequency)'
               .format(len(notifications_by_email)))
     send_emails(notifications_by_email)
+    record_activities_notified(notifications_by_email)
 
 
 # TODO make this an action function
@@ -52,8 +53,10 @@ def get_immediate_notifications():
     grace = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES)
     grace_max = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES)
     catch_up_period = datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
+    activity_notified_subquery = model.Session.query(ActivityNotified.activity_id)
     object_activity_oldest_newest = model.Session.query(
         Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
+        .filter(~Activity.id.in_(activity_notified_subquery)) \
         .filter(Activity.timestamp > (now - catch_up_period)) \
         .filter(Activity.object_id.in_(objects_subscribed_to)) \
         .group_by(Activity.object_id) \
@@ -127,3 +130,37 @@ def send_emails(notifications_by_email):
     for email, notifications in notifications_by_email.items():
         code = email_auth.create_code(email)
         notification_email.send_notification_email(code, email, notifications)
+
+
+def record_activities_notified(notifications_by_email):
+    if not notifications_by_email:
+        return
+
+    # activities_notified can be cleared of any timestamps older than the
+    # catch-up period
+    now = datetime.datetime.now()
+    catch_up_period = now - datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
+    sql = activity_notified_table.delete() \
+        .where(activity_notified_table.c.timestamp < catch_up_period)
+    model.Session.execute(sql)
+
+    # add to ActivityNotified the new notifications
+    activities_notified = {}  # id: timestamp
+    for notifications in notifications_by_email.values():
+        for notification in notifications:
+            for activity in notification['activities']:
+                if activity['id'] not in activities_notified:
+                    # just use 'now' as the timestamp for the activities -
+                    # quicker than parsing the string and storage cheap
+                    activities_notified[activity['id']] = now
+    # TODO optimize - union these selects together?
+    for activity_id, activity_timestamp in activities_notified.items():
+        # Based on: https://stackoverflow.com/a/13342031/1512326
+        #           https://stackoverflow.com/a/18605162/1512326
+        sel = select([literal(activity_id), literal(activity_timestamp)]) \
+            .where(~exists([activity_notified_table.c.activity_id])
+                   .where(activity_notified_table.c.activity_id == activity_id)
+                   )
+        ins = activity_notified_table.insert() \
+            .from_select(["activity_id", "timestamp"], sel)
+        model.Session.execute(ins)

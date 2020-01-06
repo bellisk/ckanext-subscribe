@@ -6,19 +6,21 @@ import mock
 from nose.tools import assert_equal, assert_in
 
 from ckan.tests import helpers
+from ckan import model
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import (
     get_immediate_notifications,
     send_emails,
     dictize_notifications,
+    record_activities_notified,
 )
 from ckanext.subscribe.tests import factories
 
 eq = assert_equal
 
 
-class TestGetContinousNotifications(object):
+class TestGetImmediateNotifications(object):
 
     def setup(self):
         helpers.reset_db()
@@ -62,6 +64,17 @@ class TestGetContinousNotifications(object):
         factories.Activity(
             object_id=dataset['id'], activity_type='changed package',
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=2))
+        factories.Subscription(dataset_id=dataset['id'])
+
+        notifies = get_immediate_notifications()
+
+        eq(_get_activities(notifies), [])
+
+    def test_activity_already_notified_not_notified_again(self):
+        dataset, activity = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
+            return_activity=True)
+        factories.ActivityNotified(activity_id=activity.id)
         factories.Subscription(dataset_id=dataset['id'])
 
         notifies = get_immediate_notifications()
@@ -153,3 +166,77 @@ class TestSendEmails(object):
         body = mail_recipient.call_args[1]['body']
         print(body)
         assert_in('new dataset', body)
+
+
+class TestRecordActivitiesNotified(object):
+
+    def setup(self):
+        helpers.reset_db()
+        subscribe_model.setup()
+
+    def test_basic(self):
+        dataset, activity = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
+            return_activity=True
+        )
+        # {subscription: [activity, ...], ...}
+        subscription_activities = {
+            factories.Subscription(dataset_id=dataset['id'],
+                                   return_object=True):
+            [activity]
+        }
+
+        notifications_by_email = {
+            'bob@example.com': dictize_notifications(subscription_activities)
+        }
+
+        record_activities_notified(notifications_by_email)
+
+        activites_notified = \
+            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
+            .all()
+        eq(activites_notified, [(activity.id,)])
+
+    def test_two_activities(self):
+        dataset, activity = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
+            return_activity=True
+        )
+        activity2 = factories.Activity(
+            object_id=dataset['id'], activity_type='changed package',
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=9),
+            return_object=True)
+
+        # {subscription: [activity, ...], ...}
+        subscription_activities = {
+            factories.Subscription(dataset_id=dataset['id'],
+                                   return_object=True):
+            [activity, activity2]
+        }
+
+        notifications_by_email = {
+            'bob@example.com': dictize_notifications(subscription_activities)
+        }
+
+        record_activities_notified(notifications_by_email)
+
+        activities_notified = \
+            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
+            .all()
+        eq(set((a[0] for a in activities_notified)),
+           set((activity.id, activity2.id)))
+
+    def test_deletes_activities_from_before_the_catch_up_period(self):
+        dataset, activity = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(days=2),
+            return_activity=True)
+        factories.ActivityNotified(
+            activity_id=activity.id,
+            timestamp=datetime.datetime.now() - datetime.timedelta(days=2))
+
+        record_activities_notified({'bob@example.com': []})
+
+        activities_notified = \
+            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
+            .all()
+        eq(activities_notified, [])
