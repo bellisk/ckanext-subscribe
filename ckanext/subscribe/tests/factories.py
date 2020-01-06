@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+import datetime
+
 import factory
 
 import ckan.plugins as p
@@ -90,6 +92,35 @@ class SubscriptionLowLevel(factory.Factory):
         return subscription_dict
 
 
+class ActivityNotified(factory.Factory):
+    '''A factory class for creating ActivityNotified
+    '''
+
+    FACTORY_FOR = ckanext.subscribe.model.ActivityNotified
+
+    activity_id = factory.Sequence(lambda n: 'test_sub_{n}'.format(n=n))
+    timestamp = datetime.datetime.now()
+
+    @classmethod
+    def _build(cls, target_class, *args, **kwargs):
+        raise NotImplementedError(".build() isn't supported in CKAN")
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        if args:
+            assert False, "Positional args aren't supported, use keyword args."
+
+        obj = ckanext.subscribe.model.ActivityNotified(
+            activity_id=kwargs['activity_id'],
+            timestamp=kwargs['timestamp'],
+        )
+        model.Session.add(obj)
+        model.Session.commit()
+
+        return dict(activity_id=obj.activity_id,
+                    timestamp=obj.timestamp)
+
+
 # because the core ckan one is not fully featured
 class Activity(factory.Factory):
     """A factory class for creating CKAN activity objects."""
@@ -119,6 +150,9 @@ class Activity(factory.Factory):
         if kwargs.get('timestamp'):
             activity.timestamp = kwargs['timestamp']
             model.repo.commit()
+
+        if kwargs.get('return_object'):
+            return activity
 
         return model_dictize.activity_dictize(activity, context)
 

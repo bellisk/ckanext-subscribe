@@ -85,57 +85,82 @@ To install ckanext-subscribe:
 
      sudo service apache2 reload
 
-6. Ensure CKAN's background tasks worker is running. First test it on the
-   command-line:
+6. You need to run the 'send-any-notifications' command regularly. You can see
+   it running on the command-line::
 
-     paster --plugin=ckan jobs worker -c=/etc/ckan/default/development.ini
+     paster --plugin=ckanext-subscribe subscribe send-any-notifications -c=/etc/ckan/default/development.ini
 
-   You can leave that running for development purposes. Or for production, run
-   it automatically by using supervisor. For more information, see:
-   <https://docs.ckan.org/en/2.8/maintaining/background-tasks.html#running-background-jobs>
+   But you'll probably want a cron job setup to run it every minute or so.
+   We're going to edit the cron table -
+   development machine just do this for your user:
 
-7. Setup the RQ Scheduler. Create a config file:
+     crontab -e
 
-     echo "[Unit]
-Description=RQScheduler
-After=network.target
+   Or a production machine use the 'ckan' user, instead of checking for notifications on the
+   command-line, create CRON job. To do so, edit the cron table with the
+   following command (it may ask you to choose an editor)::
 
-[Service]
-ExecStart=/usr/lib/ckan/default/bin/python \
-    /usr/lib/ckan/default/local/lib/python2.7/site-packages/rq_scheduler/scripts/rqscheduler.py
+     sudo crontab -e -u ckan
 
-[Install]
-WantedBy=multi-user.target" | sudo tee -a /etc/systemd/system/rqscheduler.service
+   Paste this line into your crontab, again replacing the paths to paster and the ini file with yours:
 
-   Start it (ubuntu):
+     # m h  dom mon dow   command
+     *   *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini
 
-     sudo systemctl start rqscheduler.service
-
-   Configure it to start every boot:
-
-     sudo systemctl enable rqscheduler.service
-
-   You can also check it:
-
-     sudo systemctl status rqscheduler.service
+   This particular example will check for notifications every minute.
 
 
 ---------------
 Config settings
 ---------------
 
-None at present
+# The queue name for the background jobs that send the notification emails.
+# Defaults to the CKAN queue, which is the default for the worker to process.
+# See: https://docs.ckan.org/en/latest/maintaining/background-tasks.html#background-job-queues
+# (optional, default: ckan:default:default).
+ckanext.subscribe.queue = ckan:default:default
 
-.. Document any optional config settings here. For example::
+# Delay sending notification emails until after a grace period, in case there
+# are further changes. When further changes occur, the grace period is extended
+# to this period after the latest change. However there is also a maximum grace
+# period, after which the notification will be sent, no matter if there are
+# further changes to the object subcribed to.
+# Applies only to subscriptions which are set to frequency 'immediate'.
+# The default values are shown. If you set these to 0, it will send
+# notifications as soon as a change is made (well, as soon as
+# send-any-notifications is called next).
+# Units: minutes
+ckanext.subscribe.immediate_notification_grace_period_minutes = 5
+ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
 
-.. # The minimum number of hours to wait before re-checking a resource
-   # (optional, default: 24).
-   ckanext.subscribe.some_setting = some_default_value
-
+# After a pause in the sending of emails, when it restarts it ignores activity
+# older than the catch-up period.
+# Units: hours
+ckanext.subscribe.catch_up_period_hours = 24
 
 ---------------
 Troubleshooting
 ---------------
+
+**Notification emails not being sent**
+
+1. Check your cron schedule is working: TODO
+
+1. Create a test activity for a dataset/group/org you are subscribed to::
+
+     paster --plugin=ckanext-subscribe subscribe create-test-activity mydataset
+
+   You should in the worker log the email being sent::
+
+     2020-01-06 16:30:40,591 DEBUG [ckanext.subscribe.notification] do_immediate_notifications
+     2020-01-06 16:30:40,628 DEBUG [ckanext.subscribe.notification] sending 1 emails (immediate frequency)
+     2020-01-06 16:30:42,116 INFO  [ckanext.subscribe.mailer] Sent email to david.read@hackneyworkshop.com
+
+1. Clean up all test activity afterwards (it is visible to users in the
+   activity stream)::
+
+     paster --plugin=ckanext-subscribe subscribe delete-test-activity
+
 
 **NameError: global name 'Subscription' is not defined**
 
