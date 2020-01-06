@@ -9,7 +9,7 @@ from ckan.tests import helpers
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import (
-    get_real_time_notifications,
+    get_continuous_notifications,
     send_emails,
     dictize_notifications,
 )
@@ -18,7 +18,7 @@ from ckanext.subscribe.tests import factories
 eq = assert_equal
 
 
-class TestGetRealTimeNotifications(object):
+class TestGetContinousNotifications(object):
 
     def setup(self):
         helpers.reset_db()
@@ -31,7 +31,7 @@ class TestGetRealTimeNotifications(object):
         _ = factories.DatasetActivity()  # decoy
         subscription = factories.Subscription(dataset_id=dataset['id'])
 
-        notifies = get_real_time_notifications()
+        notifies = get_continuous_notifications()
 
         eq(notifies.keys(),
            [subscription['email']])
@@ -43,7 +43,7 @@ class TestGetRealTimeNotifications(object):
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=70))
         factories.Subscription(dataset_id=dataset['id'])
 
-        notifies = get_real_time_notifications()
+        notifies = get_continuous_notifications()
 
         eq(_get_activities(notifies), [])
 
@@ -52,7 +52,7 @@ class TestGetRealTimeNotifications(object):
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=1))
         factories.Subscription(dataset_id=dataset['id'])
 
-        notifies = get_real_time_notifications()
+        notifies = get_continuous_notifications()
 
         eq(_get_activities(notifies), [])
 
@@ -64,7 +64,7 @@ class TestGetRealTimeNotifications(object):
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=2))
         factories.Subscription(dataset_id=dataset['id'])
 
-        notifies = get_real_time_notifications()
+        notifies = get_continuous_notifications()
 
         eq(_get_activities(notifies), [])
 
@@ -79,7 +79,7 @@ class TestGetRealTimeNotifications(object):
         factories.Subscription(
             email='user@b.com', dataset_id=datasety['id'])
 
-        notifies = get_real_time_notifications()
+        notifies = get_continuous_notifications()
 
         eq(set(notifies.keys()),
            set(('user@a.com', 'user@b.com', 'user@b.com')))

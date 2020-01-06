@@ -1,5 +1,5 @@
 import sys
-import logging
+import datetime
 
 import ckan.lib.cli as cli
 import ckan.plugins as p
@@ -11,7 +11,28 @@ class subscribeCommand(cli.CkanCommand):
     Usage:
 
         subscribe init
-            Initialize the ckanext-subscribe's database table
+            Initialize the ckanext-subscribe's database table and schedule
+
+        subscribe initdb
+            Initialize the the ckanext-subscribe's database table
+
+        subscribe schedule
+            Show the ckanext-subscribe's schedule
+
+        subscribe schedule init
+            Initialize the ckanext-subscribe's schedule
+
+        subscribe schedule delete
+            Delete the ckanext-subscribe's schedule
+
+        subscribe create-test-activity {package-name|group-name|org-name}
+            Create some activity for testing purposes, for a given existing
+            object.
+
+        subscribe delete-test-activity
+            Delete any test activity (i.e. clean up after doing
+            'create-test-activity'). Works for test activity on all objects.
+
     '''
 
     summary = __doc__.split('\n')[0]
@@ -25,24 +46,37 @@ class subscribeCommand(cli.CkanCommand):
         if not self.args:
             print(self.usage)
             sys.exit(1)
-        if self.args[0] == 'initdb':
+        if self.args[0] == 'init':
             self._load_config()
-            self._setup_subscribe_logger()
             self._initdb()
+            print('--')
+            self._subscribe_init()
+        elif self.args[0] == 'initdb':
+            self._load_config()
+            self._initdb()
+        elif self.args[0] == 'schedule':
+            args = self.args[1:]
+            if not args:
+                self._load_config()
+                self._initdb()
+                self._subscribe_list()
+            elif args[0] == 'init':
+                self._load_config()
+                self._subscribe_init()
+            elif args[0] == 'delete':
+                self._load_config()
+                self._subscribe_delete()
+            else:
+                self.parser.error('Unrecognized schedule sub-command')
+        elif self.args[0] == 'create-test-activity':
+            self._load_config()
+            object_id = self.args[1]
+            self._create_test_activity(object_id)
+        elif self.args[0] == 'delete-test-activity':
+            self._load_config()
+            self._delete_test_activity()
         else:
             self.parser.error('Unrecognized command')
-
-    def _setup_subscribe_logger(self):
-        # whilst the deveopment.ini's loggers are setup now, because this is
-        # cli, let's ensure subscribe debug messages are printed for the user
-        logger = logging.getLogger('ckanext.subscribe')
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '      %(name)-12s %(levelname)-5s %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-        logger.propagate = False  # in case the config
 
     def _initdb(self):
         from ckanext.subscribe.model import setup as db_setup
@@ -50,43 +84,49 @@ class subscribeCommand(cli.CkanCommand):
 
         print('DB tables created')
 
-    def _submit_all(self):
-        # submit every package
-        # for each package in the package list,
-        #   submit each resource w/ _submit_package
-        import ckan.model as model
-        package_list = p.toolkit.get_action('package_list')(
-            {'model': model, 'ignore_auth': True}, {})
-        print('Processing %d datasets' % len(package_list))
-        user = p.toolkit.get_action('get_site_user')(
-            {'model': model, 'ignore_auth': True}, {})
-        for p_id in package_list:
-            self._submit_package(p_id, user, indent=2)
+    def _subscribe_list(self):
+        from ckanext.subscribe import notification
+        notification.list_schedule()
 
-    def _submit_package(self, pkg_id, user=None, indent=0):
-        import ckan.model as model
-        if not user:
-            user = p.toolkit.get_action('get_site_user')(
-                {'model': model, 'ignore_auth': True}, {})
+    def _subscribe_init(self):
+        from ckanext.subscribe import notification
+        notification.set_schedule()
+        notification.list_schedule()
 
-        try:
-            pkg = p.toolkit.get_action('package_show')(
-                {'model': model, 'ignore_auth': True},
-                {'id': pkg_id.strip()})
-        except Exception as e:
-            print(e)
-            print(' ' * indent + 'Dataset "{}" was not found'.format(pkg_id))
-            sys.exit(1)
+    def _subscribe_delete(self):
+        from ckanext.subscribe import notification
+        notification.delete_schedule()
 
-        print(' ' * indent + 'Processing dataset {} with {} resources'.format(
-              pkg['name'], len(pkg['resources'])))
-        for resource in pkg['resources']:
-            try:
-                resource['package_name'] = pkg['name']  # for debug output
-                self._submit_resource(resource, user, indent=indent + 2)
-            except Exception as e:
-                self.error_occured = True
-                print(e)
-                print(' ' * indent + 'ERROR submitting resource "{}" '.format(
-                    resource['id']))
-                continue
+    def _create_test_activity(self, object_id):
+        from ckan import model
+        from ckanext.subscribe import notification
+        if p.toolkit.check_ckan_version(max_version='2.8.99'):
+            model.repo.new_revision()
+        obj = model.Package.get(object_id) or model.Group.get(object_id)
+        assert obj, 'Object could not be found'
+        grace = datetime.timedelta(
+            minutes=notification.CONTINUOUS_NOTIFICATION_GRACE_PERIOD_MINUTES)
+        site_user = p.toolkit.get_action('get_site_user')({
+            'model': model,
+            'ignore_auth': True},
+            {}
+        )
+        site_user_obj = model.User.get(site_user['name'])
+        activity = model.Activity(
+            user_id=site_user_obj.id,
+            object_id=obj.id,
+            activity_type='test activity',
+            revision_id=None,
+        )
+        # put it slightly in the past, so it notifies immediately
+        activity.timestamp = datetime.datetime.now() - grace
+        model.Session.add(activity)
+        print(activity)
+        model.Session.commit()
+
+    def _delete_test_activity(self):
+        from ckan import model
+        test_activity = model.Session.query(model.Activity) \
+            .filter_by(activity_type='test activity') \
+            .all()
+        model.Session.delete(test_activity)
