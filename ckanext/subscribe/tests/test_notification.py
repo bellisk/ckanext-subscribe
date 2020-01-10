@@ -42,7 +42,7 @@ class TestGetImmediateNotifications(object):
 
     def test_old_activity_not_notified(self):
         dataset = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(hours=25))
+            timestamp=datetime.datetime.now() - datetime.timedelta(hours=49))
         factories.Subscription(dataset_id=dataset['id'])
 
         notifies = get_immediate_notifications()

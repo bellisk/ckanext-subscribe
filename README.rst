@@ -70,29 +70,61 @@ To install ckanext-subscribe:
 
      pip install ckanext-subscribe
 
-   Note: This causes python packages 'rq-scheduler', 'rq' and 'redis' to be
-   installed or upgraded.
-
 3. Add ``subscribe`` to the ``ckan.plugins`` setting in your CKAN
-   config file (by default the config file is located at
+   configuration file (by default the config file is located at
    ``/etc/ckan/default/production.ini``).
 
-4. Initialize the subscribe tables in the database::
+4. Make sure that ``ckan.site_url`` is set correctly in the ``[app:main]``
+   section of your CKAN configuration file. This is used to generate links in
+   the bodies of the notification emails. For example::
+
+    ckan.site_url = https://example.com
+
+5. Make sure that ``smtp.mail_from`` is set correctly in the ``[app:main]``
+   section of your CKAN configuration file. This is the email address that
+   CKAN's email notifications will appear to come from. For example::
+
+    smtp.mail_from = info@example.com
+
+   This is combined with your ``ckan.site_title`` to form the ``From:`` header
+   of the email that are sent, for example::
+
+    From: Example Open Data <info@example.com>
+
+   If you would like to use an alternate reply address, such as a "no-reply"
+   address, set ``smtp.reply_to`` in the ``[app:main]``
+   section of your CKAN configuration file. For example::
+
+    smtp.reply_to = noreply@example.com
+
+6. If you do not have an SMTP server running locally on the machine that hosts
+   your CKAN instance, you can change the ``email-settings`` to send email via
+   an external SMTP server. For example, these settings in the ``[app:main]``
+   section of your configuration file will send emails using a gmail account
+   (not recommended for production websites!)::
+
+    smtp.server = smtp.gmail.com:587
+    smtp.starttls = True
+    smtp.user = your_username@gmail.com
+    smtp.password = your_gmail_password
+    smtp.mail_from = your_username@gmail.com
+
+7. Initialize the subscribe tables in the database::
 
      paster --plugin=ckanext-subscribe subscribe initdb
 
-5. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
+8. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
 
      sudo service apache2 reload
 
-6. You need to run the 'send-any-notifications' command regularly. You can see
+9. You need to run the 'send-any-notifications' command regularly. You can see
    it running on the command-line::
 
-     paster --plugin=ckanext-subscribe subscribe send-any-notifications -c=/etc/ckan/default/development.ini
+     paster --plugin=ckanext-subscribe subscribe send-any-notifications -c /etc/ckan/default/production.ini
 
-   But you'll probably want a cron job setup to run it every minute or so.
-   We're going to edit the cron table -
-   development machine just do this for your user:
+   However instead you'll probably want a cron job setup to run it every minute
+   or so. We're going to edit the cron table. On a development machine, just do
+   this for your user::
 
      crontab -e
 
@@ -105,20 +137,19 @@ To install ckanext-subscribe:
    Paste this line into your crontab, again replacing the paths to paster and the ini file with yours:
 
      # m h  dom mon dow   command
-     *   *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini
+       * *  *   *   *     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe send-any-notifications --config=/etc/ckan/default/production.ini
 
    This particular example will check for notifications every minute.
 
+   Also in this cron you will likely see it also running a paster command for
+   `/api/action/send_email_notifications`. This is similar but separate
+   functionality, that core CKAN uses to send emails to users that have created
+   user accounts e.g. for the 'follower' functionality. There's more about this
+   here: https://docs.ckan.org/en/2.8/maintaining/email-notifications.html
 
 ---------------
 Config settings
 ---------------
-
-# The queue name for the background jobs that send the notification emails.
-# Defaults to the CKAN queue, which is the default for the worker to process.
-# See: https://docs.ckan.org/en/latest/maintaining/background-tasks.html#background-job-queues
-# (optional, default: ckan:default:default).
-ckanext.subscribe.queue = ckan:default:default
 
 # Delay sending notification emails until after a grace period, in case there
 # are further changes. When further changes occur, the grace period is extended
@@ -133,10 +164,14 @@ ckanext.subscribe.queue = ckan:default:default
 ckanext.subscribe.immediate_notification_grace_period_minutes = 5
 ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
 
-# After a pause in the sending of emails, when it restarts it ignores activity
-# older than the catch-up period.
-# Units: hours
-ckanext.subscribe.catch_up_period_hours = 24
+# Email notifications for events older than this time period will not be sent.
+# So, after a pause in the sending of emails, when it restarts, activity older
+# than this time period will not be sent to users.
+# Accepted formats: ‘2 days’, ‘14 days’, ‘4:35:00’ (hours, minutes, seconds),
+#                  ‘7 days, 3:23:34’, etc.
+# See also: https://docs.ckan.org/en/2.8/maintaining/configuration.html#ckan-email-notifications-since
+# (optional, default: ‘2 days’)
+ckan.email_notifications_since = 24:00:00
 
 ---------------
 Troubleshooting
@@ -144,7 +179,13 @@ Troubleshooting
 
 **Notification emails not being sent**
 
-1. Check your cron schedule is working: TODO
+1. Check your cron schedule is working::
+
+     tail -f /var/log/syslog | grep subscribe
+
+   You should see this sort of thing every minute::
+
+     Jan 10 15:24:01 ip-172-30-3-71 CRON[29231]: (ubuntu) CMD (/usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini)
 
 1. Create a test activity for a dataset/group/org you are subscribed to::
 

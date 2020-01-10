@@ -7,23 +7,40 @@ from ckan import model
 from ckan.model import Activity
 from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
+from ckan.lib.email_notifications import string_to_timedelta
 
 from ckanext.subscribe import dictization
-from ckanext.subscribe.model import Subscription, ActivityNotified, activity_notified_table
+from ckanext.subscribe.model import (
+    Subscription,
+    ActivityNotified,
+    activity_notified_table
+)
 from ckanext.subscribe import notification_email
 from ckanext.subscribe import email_auth
 
 log = __import__('logging').getLogger(__name__)
-config = toolkit.config
 
-IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES = int(
-    config.get('ckanext.subscribe.immediate_notification_grace_period_minutes',
-               5))
-IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES = int(
-    config.get('ckanext.subscribe.immediate_notification_grace_period_max_minutes',
-               60))
-CATCH_UP_PERIOD_HOURS = int(
-    config.get('ckanext.subscribe.catch_up_period_hours', 24))
+_config = {}
+
+
+def get_config(key):
+    global _config
+    if not _config:
+        _config['immediate_notification_grace_period'] = \
+            datetime.timedelta(minutes=int(
+                toolkit.config.get(
+                    'ckanext.subscribe.immediate_notification_grace_period_minutes',
+                    5)))
+        _config['immediate_notification_grace_period_max'] = \
+            datetime.timedelta(minutes=int(
+                toolkit.config.get(
+                    'ckanext.subscribe.immediate_notification_grace_period_max_minutes',
+                    60)))
+        _config['email_notifications_since'] = string_to_timedelta(
+            toolkit.config.get(
+                'ckan.email_notifications_since', '2 days')
+        )
+    return _config[key]
 
 
 def do_immediate_notifications():
@@ -50,9 +67,9 @@ def get_immediate_notifications():
     if not objects_subscribed_to:
         return {}
     now = datetime.datetime.now()
-    grace = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES)
-    grace_max = datetime.timedelta(minutes=IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MAX_MINUTES)
-    catch_up_period = datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
+    grace = get_config('immediate_notification_grace_period')
+    grace_max = get_config('immediate_notification_grace_period_max')
+    catch_up_period = get_config('email_notifications_since')
     activity_notified_subquery = model.Session.query(ActivityNotified.activity_id)
     object_activity_oldest_newest = model.Session.query(
         Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
@@ -137,9 +154,9 @@ def record_activities_notified(notifications_by_email):
         return
 
     # activities_notified can be cleared of any timestamps older than the
-    # catch-up period
+    # 'ckan.email_notifications_since' (catch-up) period
     now = datetime.datetime.now()
-    catch_up_period = now - datetime.timedelta(hours=CATCH_UP_PERIOD_HOURS)
+    catch_up_period = now - get_config('email_notifications_since')
     sql = activity_notified_table.delete() \
         .where(activity_notified_table.c.timestamp < catch_up_period)
     model.Session.execute(sql)

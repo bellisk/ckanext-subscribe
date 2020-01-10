@@ -92,7 +92,8 @@ class Subscription(_DomainObject):
 class ActivityNotified(_DomainObject):
     '''A table of all the activities that have been notified to subscribers
     already (immediate frequency only). Once their timestamp passes out of the
-    catch-up period they can be removed from this table.
+    'ckan.email_notifications_since' period they can be removed from this
+    table.
     '''
     def __repr__(self):
         return '<ActivityNotified activity_id={} timestamp={}>' \

@@ -56,7 +56,6 @@ setup(
     namespace_packages=['ckanext'],
 
     install_requires=[
-        'rq-scheduler',
     ],
 
     # If there are data files included in your packages that need to be

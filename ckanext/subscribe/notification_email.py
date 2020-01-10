@@ -40,7 +40,7 @@ def get_notification_email_contents(code, email, notifications):
 
   {% for activity in notification.activities %}
     <p>
-      * {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} -
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} -
       {{ activity.activity_type }}
     </p>
   {% endfor %}
@@ -56,7 +56,7 @@ Changes have occurred in relation to your subscription(s)
   "{{ notification.object_title }}" - {{ notification.object_link }}
 
   {% for activity in notification.activities %}
-      * {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }}
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }}
   {% endfor %}
 {% endfor %}
 

@@ -85,8 +85,7 @@ class subscribeCommand(cli.CkanCommand):
             model.repo.new_revision()
         obj = model.Package.get(object_id) or model.Group.get(object_id)
         assert obj, 'Object could not be found'
-        grace = datetime.timedelta(
-            minutes=notification.IMMEDIATE_NOTIFICATION_GRACE_PERIOD_MINUTES)
+        grace = notification.get_config('immediate_notification_grace_period')
         site_user = p.toolkit.get_action('get_site_user')({
             'model': model,
             'ignore_auth': True},
