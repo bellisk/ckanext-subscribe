@@ -53,6 +53,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_unsubscribe': action.subscribe_unsubscribe,
             'subscribe_request_manage_code':
             action.subscribe_request_manage_code,
+            'subscribe_send_any_notifications':
+            action.subscribe_send_any_notifications,
         }
 
     # IAuthFunctions
@@ -66,4 +68,6 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_unsubscribe': auth.subscribe_unsubscribe,
             'subscribe_request_manage_code':
             auth.subscribe_request_manage_code,
+            'subscribe_send_any_notifications':
+            auth.subscribe_send_any_notifications,
         }

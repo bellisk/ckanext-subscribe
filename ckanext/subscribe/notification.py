@@ -13,8 +13,8 @@ from ckanext.subscribe import dictization
 from ckanext.subscribe.model import (
     Subscription,
     ActivityNotified,
-    activity_notified_table
 )
+from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe import notification_email
 from ckanext.subscribe import email_auth
 
@@ -43,8 +43,8 @@ def get_config(key):
     return _config[key]
 
 
-def do_immediate_notifications():
-    log.debug('do_immediate_notifications')
+def send_any_immediate_notifications():
+    log.debug('send_any_immediate_notifications')
     notifications_by_email = get_immediate_notifications()
     if not notifications_by_email:
         log.debug('no emails to send (immediate frequency)')
@@ -157,6 +157,7 @@ def record_activities_notified(notifications_by_email):
     # 'ckan.email_notifications_since' (catch-up) period
     now = datetime.datetime.now()
     catch_up_period = now - get_config('email_notifications_since')
+    activity_notified_table = subscribe_model.activity_notified_table
     sql = activity_notified_table.delete() \
         .where(activity_notified_table.c.timestamp < catch_up_period)
     model.Session.execute(sql)

@@ -12,9 +12,9 @@ from ckanext.subscribe import (
     schema,
     dictization,
     email_verification,
+    email_auth,
+    notification,
 )
-from ckanext.subscribe import email_auth
-
 
 log = logging.getLogger(__name__)
 _check_access = p.toolkit.check_access
@@ -265,4 +265,12 @@ def subscribe_request_manage_code(context, data_dict):
         log.error('Could not email manage code: {}'.format(exc))
         raise
 
+    return None
+
+
+def subscribe_send_any_notifications(context, data_dict):
+    '''Check for activity and for any subscribers, send emails with the
+    notifications.
+    '''
+    notification.send_any_immediate_notifications()
     return None

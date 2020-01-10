@@ -13,6 +13,7 @@ from ckan import model
 from ckanext.subscribe.tests.factories import (
     Subscription,
     SubscriptionLowLevel,
+    DatasetActivity,
     )
 from ckanext.subscribe import model as subscribe_model
 
@@ -480,3 +481,27 @@ class TestUnsubscribe(object):
             email='bob@example.com',
         )
         eq([sub['object_id'] for sub in sub_list], [org2['id']])
+
+
+class TestSendAnyNotifications(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    @mock.patch('ckanext.subscribe.notification_email.send_notification_email')
+    def test_basic(self, send_notification_email):
+        dataset = DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10))
+        subscription = Subscription(dataset_id=dataset['id'])
+
+        helpers.call_action('subscribe_send_any_notifications', {})
+
+        send_notification_email.assert_called_once()
+        code, email, notifications = send_notification_email.call_args[0]
+        eq(type(code), type(u''))
+        eq(email, 'bob@example.com')
+        eq(len(notifications), 1)
+        eq([(a['activity_type'], a['data']['package']['id'])
+            for a in notifications[0]['activities']],
+           [('new package', dataset['id'])])
+        eq(notifications[0]['subscription']['id'], subscription['id'])

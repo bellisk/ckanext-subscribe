@@ -183,7 +183,7 @@ Troubleshooting
 
      tail -f /var/log/syslog | grep subscribe
 
-   You should see this sort of thing every minute::
+   You should see messages every minute::
 
      Jan 10 15:24:01 ip-172-30-3-71 CRON[29231]: (ubuntu) CMD (/usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini)
 
@@ -191,14 +191,17 @@ Troubleshooting
 
      paster --plugin=ckanext-subscribe subscribe create-test-activity mydataset
 
-   You should in the worker log the email being sent::
+   The log of the cron-activated paster command itself is not currently stored anywhere, so it's best to test it on the commandline::
 
-     2020-01-06 16:30:40,591 DEBUG [ckanext.subscribe.notification] do_immediate_notifications
+     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini
+
+   You should see emails being sent to subscribers of that dataset::
+
+     2020-01-06 16:30:40,591 DEBUG [ckanext.subscribe.notification] send_any_immediate_notifications
      2020-01-06 16:30:40,628 DEBUG [ckanext.subscribe.notification] sending 1 emails (immediate frequency)
      2020-01-06 16:30:42,116 INFO  [ckanext.subscribe.mailer] Sent email to david.read@hackneyworkshop.com
 
-1. Clean up all test activity afterwards (it is visible to users in the
-   activity stream)::
+1. Clean up all test activity afterwards::
 
      paster --plugin=ckanext-subscribe subscribe delete-test-activity
 

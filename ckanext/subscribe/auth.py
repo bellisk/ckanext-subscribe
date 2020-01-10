@@ -56,3 +56,8 @@ def subscribe_manage(context, data_dict):
 @auth_allow_anonymous_access
 def subscribe_request_manage_code(context, data_dict):
     return {'success': True}
+
+
+def subscribe_send_any_notifications(context, data_dict):
+    # sysadmins only
+    return {'success': False}

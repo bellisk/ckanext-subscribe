@@ -14,7 +14,7 @@ class subscribeCommand(cli.CkanCommand):
         subscribe initdb
             Initialize the the ckanext-subscribe's database table
 
-        subscribe send-any-notifications [-r] [-i
+        subscribe send-any-notifications [-r]
             Check for activity and for any subscribers, send emails with the
             notifications.
             Option:
@@ -51,6 +51,7 @@ class subscribeCommand(cli.CkanCommand):
             self._initdb()
         elif self.args[0] == 'send-any-notifications':
             self._load_config()
+            self._initdb()
             self._send_any_notifications()
         elif self.args[0] == 'create-test-activity':
             self._load_config()
@@ -69,14 +70,19 @@ class subscribeCommand(cli.CkanCommand):
         print('DB tables created')
 
     def _send_any_notifications(self):
+        from ckan import model
         log = __import__('logging').getLogger(__name__)
-        from ckanext.subscribe import notification
-        notification.do_immediate_notifications()
-        if self.options.repeatedly:
-            while True:
-                log.debug('Repeating in 10s')
-                time.sleep(10)
-                notification.do_immediate_notifications()
+
+        while True:
+            p.toolkit.get_action('subscribe_send_any_notifications')({
+                'model': model,
+                'ignore_auth': True},
+                {}
+            )
+            if not self.options.repeatedly:
+                break
+            log.debug('Repeating in 10s')
+            time.sleep(10)
 
     def _create_test_activity(self, object_id):
         from ckan import model
