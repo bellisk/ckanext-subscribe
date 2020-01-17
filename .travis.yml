@@ -5,6 +5,8 @@ sudo: required
 # psycopg2 that comes with CKAN<2.8:
 #   "Error: could not determine PostgreSQL version from '10.1'"
 # see https://github.com/travis-ci/travis-ci/issues/8897
+# Update Jan 2020: I don't think we're getting this old image any more because
+# we still get postgres 10
 dist: trusty
 group: deprecated-2017Q4
 
