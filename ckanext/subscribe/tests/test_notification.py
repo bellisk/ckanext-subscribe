@@ -79,6 +79,8 @@ class TestGetImmediateNotifications(object):
 
         eq(_get_activities(notifies), [])
 
+    @helpers.change_config(
+        'ckanext.subscribe.immediate_notification_grace_period_minutes', '5')
     def test_activity_just_occurred_not_notified(self):
         dataset = factories.DatasetActivity(
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=1))
@@ -88,6 +90,8 @@ class TestGetImmediateNotifications(object):
 
         eq(_get_activities(notifies), [])
 
+    @helpers.change_config(
+        'ckanext.subscribe.immediate_notification_grace_period_minutes', '5')
     def test_activity_not_notified_yet_as_more_activity(self):
         dataset = factories.DatasetActivity(
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10))
@@ -100,6 +104,8 @@ class TestGetImmediateNotifications(object):
 
         eq(_get_activities(notifies), [])
 
+    @helpers.change_config(
+        'ckanext.subscribe.immediate_notification_grace_period_minutes', '5')
     def test_activity_already_notified_not_notified_again(self):
         dataset = factories.DatasetActivity(
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10))

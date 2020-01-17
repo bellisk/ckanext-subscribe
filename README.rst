@@ -161,7 +161,7 @@ Config settings
 # notifications as soon as a change is made (well, as soon as
 # send-any-notifications is called next).
 # Units: minutes
-ckanext.subscribe.immediate_notification_grace_period_minutes = 5
+ckanext.subscribe.immediate_notification_grace_period_minutes = 0
 ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
 
 # Email notifications for events older than this time period will not be sent.
@@ -230,7 +230,7 @@ or simply::
 
     sudo -u postgres dropdb ckan_test
     sudo -u postgres createdb -O ckan_default ckan_test -E utf-8
-    paster --plugin=ckan db init -c test.ini
+    paster --plugin=ckan db init -c ../ckan/test-core.ini
 
 
 ----------------------

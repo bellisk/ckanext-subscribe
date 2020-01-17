@@ -29,7 +29,7 @@ def get_config(key):
             datetime.timedelta(minutes=int(
                 toolkit.config.get(
                     'ckanext.subscribe.immediate_notification_grace_period_minutes',
-                    5)))
+                    0)))
         _config['immediate_notification_grace_period_max'] = \
             datetime.timedelta(minutes=int(
                 toolkit.config.get(
