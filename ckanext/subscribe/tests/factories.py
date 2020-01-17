@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+import datetime
+
 import factory
 
 import ckan.plugins as p
@@ -22,6 +24,7 @@ class Subscription(factory.Factory):
     id = factory.Sequence(lambda n: 'test_sub_{n}'.format(n=n))
     email = 'bob@example.com'
     return_object = False
+    created = datetime.datetime.now() - datetime.timedelta(hours=1)
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -42,6 +45,16 @@ class Subscription(factory.Factory):
 
         subscription_dict = \
             p.toolkit.get_action('subscribe_signup')(context, kwargs)
+
+        # to set the 'created' time we need to edit the object
+        subscription = \
+            model.Session.query(ckanext.subscribe.model.Subscription) \
+            .get(subscription_dict['id'])
+        if kwargs.get('created'):
+            subscription.created = kwargs['created']
+            model.repo.commit()
+        subscription_dict = \
+            dictization.dictize_subscription(subscription, context)
 
         if kwargs['return_object']:
             return ckanext.subscribe.model.Subscription.get(

@@ -6,6 +6,7 @@ import mock
 from nose.tools import assert_equal, assert_in
 
 from ckan.tests import helpers
+from ckan.tests.factories import Dataset
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import (
@@ -14,6 +15,7 @@ from ckanext.subscribe.notification import (
     send_emails,
     dictize_notifications,
 )
+from ckanext.subscribe import notification as subscribe_notification
 from ckanext.subscribe.tests import factories
 
 eq = assert_equal
@@ -52,6 +54,7 @@ class TestGetImmediateNotifications(object):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
+        subscribe_notification._config = {}
 
     def test_basic(self):
         dataset = factories.DatasetActivity(
@@ -108,16 +111,36 @@ class TestGetImmediateNotifications(object):
 
         eq(_get_activities(notifies), [])
 
+    @helpers.change_config(
+        'ckanext.subscribe.immediate_notification_grace_period_minutes', '0')
+    def test_activity_before_the_subscription_is_not_notified(self):
+        dataset = Dataset()
+        factories.Activity(
+            object_id=dataset['id'], activity_type='changed package')
+        factories.Subscription(dataset_id=dataset['id'],
+                               created=datetime.datetime.now())
+        factories.Activity(
+            object_id=dataset['id'], activity_type='changed package')
+
+        notifies = get_immediate_notifications()
+
+        eq(_get_activities(notifies), [
+            (u'bob@example.com', u'changed package', dataset['id'])
+        ])
+
     def test_lots_of_users_and_datasets(self):
         datasetx = _create_dataset_and_activity([70, 50, 10])
         datasety = _create_dataset_and_activity([40, 20])
         _ = factories.DatasetActivity()  # decoy
         factories.Subscription(
-            email='user@a.com', dataset_id=datasetx['id'])
+            email='user@a.com', dataset_id=datasetx['id'],
+            created=datetime.datetime.now() - datetime.timedelta(hours=2))
         factories.Subscription(
-            email='user@b.com', dataset_id=datasetx['id'])
+            email='user@b.com', dataset_id=datasetx['id'],
+            created=datetime.datetime.now() - datetime.timedelta(hours=2))
         factories.Subscription(
-            email='user@b.com', dataset_id=datasety['id'])
+            email='user@b.com', dataset_id=datasety['id'],
+            created=datetime.datetime.now() - datetime.timedelta(hours=2))
 
         notifies = get_immediate_notifications()
 

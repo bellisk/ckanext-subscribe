@@ -148,6 +148,7 @@ def define_tables():
         Column('verified', types.Boolean, default=False),
         Column('verification_code', types.UnicodeText),
         Column('verification_code_expires', types.DateTime),
+        Column('created', types.DateTime, default=datetime.datetime.utcnow),
     )
 
     login_code_table = Table(

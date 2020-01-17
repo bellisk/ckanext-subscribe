@@ -49,6 +49,7 @@ class subscribeCommand(cli.CkanCommand):
         if self.args[0] == 'initdb':
             self._load_config()
             self._initdb()
+            print('DB tables created')
         elif self.args[0] == 'send-any-notifications':
             self._load_config()
             self._initdb()
@@ -66,8 +67,6 @@ class subscribeCommand(cli.CkanCommand):
     def _initdb(self):
         from ckanext.subscribe.model import setup as db_setup
         db_setup()
-
-        print('DB tables created')
 
     def _send_any_notifications(self):
         from ckan import model

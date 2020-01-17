@@ -67,14 +67,14 @@ def get_immediate_notifications(notification_datetime=None):
     objects_subscribed_to = set(
         (r[0] for r in model.Session.query(Subscription.object_id).all())
     )
+    if not objects_subscribed_to:
+        return {}
     try:
         emails_last_sent = Subscribe.get_emails_last_sent()
     except AttributeError:
         # some date long in the past
         emails_last_sent = \
             datetime.datetime(year=datetime.MINYEAR, month=1, day=1)
-    if not objects_subscribed_to:
-        return {}
     now = notification_datetime or datetime.datetime.now()
     grace = get_config('immediate_notification_grace_period')
     grace_max = get_config('immediate_notification_grace_period_max')
@@ -117,6 +117,10 @@ def get_immediate_notifications(notification_datetime=None):
     # email: {subscription: [activity, ...], ...}
     notifications = defaultdict(lambda: defaultdict(list))
     for subscription, activity in subscription_activity:
+        # ignore activity that occurs before this subscription was created
+        if subscription.created > activity.timestamp:
+            continue
+
         notifications[subscription.email][subscription].append(activity)
 
     # dictize

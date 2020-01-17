@@ -89,7 +89,7 @@ To install ckanext-subscribe:
    This is combined with your ``ckan.site_title`` to form the ``From:`` header
    of the email that are sent, for example::
 
-    From: Example Open Data <info@example.com>
+    From: Sunnyville Open Data <info@example.com>
 
    If you would like to use an alternate reply address, such as a "no-reply"
    address, set ``smtp.reply_to`` in the ``[app:main]``

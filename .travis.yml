@@ -38,7 +38,7 @@ matrix:
       install: pip install flake8
       script:
         - flake8 --version
-        - flake8 . --count --max-complexity=10 --max-line-length=127 --statistics --exclude ckan,ckanext-subscribe
+        - flake8 . --count --max-complexity=12 --max-line-length=127 --statistics --exclude ckan,ckanext-subscribe
       python: 3.7
       # overwrite matrix
       env:
