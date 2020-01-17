@@ -37,6 +37,9 @@ if [ -f requirements-py2.txt ]
 then
     pip install -r requirements-py2.txt
 else
+    # Need newer psycopg2 to avoid error:
+    # Error: could not determine PostgreSQL version from '10.1'
+    sed -i -e 's/psycopg2==2.4.5/psycopg2==2.8.2/' requirements.txt
     pip install -r requirements.txt
 fi
 pip install -r dev-requirements.txt
