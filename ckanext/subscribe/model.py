@@ -15,8 +15,8 @@ __all__ = [
 ]
 
 subscription_table = None
-activity_notified_table = None
 login_code_table = None
+subscribe_table = None
 
 
 def setup():
@@ -34,8 +34,8 @@ def setup():
         # Create each table individually rather than
         # using metadata.create_all()
         subscription_table.create()
-        activity_notified_table.create()
         login_code_table.create()
+        subscribe_table.create()
 
         log.debug('Subscription tables created')
 
@@ -89,17 +89,6 @@ class Subscription(_DomainObject):
             .format(self.id, self.email, self.object_type, self.verified)
 
 
-class ActivityNotified(_DomainObject):
-    '''A table of all the activities that have been notified to subscribers
-    already (immediate frequency only). Once their timestamp passes out of the
-    'ckan.email_notifications_since' period they can be removed from this
-    table.
-    '''
-    def __repr__(self):
-        return '<ActivityNotified activity_id={} timestamp={}>' \
-            .format(self.activity_id, self.timestamp)
-
-
 class LoginCode(_DomainObject):
     '''A login code is sent out in an email to let the user click to login
     without password. A user can have multiple codes at once - new ones don't
@@ -107,7 +96,7 @@ class LoginCode(_DomainObject):
     is at the expense of some security).
     '''
     def __repr__(self):
-        return '<Logincode id={} email={} code={}... expires={}>'.format(
+        return '<LoginCode id={} email={} code={}... expires={}>'.format(
             self.id, self.email, self.code[:4], self.expires)
 
     @classmethod
@@ -124,9 +113,29 @@ class LoginCode(_DomainObject):
         return login_code
 
 
+class Subscribe(_DomainObject):
+    '''General state
+    '''
+    def __repr__(self):
+        return '<Subscribe email_last_sent={}>'.format(
+            self.email_last_sent)
+
+    @classmethod
+    def set_emails_last_sent(cls, emails_last_sent):
+        model.Session.query(cls).delete()
+        model.Session.add(cls(emails_last_sent=emails_last_sent))
+        # caller needs to do:
+        #   model.Session.commit()
+
+    @classmethod
+    def get_emails_last_sent(cls):
+        # if there is none recorded, this returns AttributeError
+        return model.Session.query(cls).first().emails_last_sent
+
+
 def define_tables():
 
-    global subscription_table, activity_notified_table, login_code_table
+    global subscription_table, login_code_table, subscribe_table
 
     subscription_table = Table(
         'subscription',
@@ -141,13 +150,6 @@ def define_tables():
         Column('verification_code_expires', types.DateTime),
     )
 
-    activity_notified_table = Table(
-        'activity_notified',
-        metadata,
-        Column('activity_id', types.UnicodeText, primary_key=True),
-        Column('timestamp', types.DateTime),
-    )
-
     login_code_table = Table(
         'subscribe_login_code',
         metadata,
@@ -157,15 +159,23 @@ def define_tables():
         Column('expires', types.DateTime),
     )
 
+    subscribe_table = Table(
+        'subscribe',
+        metadata,
+        # just stores one row for now
+        Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('emails_last_sent', types.DateTime, nullable=False),
+    )
+
     mapper(
         Subscription,
         subscription_table,
     )
     mapper(
-        ActivityNotified,
-        activity_notified_table,
-    )
-    mapper(
         LoginCode,
         login_code_table,
+    )
+    mapper(
+        Subscribe,
+        subscribe_table,
     )

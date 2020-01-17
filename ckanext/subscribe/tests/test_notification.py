@@ -6,18 +6,45 @@ import mock
 from nose.tools import assert_equal, assert_in
 
 from ckan.tests import helpers
-from ckan import model
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import (
+    send_any_immediate_notifications,
     get_immediate_notifications,
     send_emails,
     dictize_notifications,
-    record_activities_notified,
 )
 from ckanext.subscribe.tests import factories
 
 eq = assert_equal
+
+
+class TestSendAnyImmediateNotifications(object):
+
+    def setup(self):
+        helpers.reset_db()
+        subscribe_model.setup()
+
+    @mock.patch('ckanext.subscribe.notification_email.send_notification_email')
+    def test_basic(self, send_notification_email):
+        dataset = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10)
+        )
+        _ = factories.DatasetActivity()  # decoy
+        subscription = factories.Subscription(dataset_id=dataset['id'])
+
+        send_any_immediate_notifications()
+
+        send_notification_email.assert_called_once()
+        code, email, notifications = send_notification_email.call_args[0]
+        eq(type(code), type(u''))
+        eq(email, 'bob@example.com')
+        eq(len(notifications), 1)
+        eq([(a['activity_type'], a['data']['package']['id'])
+            for a in notifications[0]['activities']],
+           [('new package', dataset['id'])])
+        eq(notifications[0]['subscription']['id'], subscription['id'])
+        assert time_since_emails_last_sent() < datetime.timedelta(seconds=1)
 
 
 class TestGetImmediateNotifications(object):
@@ -71,10 +98,10 @@ class TestGetImmediateNotifications(object):
         eq(_get_activities(notifies), [])
 
     def test_activity_already_notified_not_notified_again(self):
-        dataset, activity = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
-            return_activity=True)
-        factories.ActivityNotified(activity_id=activity.id)
+        dataset = factories.DatasetActivity(
+            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10))
+        subscribe_model.Subscribe.set_emails_last_sent(
+            datetime.datetime.now() - datetime.timedelta(minutes=5))
         factories.Subscription(dataset_id=dataset['id'])
 
         notifies = get_immediate_notifications()
@@ -168,75 +195,6 @@ class TestSendEmails(object):
         assert_in('new dataset', body)
 
 
-class TestRecordActivitiesNotified(object):
-
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-
-    def test_basic(self):
-        dataset, activity = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
-            return_activity=True
-        )
-        # {subscription: [activity, ...], ...}
-        subscription_activities = {
-            factories.Subscription(dataset_id=dataset['id'],
-                                   return_object=True):
-            [activity]
-        }
-
-        notifications_by_email = {
-            'bob@example.com': dictize_notifications(subscription_activities)
-        }
-
-        record_activities_notified(notifications_by_email)
-
-        activites_notified = \
-            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
-            .all()
-        eq(activites_notified, [(activity.id,)])
-
-    def test_two_activities(self):
-        dataset, activity = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
-            return_activity=True
-        )
-        activity2 = factories.Activity(
-            object_id=dataset['id'], activity_type='changed package',
-            timestamp=datetime.datetime.now() - datetime.timedelta(minutes=9),
-            return_object=True)
-
-        # {subscription: [activity, ...], ...}
-        subscription_activities = {
-            factories.Subscription(dataset_id=dataset['id'],
-                                   return_object=True):
-            [activity, activity2]
-        }
-
-        notifications_by_email = {
-            'bob@example.com': dictize_notifications(subscription_activities)
-        }
-
-        record_activities_notified(notifications_by_email)
-
-        activities_notified = \
-            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
-            .all()
-        eq(set((a[0] for a in activities_notified)),
-           set((activity.id, activity2.id)))
-
-    def test_deletes_activities_from_before_the_catch_up_period(self):
-        dataset, activity = factories.DatasetActivity(
-            timestamp=datetime.datetime.now() - datetime.timedelta(days=2),
-            return_activity=True)
-        factories.ActivityNotified(
-            activity_id=activity.id,
-            timestamp=datetime.datetime.now() - datetime.timedelta(days=2))
-
-        record_activities_notified({'bob@example.com': []})
-
-        activities_notified = \
-            model.Session.query(subscribe_model.ActivityNotified.activity_id) \
-            .all()
-        eq(activities_notified, [])
+def time_since_emails_last_sent():
+    return (datetime.datetime.now() -
+            subscribe_model.Subscribe.get_emails_last_sent())

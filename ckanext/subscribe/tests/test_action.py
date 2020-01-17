@@ -488,6 +488,8 @@ class TestSendAnyNotifications(object):
     def setup(self):
         helpers.reset_db()
 
+    # Lots of overlap here with:
+    # test_notification.py:TestSendAnyImmediateNotifications
     @mock.patch('ckanext.subscribe.notification_email.send_notification_email')
     def test_basic(self, send_notification_email):
         dataset = DatasetActivity(

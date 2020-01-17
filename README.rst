@@ -189,11 +189,11 @@ Troubleshooting
 
 1. Create a test activity for a dataset/group/org you are subscribed to::
 
-     paster --plugin=ckanext-subscribe subscribe create-test-activity mydataset
+     paster --plugin=ckanext-subscribe subscribe create-test-activity mydataset --config=/etc/ckan/default/production.ini
 
    The log of the cron-activated paster command itself is not currently stored anywhere, so it's best to test it on the commandline::
 
-     /usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini
+     paster --plugin=ckanext-subscribe subscribe send-any-notifications --config=/etc/ckan/default/production.ini
 
    You should see emails being sent to subscribers of that dataset::
 
@@ -203,7 +203,7 @@ Troubleshooting
 
 1. Clean up all test activity afterwards::
 
-     paster --plugin=ckanext-subscribe subscribe delete-test-activity
+     paster --plugin=ckanext-subscribe subscribe delete-test-activity --config=/etc/ckan/default/production.ini
 
 
 **NameError: global name 'Subscription' is not defined**
@@ -224,7 +224,13 @@ You're running the tests with `--reset-db` and this extension doesn't work with
 that. Instead, if you need to wipe the tables before running tests, do it this
 way::
 
-    sudo -u postgres psql ckan_test -c 'drop table if exists subscription; drop table if exists subscribe_login_code;'
+    sudo -u postgres psql ckan_test -c 'drop table if exists subscription; drop table if exists subscribe_login_code; drop table if exists subscribe;'
+
+or simply::
+
+    sudo -u postgres dropdb ckan_test
+    sudo -u postgres createdb -O ckan_default ckan_test -E utf-8
+    paster --plugin=ckan db init -c test.ini
 
 
 ----------------------
