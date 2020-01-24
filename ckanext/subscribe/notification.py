@@ -13,6 +13,7 @@ from ckanext.subscribe import dictization
 from ckanext.subscribe.model import (
     Subscription,
     Subscribe,
+    Frequency,
 )
 from ckanext.subscribe import notification_email
 from ckanext.subscribe import email_auth
@@ -39,6 +40,17 @@ def get_config(key):
             toolkit.config.get(
                 'ckan.email_notifications_since', '2 days')
         )
+        _config['weekly_notification_day'] = \
+            {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3,
+             'friday': 4, 'saturday': 5, 'sunday': 6}[
+                 toolkit.config.get(
+                     'ckanext.subscribe.weekly_notification_day', 'friday')]
+        _config['daily_and_weekly_notification_time'] = \
+            datetime.datetime.strptime(
+                toolkit.config.get('daily_and_weekly_notification_time',
+                                   '9:00'),
+                '%H:%M')
+
     return _config[key]
 
 
@@ -48,41 +60,86 @@ def send_any_immediate_notifications():
     notifications_by_email = get_immediate_notifications(notification_datetime)
     if not notifications_by_email:
         log.debug('no emails to send (immediate frequency)')
-        return
-    log.debug('sending {} emails (immediate frequency)'
-              .format(len(notifications_by_email)))
-    send_emails(notifications_by_email)
+    else:
+        log.debug('sending {} emails (immediate frequency)'
+                  .format(len(notifications_by_email)))
+        send_emails(notifications_by_email)
 
     # record that notifications are 'all done' up to this time
-    Subscribe.set_emails_last_sent(notification_datetime)
+    Subscribe.set_emails_last_sent(frequency=Frequency.IMMEDIATE.value,
+                                   emails_last_sent=notification_datetime)
     model.Session.commit()
 
 
-# TODO make this an action function
+def send_weekly_notifications_if_its_time_to():
+    if not is_it_time_to_send_weekly_notifications():
+        return
+
+    log.debug('send_weekly_notifications')
+    notification_datetime = datetime.datetime.now()
+    notifications_by_email = get_weekly_notifications(notification_datetime)
+    if not notifications_by_email:
+        log.debug('no emails to send (weekly frequency)')
+    else:
+        log.debug('sending {} emails (weekly frequency)'
+                  .format(len(notifications_by_email)))
+        send_emails(notifications_by_email)
+
+    # record that notifications are 'all done' up to this time
+    Subscribe.set_emails_last_sent(frequency=Frequency.WEEKLY.value,
+                                   emails_last_sent=notification_datetime)
+    model.Session.commit()
+
+
+def send_daily_notifications_if_its_time_to():
+    if not is_it_time_to_send_daily_notifications():
+        return
+
+    log.debug('send_daily_notifications')
+    notification_datetime = datetime.datetime.now()
+    notifications_by_email = get_daily_notifications(notification_datetime)
+    if not notifications_by_email:
+        log.debug('no emails to send (daily frequency)')
+    else:
+        log.debug('sending {} emails (daily frequency)'
+                  .format(len(notifications_by_email)))
+        send_emails(notifications_by_email)
+
+    # record that notifications are 'all done' up to this time
+    Subscribe.set_emails_last_sent(frequency=Frequency.DAILY.value,
+                                   emails_last_sent=notification_datetime)
+    model.Session.commit()
+
+
 def get_immediate_notifications(notification_datetime=None):
-    '''Work out what notifications need sending out, based on activity,
-    subscriptions and past notifications.
+    '''Work out what immediate notifications need sending out, based on
+    activity, subscriptions and past notifications.
     '''
     # just interested in activity which is recent and has a subscriber
+    subscription_frequency = Frequency.IMMEDIATE.value
     objects_subscribed_to = set(
-        (r[0] for r in model.Session.query(Subscription.object_id).all())
+        (r[0] for r in model.Session.query(Subscription.object_id)
+         .filter(Subscription.frequency == subscription_frequency).all())
     )
     if not objects_subscribed_to:
         return {}
-    try:
-        emails_last_sent = Subscribe.get_emails_last_sent()
-    except AttributeError:
-        # some date long in the past
-        emails_last_sent = \
-            datetime.datetime(year=datetime.MINYEAR, month=1, day=1)
+
+    emails_last_sent = Subscribe.get_emails_last_sent(
+        frequency=Frequency.IMMEDIATE.value)
     now = notification_datetime or datetime.datetime.now()
     grace = get_config('immediate_notification_grace_period')
     grace_max = get_config('immediate_notification_grace_period_max')
     catch_up_period = get_config('email_notifications_since')
+    if emails_last_sent:
+        include_activity_from = max(
+            emails_last_sent, (now - catch_up_period))
+    else:
+        include_activity_from = (now - catch_up_period)
+
     object_activity_oldest_newest = model.Session.query(
-        Activity.object_id, func.min(Activity.timestamp), func.max(Activity.timestamp)) \
-        .filter(Activity.timestamp > emails_last_sent) \
-        .filter(Activity.timestamp > (now - catch_up_period)) \
+        Activity.object_id, func.min(Activity.timestamp),
+        func.max(Activity.timestamp)) \
+        .filter(Activity.timestamp > include_activity_from) \
         .filter(Activity.object_id.in_(objects_subscribed_to)) \
         .group_by(Activity.object_id) \
         .all()
@@ -102,11 +159,129 @@ def get_immediate_notifications(notification_datetime=None):
             objects_to_notify.append(object_id)
     if not objects_to_notify:
         return {}
+    return get_notifications_by_email(objects_to_notify,
+                                      subscription_frequency)
 
+
+def is_it_time_to_send_weekly_notifications():
+    emails_last_sent = Subscribe.get_emails_last_sent(
+        frequency=Frequency.WEEKLY.value)
+    if not emails_last_sent:
+        return True
+    else:
+        return most_recent_weekly_notification_datetime() > emails_last_sent
+
+
+def is_it_time_to_send_daily_notifications():
+    emails_last_sent = Subscribe.get_emails_last_sent(
+        frequency=Frequency.DAILY.value)
+    if not emails_last_sent:
+        return True
+    else:
+        return most_recent_daily_notification_datetime() > emails_last_sent
+
+
+def most_recent_weekly_notification_datetime(now=None):
+    now = now or datetime.datetime.now()
+    this_weeks_notification_date = now + datetime.timedelta(
+        days=get_config('weekly_notification_day') - now.weekday(),
+        hours=get_config('daily_and_weekly_notification_time').hour - now.hour,
+        minutes=get_config('daily_and_weekly_notification_time').minute - now.minute)
+    if this_weeks_notification_date > now:
+        return this_weeks_notification_date - datetime.timedelta(days=7)
+    else:
+        return this_weeks_notification_date
+
+
+def most_recent_daily_notification_datetime(now=None):
+    now = now or datetime.datetime.now()
+    todays_notification_time = now + datetime.timedelta(
+        hours=get_config('daily_and_weekly_notification_time').hour - now.hour,
+        minutes=get_config('daily_and_weekly_notification_time').minute - now.minute)
+    if todays_notification_time > now:
+        return todays_notification_time - datetime.timedelta(days=1)
+    else:
+        return todays_notification_time
+
+
+def get_weekly_notifications(notification_datetime=None):
+    '''Work out what weekly notifications need sending out, based on activity,
+    subscriptions and past notifications.
+    '''
+    # interested in activity which is this week and has a subscriber
+    subscription_frequency = Frequency.WEEKLY.value
+    objects_subscribed_to = set(
+        (r[0] for r in model.Session.query(Subscription.object_id)
+         .filter(Subscription.frequency == subscription_frequency).all())
+    )
+    if not objects_subscribed_to:
+        return {}
+
+    emails_last_sent = Subscribe.get_emails_last_sent(
+        frequency=Frequency.WEEKLY.value)
+    now = notification_datetime or datetime.datetime.now()
+    catch_up_period = get_config('email_notifications_since')
+    week = datetime.timedelta(days=7)
+    if emails_last_sent:
+        include_activity_from = max(
+            emails_last_sent, (now - week - catch_up_period))
+    else:
+        include_activity_from = (now - week)
+    object_activity = model.Session.query(Activity.object_id) \
+        .filter(Activity.timestamp > include_activity_from) \
+        .filter(Activity.object_id.in_(objects_subscribed_to)) \
+        .group_by(Activity.object_id) \
+        .all()
+
+    objects_to_notify = [object_id for object_id in object_activity]
+    if not objects_to_notify:
+        return {}
+    return get_notifications_by_email(objects_to_notify,
+                                      subscription_frequency)
+
+
+def get_daily_notifications(notification_datetime=None):
+    '''Work out what daily notifications need sending out, based on activity,
+    subscriptions and past notifications.
+    '''
+    # interested in activity which is this week and has a subscriber
+    subscription_frequency = Frequency.DAILY.value
+    objects_subscribed_to = set(
+        (r[0] for r in model.Session.query(Subscription.object_id)
+         .filter(Subscription.frequency == subscription_frequency).all())
+    )
+    if not objects_subscribed_to:
+        return {}
+
+    emails_last_sent = Subscribe.get_emails_last_sent(
+        frequency=Frequency.DAILY.value)
+    now = notification_datetime or datetime.datetime.now()
+    catch_up_period = get_config('email_notifications_since')
+    day = datetime.timedelta(days=1)
+    if emails_last_sent:
+        include_activity_from = max(
+            emails_last_sent, (now - day - catch_up_period))
+    else:
+        include_activity_from = (now - day)
+    object_activity = model.Session.query(Activity.object_id) \
+        .filter(Activity.timestamp > include_activity_from) \
+        .filter(Activity.object_id.in_(objects_subscribed_to)) \
+        .group_by(Activity.object_id) \
+        .all()
+
+    objects_to_notify = [object_id for object_id in object_activity]
+    if not objects_to_notify:
+        return {}
+    return get_notifications_by_email(objects_to_notify,
+                                      subscription_frequency)
+
+
+def get_notifications_by_email(objects_to_notify, subscription_frequency):
     # get subscriptions for these activities
     subscription_activity = model.Session.query(
         Subscription, Activity) \
         .join(Activity, Subscription.object_id == Activity.object_id) \
+        .filter(Subscription.frequency == subscription_frequency) \
         .filter(Subscription.object_id.in_(objects_to_notify)) \
         .all()
 

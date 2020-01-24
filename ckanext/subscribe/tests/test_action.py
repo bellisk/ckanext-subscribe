@@ -234,6 +234,7 @@ class TestSubscribeVerify(object):
             object_id=dataset['id'],
             object_type='dataset',
             email='bob@example.com',
+            frequency=subscribe_model.Frequency.IMMEDIATE.value,
             verification_code='the_code',
             verification_code_expires=datetime.datetime.now() +
             datetime.timedelta(hours=1)
@@ -266,6 +267,7 @@ class TestSubscribeVerify(object):
             object_id=dataset['id'],
             object_type='dataset',
             email='bob@example.com',
+            frequency=subscribe_model.Frequency.IMMEDIATE.value,
             verification_code='the_code',
             verification_code_expires=datetime.datetime.now() +
             datetime.timedelta(hours=1)
@@ -289,6 +291,7 @@ class TestSubscribeVerify(object):
             object_id=dataset['id'],
             object_type='dataset',
             email='bob@example.com',
+            frequency=subscribe_model.Frequency.IMMEDIATE.value,
             verification_code='the_code',
             verification_code_expires=datetime.datetime.now() -
             datetime.timedelta(hours=1)  # in the past

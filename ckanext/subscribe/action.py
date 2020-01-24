@@ -7,7 +7,7 @@ import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
 from ckan.lib.mailer import MailerException
 
-from ckanext.subscribe.model import Subscription
+from ckanext.subscribe.model import Subscription, Frequency
 from ckanext.subscribe import (
     schema,
     dictization,
@@ -33,6 +33,8 @@ def subscribe_signup(context, data_dict):
         about (specify only one of: dataset_id or group_id or organization_id)
     :param organization_id: Organization name or id to get notifications
         about (specify only one of: dataset_id or group_id or organization_id)
+    :param frequency: Frequency of notifications to receive. One of:
+        'immediate', 'daily', 'weekly' (optional, default=immediate)
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
@@ -47,6 +49,7 @@ def subscribe_signup(context, data_dict):
 
     data = {
         'email': data_dict['email'],
+        'frequency': data_dict.get('frequency', Frequency.IMMEDIATE.value),
     }
     if data_dict.get('dataset_id'):
         data['object_type'] = 'dataset'
@@ -273,4 +276,6 @@ def subscribe_send_any_notifications(context, data_dict):
     notifications.
     '''
     notification.send_any_immediate_notifications()
+    notification.send_weekly_notifications_if_its_time_to()
+    notification.send_daily_notifications_if_its_time_to()
     return None

@@ -164,14 +164,25 @@ Config settings
 ckanext.subscribe.immediate_notification_grace_period_minutes = 0
 ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
 
-# Email notifications for events older than this time period will not be sent.
-# So, after a pause in the sending of emails, when it restarts, activity older
-# than this time period will not be sent to users.
+# Email notifications older than this time period will not be sent.
+# So, after a pause in the sending of emails, when it restarts, it will not
+# notify about activity which is:
+# * older than this period, for immediate subscriptions
+# * older than this period + 1 day, for daily subscriptions
+# * older than this period + 1 week, for weekly subscriptions
 # Accepted formats: ‘2 days’, ‘14 days’, ‘4:35:00’ (hours, minutes, seconds),
 #                  ‘7 days, 3:23:34’, etc.
 # See also: https://docs.ckan.org/en/2.8/maintaining/configuration.html#ckan-email-notifications-since
 # (optional, default: ‘2 days’)
 ckan.email_notifications_since = 24:00:00
+
+# The time that daily and weekly notification subscriptions are sent (UTC
+# timezone)
+ckanext.subscribe.daily_and_weekly_notification_time = 09:00
+
+# The day of the week that weekly notification subscriptions are sent
+ckanext.subscribe.weekly_notification_day = friday
+
 
 ---------------
 Troubleshooting

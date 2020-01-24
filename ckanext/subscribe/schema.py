@@ -1,5 +1,9 @@
+# encoding: utf-8
+
 import ckan.plugins as p
 from ckan.common import _
+
+from ckanext.subscribe.model import Frequency
 
 get_validator = p.toolkit.get_validator
 Invalid = p.toolkit.Invalid
@@ -23,6 +27,14 @@ def one_package_or_group_or_org(key, data, errors, context):
                         '"group_id" or "organization_id"'))
 
 
+def frequency_name_to_int(name, context):
+    try:
+        return Frequency[name.upper()].value
+    except KeyError:
+        raise Invalid(_('Frequency must be one of: {}'
+                        .format(' '.join(f.name.lower() for f in Frequency))))
+
+
 def subscribe_schema():
     return {
         u'__before': [one_package_or_group_or_org],
@@ -30,6 +42,7 @@ def subscribe_schema():
         u'group_id': [ignore_empty, group_id_or_name_exists],
         u'organization_id': [ignore_empty, group_id_or_name_exists],
         u'email': [email],
+        u'frequency': [ignore_empty, frequency_name_to_int],
         u'skip_verification': [boolean_validator],
     }
 

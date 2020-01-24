@@ -3,7 +3,7 @@ import uuid
 from ckan.lib.dictization import table_dict_save, table_dictize
 from ckan import model
 
-from ckanext.subscribe.model import Subscription
+from ckanext.subscribe.model import Subscription, Frequency
 
 
 def subscription_save(subscription_dict, context):
@@ -30,5 +30,8 @@ def dictize_subscription(subscription_obj, context, include_name=False):
         else:
             subscription_dict['object_name'] = \
                 model.Group.get(subscription_dict['object_id']).id
+
+    subscription_dict['frequency'] = \
+        Frequency(subscription_dict['frequency']).name
 
     return subscription_dict

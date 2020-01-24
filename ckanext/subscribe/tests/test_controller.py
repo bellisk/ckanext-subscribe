@@ -118,6 +118,7 @@ class TestVerifySubscription(FunctionalTestBase):
             object_id=dataset['id'],
             object_type='dataset',
             email='bob@example.com',
+            frequency=subscribe_model.Frequency.IMMEDIATE.value,
             verification_code='verify_code',
             verification_code_expires=datetime.datetime.now() +
             datetime.timedelta(hours=1)

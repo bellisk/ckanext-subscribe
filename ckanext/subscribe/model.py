@@ -1,5 +1,6 @@
 import logging
 import datetime
+from enum import Enum
 
 from sqlalchemy import Table, Column, types
 
@@ -85,8 +86,16 @@ class Subscription(_DomainObject):
     # The LoginCode.code does not invalidate previous ones, for convenience.
 
     def __repr__(self):
-        return '<Subscription id={} email={} object_type={} verified={}>'\
-            .format(self.id, self.email, self.object_type, self.verified)
+        return '<Subscription id={} email={} object_type={} verified={} ' \
+            'frequency={}>'.format(
+                self.id, self.email, self.object_type, self.verified,
+                Frequency(self.frequency).name)
+
+
+class Frequency(Enum):
+    IMMEDIATE = 1
+    DAILY = 2
+    WEEKLY = 3
 
 
 class LoginCode(_DomainObject):
@@ -121,16 +130,28 @@ class Subscribe(_DomainObject):
             self.email_last_sent)
 
     @classmethod
-    def set_emails_last_sent(cls, emails_last_sent):
-        model.Session.query(cls).delete()
-        model.Session.add(cls(emails_last_sent=emails_last_sent))
+    def set_emails_last_sent(cls, frequency, emails_last_sent):
+        subscribe = model.Session.query(cls) \
+            .filter_by(frequency=frequency) \
+            .first()
+        if subscribe:
+            subscribe.emails_last_sent = emails_last_sent
+        else:
+            subscribe = cls(frequency=frequency,
+                            emails_last_sent=emails_last_sent)
+            model.Session.add(subscribe)
         # caller needs to do:
         #   model.Session.commit()
 
     @classmethod
-    def get_emails_last_sent(cls):
-        # if there is none recorded, this returns AttributeError
-        return model.Session.query(cls).first().emails_last_sent
+    def get_emails_last_sent(cls, frequency):
+        try:
+            return model.Session.query(cls) \
+                .filter_by(frequency=frequency) \
+                .first() \
+                .emails_last_sent
+        except AttributeError:
+            return None
 
 
 def define_tables():
@@ -149,6 +170,8 @@ def define_tables():
         Column('verification_code', types.UnicodeText),
         Column('verification_code_expires', types.DateTime),
         Column('created', types.DateTime, default=datetime.datetime.utcnow),
+        # frequency is: immediate, daily, weekly
+        Column('frequency', types.Integer),
     )
 
     login_code_table = Table(
@@ -163,8 +186,9 @@ def define_tables():
     subscribe_table = Table(
         'subscribe',
         metadata,
-        # just stores one row for now
+        # just stores one row for each frequency now
         Column('id', types.UnicodeText, primary_key=True, default=make_uuid),
+        Column('frequency', types.Integer),
         Column('emails_last_sent', types.DateTime, nullable=False),
     )
 

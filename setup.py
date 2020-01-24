@@ -56,6 +56,7 @@ setup(
     namespace_packages=['ckanext'],
 
     install_requires=[
+        'enum34',
     ],
 
     # If there are data files included in your packages that need to be
