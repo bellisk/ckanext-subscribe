@@ -61,3 +61,8 @@ def subscribe_request_manage_code(context, data_dict):
 def subscribe_send_any_notifications(context, data_dict):
     # sysadmins only
     return {'success': False}
+
+
+def subscribe_update(context, data_dict):
+    # sysadmins only
+    return {'success': False}

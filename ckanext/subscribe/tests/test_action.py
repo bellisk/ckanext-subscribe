@@ -510,3 +510,39 @@ class TestSendAnyNotifications(object):
             for a in notifications[0]['activities']],
            [('new package', dataset['id'])])
         eq(notifications[0]['subscription']['id'], subscription['id'])
+
+
+class TestUpdate(object):
+    def setup(self):
+        helpers.reset_db()
+
+    def test_basic(self):
+        subscription = Subscription(
+            email='bob@example.com',
+            frequency='WEEKLY',
+            skip_verification=True,
+        )
+
+        subscription = helpers.call_action(
+            "subscribe_update",
+            {},
+            id=subscription['id'],
+            frequency='DAILY',
+        )
+
+        eq(subscription['frequency'], 'DAILY')
+
+    def test_frequency_not_specified(self):
+        subscription = Subscription(
+            email='bob@example.com',
+            frequency='WEEKLY',
+            skip_verification=True,
+        )
+
+        subscription = helpers.call_action(
+            "subscribe_update",
+            {},
+            id=subscription['id'],
+        )
+
+        eq(subscription['frequency'], 'WEEKLY')  # unchanged

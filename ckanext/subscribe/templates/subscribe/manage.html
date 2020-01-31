@@ -5,12 +5,13 @@
   {% resource 'subscribe/subscribe.css' %}
 {% endblock styles %}
 
-{% block primary_content %}
+{% block primary %}
+<article class="module">
+  <div class="module-content">
 
 <h1>Manage subscriptions</h1>
 
 <p>Email: {{ email }}</p>
-
 <p>Subscriptions:</p>
 {% if subscriptions %}
   <table id="subscriptions">
@@ -33,6 +34,19 @@
           {% endif %}
         </td>
         <td>
+          {% if subscription.verified %}
+            {% import 'macros/form.html' as form %}
+            <form method='post' action="{{ h.url_for(controller='ckanext.subscribe.controller:SubscribeController', action='update') }}" id="frequency-form" enctype="multipart/form-data" class="form-inline">
+              <input id="subscribe-code" type="hidden" name="code" value="{{ code }}" />
+              <input id="subscribe-id" type="hidden" name="id" value="{{ subscription.id }}" />
+              {{ form.select('frequency', label=_('Emails are sent'), options=frequency_options, selected=subscription.frequency, error=None) }}
+              <button class="btn btn-primary" type="submit" name="submit" >
+                {{ _('Save') }}
+              </button>
+            </form>
+          {% endif %}
+        </td>
+        <td>
             <form method='post' action="{{ h.url_for(controller='ckanext.subscribe.controller:SubscribeController', action='unsubscribe') }}" id="unsubscribe-form" enctype="multipart/form-data" class="form-inline">
               <!-- (Bootstrap 3) <div class="form-group input-group-sm"> -->
                 <input id="unsubscribe-code" type="hidden" name="code" value="{{ code }}" />
@@ -48,4 +62,8 @@
   (None)
 {% endif %}
 
+  </div>
+</article>
 {% endblock %}
+
+{% block secondary %}{% endblock %}

@@ -31,3 +31,6 @@ table#subscriptions {
 #subscriptions form {
     margin: 0;
 }
+#subscriptions select#frequency {
+    width: 120px;
+}

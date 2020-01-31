@@ -182,6 +182,68 @@ class TestManage(FunctionalTestBase):
            'http://test.ckan.net/subscribe/request_manage_code')
 
 
+class TestUpdate(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        super(TestUpdate, cls).setup_class()
+        subscribe_model.setup()
+
+    def test_submit(self):
+        subscription = Subscription(
+            email='bob@example.com',
+            frequency='WEEKLY',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().post(
+            '/subscribe/update',
+            params={'code': code, 'id': subscription['id'],
+                    'frequency': 'daily'},
+            status=302)
+
+        assert response.location.startswith(
+            'http://test.ckan.net/subscribe/manage?code=')
+        response = response.follow()
+        assert_in('<option value="DAILY" selected>',
+                  response.body.decode('utf8'))
+
+    def test_form_submit(self):
+        Subscription(
+            email='bob@example.com',
+            frequency='WEEKLY',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/manage',
+            params={'code': code},
+            status=200)
+        form = response.forms["frequency-form"]
+        form["frequency"] = u"IMMEDIATE"
+        response = submit_and_follow(self._get_test_app(), form, {}, "save")
+
+        assert_in('<option value="IMMEDIATE" selected>',
+                  response.body.decode('utf8'))
+
+    def test_no_code(self):
+        subscription = Subscription(
+            email='bob@example.com',
+            frequency='WEEKLY',
+            skip_verification=True,
+        )
+
+        response = self._get_test_app().post(
+            '/subscribe/update',
+            params={'code': '', 'id': subscription['id'],
+                    'frequency': 'daily'},
+            status=302)
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+
 class TestUnsubscribe(FunctionalTestBase):
     @classmethod
     def setup_class(cls):

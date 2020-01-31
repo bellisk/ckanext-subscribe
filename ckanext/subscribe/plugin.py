@@ -31,6 +31,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
                     controller=controller, action='signup')
         map.connect('verify', '/subscribe/verify',
                     controller=controller, action='verify_subscription')
+        map.connect('update', '/subscribe/update',
+                    controller=controller, action='update')
         map.connect('manage', '/subscribe/manage',
                     controller=controller, action='manage')
         map.connect('unsubscribe', '/subscribe/unsubscribe',
@@ -48,6 +50,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
         return {
             'subscribe_signup': action.subscribe_signup,
             'subscribe_verify': action.subscribe_verify,
+            'subscribe_update': action.subscribe_update,
             'subscribe_list_subscriptions':
             action.subscribe_list_subscriptions,
             'subscribe_unsubscribe': action.subscribe_unsubscribe,
@@ -63,6 +66,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
         return {
             'subscribe_signup': auth.subscribe_signup,
             'subscribe_verify': auth.subscribe_verify,
+            'subscribe_update': auth.subscribe_update,
             'subscribe_list_subscriptions':
             auth.subscribe_list_subscriptions,
             'subscribe_unsubscribe': auth.subscribe_unsubscribe,

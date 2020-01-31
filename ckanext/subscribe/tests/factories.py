@@ -25,6 +25,7 @@ class Subscription(factory.Factory):
     email = 'bob@example.com'
     return_object = False
     created = datetime.datetime.now() - datetime.timedelta(hours=1)
+    frequency = 'immediate'
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):

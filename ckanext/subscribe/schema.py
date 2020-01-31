@@ -3,7 +3,7 @@
 import ckan.plugins as p
 from ckan.common import _
 
-from ckanext.subscribe.model import Frequency
+from ckanext.subscribe.model import Subscription, Frequency
 
 get_validator = p.toolkit.get_validator
 Invalid = p.toolkit.Invalid
@@ -47,6 +47,13 @@ def subscribe_schema():
     }
 
 
+def update_schema():
+    return {
+        u'id': [subscription_id_exists],
+        u'frequency': [ignore_empty, frequency_name_to_int],
+    }
+
+
 def unsubscribe_schema():
     return {
         u'__before': [one_package_or_group_or_org],
@@ -61,3 +68,14 @@ def request_manage_code_schema():
     return {
         u'email': [email],
     }
+
+
+def subscription_id_exists(id_, context):
+    '''
+    Raises Invalid if a subscription identified by the id cannot be found.
+    '''
+    model = context['model']
+    result = model.Session.query(Subscription).get(id_)
+    if not result:
+        raise Invalid(_('That subscription ID does not exist.'))
+    return id_

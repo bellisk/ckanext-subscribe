@@ -19,6 +19,7 @@ from ckan.plugins.toolkit import (
 from ckan.lib.mailer import MailerException
 
 from ckanext.subscribe import email_auth
+from ckanext.subscribe import model as subscribe_model
 
 log = __import__('logging').getLogger(__name__)
 
@@ -127,11 +128,69 @@ class SubscribeController(BaseController):
         subscriptions = \
             get_action(u'subscribe_list_subscriptions')(
                 context, {'email': email})
+        frequency_options = [
+            dict(text=f.name.lower().capitalize().replace(
+                     'Immediate', 'Immediately'),
+                 value=f.name)
+            for f in sorted(subscribe_model.Frequency, key=lambda x: x.value)
+        ]
         return render(u'subscribe/manage.html', extra_vars={
             'email': email,
             'code': code,
             'subscriptions': subscriptions,
+            'frequency_options': frequency_options,
         })
+
+    def update(self):
+        code = request.POST.get('code')
+        if not code:
+            h.flash_error('Code not supplied')
+            log.debug('No code supplied')
+            return self._request_manage_code_form()
+        try:
+            email_auth.authenticate_with_code(code)
+        except ValueError as exp:
+            h.flash_error('Code is invalid: {}'.format(exp))
+            log.debug('Code is invalid: {}'.format(exp))
+            return self._request_manage_code_form()
+
+        subscription_id = request.POST.get('id')
+        if not subscription_id:
+            abort(400, _(u'No id supplied'))
+
+        frequency = request.POST.get('frequency')
+        if not frequency:
+            abort(400, _(u'No frequency supplied'))
+
+        # user has done auth, but it's an email rather than a ckan user, so
+        # use site_user
+        site_user = get_action('get_site_user')({
+            'model': model,
+            'ignore_auth': True},
+            {}
+        )
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': site_user['name'],
+        }
+        data_dict = {
+            'id': subscription_id,
+            'frequency': frequency,
+        }
+        try:
+            get_action(u'subscribe_update')(context, data_dict)
+        except ValidationError as err:
+            h.flash_error(_('Error updating subscription: {}'
+                            .format(err.error_dict['message'])))
+        else:
+            h.flash_success(_('Subscription updated'))
+
+        return redirect_to(
+            controller='ckanext.subscribe.controller:SubscribeController',
+            action='manage',
+            code=code,
+        )
 
     def unsubscribe(self):
         # allow a GET or POST to do this, so that we can trigger it from a link

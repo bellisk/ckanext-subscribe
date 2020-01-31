@@ -75,6 +75,7 @@ def subscribe_signup(context, data_dict):
     if existing:
         # reuse existing subscription
         subscription = existing
+        subscription.frequency = data['frequency']
     else:
         # create subscription object
         if p.toolkit.check_ckan_version(max_version='2.8.99'):
@@ -141,6 +142,35 @@ def subscribe_verify(context, data_dict):
         manage_code, subscription=subscription)
 
     return dictization.dictize_subscription(subscription, context)
+
+
+@validate(schema.update_schema)
+def subscribe_update(context, data_dict):
+    '''Update a subscription's configuration.
+
+    :param id: Subscription id to update
+    :param frequency: Frequency of notifications to receive. One of:
+        'immediate', 'daily', 'weekly' (optional, default=unchanged)
+
+    :returns: the updated subscription
+    :rtype: dictionary
+
+    '''
+    model = context['model']
+
+    _check_access(u'subscribe_update', context, data_dict)
+
+    id_ = p.toolkit.get_or_bust(data_dict, 'id')
+    subscription = model.Session.query(Subscription).get(id_)
+
+    for key in ('frequency',):
+        if not data_dict.get(key):
+            continue
+        setattr(subscription, key, data_dict[key])
+    model.repo.commit()
+
+    subscription_dict = dictization.dictize_subscription(subscription, context)
+    return subscription_dict
 
 
 def subscribe_list_subscriptions(context, data_dict):
