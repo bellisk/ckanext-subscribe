@@ -267,6 +267,34 @@ def subscribe_unsubscribe(context, data_dict):
     return data['object_name'], data['object_type']
 
 
+@validate(schema.unsubscribe_all_schema)
+def subscribe_unsubscribe_all(context, data_dict):
+    '''Unsubscribe an email from all notifications
+
+    :param email: Email address to unsubscribe
+
+    :returns: None
+    '''
+    model = context['model']
+
+    _check_access(u'subscribe_unsubscribe_all', context, data_dict)
+
+    data = {
+        'email': p.toolkit.get_or_bust(data_dict, 'email'),
+        'user': context['user']
+    }
+
+    subscriptions = model.Session.query(Subscription) \
+        .filter_by(email=data['email']) \
+        .all()
+    if not subscriptions:
+        raise p.toolkit.ObjectNotFound(
+            'That user has no subscriptions')
+    for subscription in subscriptions:
+        model.Session.delete(subscription)
+    model.repo.commit()
+
+
 @validate(schema.request_manage_code_schema)
 def subscribe_request_manage_code(context, data_dict):
     '''Request a code for managing existing subscriptions. Causes a email to be

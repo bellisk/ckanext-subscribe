@@ -15,6 +15,7 @@ from ckan.plugins.toolkit import (
     abort,
     render,
     redirect_to,
+    config,
 )
 from ckan.lib.mailer import MailerException
 
@@ -254,6 +255,59 @@ class SubscribeController(BaseController):
             return self._redirect_back_to_subscribe_page(object_name,
                                                          object_type)
         return self._redirect_back_to_subscribe_page_from_request(data_dict)
+
+    def unsubscribe_all(self):
+        # allow a GET or POST to do this, so that we can trigger it from a link
+        # in an email or a web form
+        code = request.params.get('code')
+        if not code:
+            h.flash_error('Code not supplied')
+            log.debug('No code supplied')
+            return self._request_manage_code_form()
+        try:
+            email = email_auth.authenticate_with_code(code)
+        except ValueError as exp:
+            h.flash_error('Code is invalid: {}'.format(exp))
+            log.debug('Code is invalid: {}'.format(exp))
+            return self._request_manage_code_form()
+
+        # user has done auth, but it's an email rather than a ckan user, so
+        # use site_user
+        site_user = get_action('get_site_user')({
+            'model': model,
+            'ignore_auth': True},
+            {}
+        )
+        context = {
+            u'model': model,
+            u'user': site_user['name'],
+        }
+        data_dict = {
+            'email': email,
+        }
+        try:
+            get_action(u'subscribe_unsubscribe_all')(context, data_dict)
+        except ValidationError as err:
+            error_messages = []
+            for key_ignored in ('message', '__before'):
+                if key_ignored in err.error_dict:
+                    error_messages.extend(err.error_dict.pop(key_ignored))
+            if err.error_dict:
+                error_messages.append(repr(err.error_dict))
+            h.flash_error(_('Error unsubscribing: {}'
+                            .format('; '.join(error_messages))))
+        except ObjectNotFound as err:
+            h.flash_error(_('Error unsubscribing: {}'.format(err)))
+        else:
+            h.flash_success(
+                _('You are no longer subscribed to notifications from {}'
+                  .format(config.get('ckan.site_title'))))
+            return redirect_to('home')
+        return redirect_to(
+            controller='ckanext.subscribe.controller:SubscribeController',
+            action='manage',
+            code=code,
+        )
 
     def _redirect_back_to_subscribe_page(self, object_name, object_type):
         if object_type == 'dataset':

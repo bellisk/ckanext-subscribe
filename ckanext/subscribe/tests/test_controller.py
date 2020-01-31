@@ -342,6 +342,77 @@ class TestUnsubscribe(FunctionalTestBase):
             'Error unsubscribing: That user is not subscribed to that object',
             response.body.decode('utf8'))
 
+    def test_no_object(self):
+        code = email_auth.create_code('bob@example.com')
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': code, 'dataset': ''},
+            status=302)
+
+        eq(response.location, 'http://test.ckan.net/?__no_cache__=True')
+
+
+class TestUnsubscribeAll(FunctionalTestBase):
+    @classmethod
+    def setup_class(cls):
+        reset_db()
+        super(TestUnsubscribeAll, cls).setup_class()
+        subscribe_model.setup()
+
+    def test_basic(self):
+        dataset = Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe-all',
+            params={'code': code},
+            status=302)
+
+        assert_equal(response.location,
+                     'http://test.ckan.net/?__no_cache__=True'
+                     .format(dataset['name']))
+        response = response.follow()
+        assert_in('You are no longer subscribed to notifications from CKAN',
+                  response.body.decode('utf8'))
+
+    def test_no_code(self):
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe-all',
+            params={'code': ''},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_bad_code(self):
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe-all',
+            params={'code': 'bad-code'},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_no_subscription(self):
+        Dataset()
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe-all',
+            params={'code': code},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/')
+        response = response.follow()
+        assert_in(
+            'Error unsubscribing: That user has no subscriptions',
+            response.body.decode('utf8'))
 
     def test_no_object(self):
         code = email_auth.create_code('bob@example.com')

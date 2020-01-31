@@ -486,6 +486,37 @@ class TestUnsubscribe(object):
         eq([sub['object_id'] for sub in sub_list], [org2['id']])
 
 
+class TestUnsubscribeAll(object):
+
+    def setup(self):
+        helpers.reset_db()
+
+    def test_basic(self):
+        dataset = factories.Dataset()
+        dataset2 = factories.Dataset()
+        Subscription(
+            dataset_id=dataset['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+        Subscription(
+            dataset_id=dataset2['id'],
+            email='bob@example.com',
+            skip_verification=True,
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_unsubscribe_all', {},
+            email='bob@example.com',
+        )
+
+        sub_list = helpers.call_action(
+            'subscribe_list_subscriptions', {},
+            email='bob@example.com',
+        )
+        eq([sub['object_id'] for sub in sub_list], [])
+
+
 class TestSendAnyNotifications(object):
 
     def setup(self):

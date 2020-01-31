@@ -64,6 +64,12 @@ def unsubscribe_schema():
     }
 
 
+def unsubscribe_all_schema():
+    return {
+        u'email': [email],
+    }
+
+
 def request_manage_code_schema():
     return {
         u'email': [email],

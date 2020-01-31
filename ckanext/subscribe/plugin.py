@@ -37,6 +37,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
                     controller=controller, action='manage')
         map.connect('unsubscribe', '/subscribe/unsubscribe',
                     controller=controller, action='unsubscribe')
+        map.connect('unsubscribe_all', '/subscribe/unsubscribe-all',
+                    controller=controller, action='unsubscribe_all')
         map.connect('request_manage_code', '/subscribe/request_manage_code',
                     controller=controller, action='request_manage_code')
         return map
@@ -54,6 +56,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_list_subscriptions':
             action.subscribe_list_subscriptions,
             'subscribe_unsubscribe': action.subscribe_unsubscribe,
+            'subscribe_unsubscribe_all': action.subscribe_unsubscribe_all,
             'subscribe_request_manage_code':
             action.subscribe_request_manage_code,
             'subscribe_send_any_notifications':
@@ -70,6 +73,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
             'subscribe_list_subscriptions':
             auth.subscribe_list_subscriptions,
             'subscribe_unsubscribe': auth.subscribe_unsubscribe,
+            'subscribe_unsubscribe_all': auth.subscribe_unsubscribe_all,
             'subscribe_request_manage_code':
             auth.subscribe_request_manage_code,
             'subscribe_send_any_notifications':

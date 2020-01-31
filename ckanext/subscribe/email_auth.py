@@ -134,6 +134,12 @@ def get_footer_contents(code, subscription=None, email=None):
             '<a href="{unsubscribe_link}">'
             'unsubscribe from {object_type} "{object_title}"</a>'
         )
+    else:
+        html_lines.append(
+            'To stop receiving all subscription emails from {site_title}: '
+            '<a href="{unsubscribe_all_link}">'
+            'unsubscribe all</a>'
+        )
     html_lines.append('<a href="{manage_link}">Manage settings</a>')
     html_footer = '\n'.join(
         '<p style="font-size:10px;line-height:200%;text-align:center;'
@@ -145,6 +151,12 @@ def get_footer_contents(code, subscription=None, email=None):
         plain_text_footer += '''
 You can unsubscribe from notifications emails for {object_type}: "{object_title}" by going to {unsubscribe_link}.
 '''.format(**email_vars)
+    else:
+        plain_text_footer += (
+            'To stop receiving all subscription emails from {site_title}: '
+            '<a href="{unsubscribe_all_link}">'
+            'unsubscribe all</a>'
+        ).format(**email_vars)
     plain_text_footer += '''
 Manage your settings at {manage_link}.
 '''.format(**email_vars)
@@ -165,6 +177,11 @@ def get_email_vars(code, subscription=None, email=None):
     '''
     assert code
     assert subscription or email
+    unsubscribe_all_link = p.toolkit.url_for(
+        controller='ckanext.subscribe.controller:SubscribeController',
+        action='unsubscribe_all',
+        code=code,
+        qualified=True)
     manage_link = p.toolkit.url_for(
         controller='ckanext.subscribe.controller:SubscribeController',
         action='manage',
@@ -174,6 +191,7 @@ def get_email_vars(code, subscription=None, email=None):
         site_title=config.get('ckan.site_title'),
         site_url=config.get('ckan.site_url'),
         email=email or subscription.email,
+        unsubscribe_all_link=unsubscribe_all_link,
         manage_link=manage_link,
     )
 
