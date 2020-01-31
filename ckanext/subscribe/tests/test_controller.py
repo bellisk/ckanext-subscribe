@@ -228,16 +228,17 @@ class TestUpdate(FunctionalTestBase):
         assert_in('<option value="IMMEDIATE" selected>',
                   response.body.decode('utf8'))
 
-    def test_no_code(self):
+    def test_another_code(self):
         subscription = Subscription(
             email='bob@example.com',
             frequency='WEEKLY',
             skip_verification=True,
         )
+        code = email_auth.create_code('someone_else@example.com')
 
         response = self._get_test_app().post(
             '/subscribe/update',
-            params={'code': '', 'id': subscription['id'],
+            params={'code': code, 'id': subscription['id'],
                     'frequency': 'daily'},
             status=302)
         assert response.location.startswith(
@@ -324,6 +325,23 @@ class TestUnsubscribe(FunctionalTestBase):
 
         assert response.location.startswith(
            'http://test.ckan.net/subscribe/request_manage_code')
+
+    def test_no_subscription(self):
+        dataset = Dataset()
+        code = email_auth.create_code('bob@example.com')
+
+        response = self._get_test_app().get(
+            '/subscribe/unsubscribe',
+            params={'code': code, 'dataset': dataset['id']},
+            status=302)
+
+        assert response.location.startswith(
+           'http://test.ckan.net/dataset/{}'.format(dataset['name']))
+        response = response.follow()
+        assert_in(
+            'Error unsubscribing: That user is not subscribed to that object',
+            response.body.decode('utf8'))
+
 
     def test_no_object(self):
         code = email_auth.create_code('bob@example.com')

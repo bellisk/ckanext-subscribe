@@ -148,7 +148,7 @@ class SubscribeController(BaseController):
             log.debug('No code supplied')
             return self._request_manage_code_form()
         try:
-            email_auth.authenticate_with_code(code)
+            email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
             h.flash_error('Code is invalid: {}'.format(exp))
             log.debug('Code is invalid: {}'.format(exp))
@@ -157,6 +157,14 @@ class SubscribeController(BaseController):
         subscription_id = request.POST.get('id')
         if not subscription_id:
             abort(400, _(u'No id supplied'))
+        subscription = model.Session.query(subscribe_model.Subscription) \
+            .get(subscription_id)
+        if not subscription:
+            abort(404, _(u'That subscription ID does not exist.'))
+        if subscription.email != email:
+            h.flash_error('Code is invalid for that subscription')
+            log.debug('Code is invalid for that subscription')
+            return self._request_manage_code_form()
 
         frequency = request.POST.get('frequency')
         if not frequency:
