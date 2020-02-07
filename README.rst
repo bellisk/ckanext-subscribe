@@ -37,6 +37,10 @@ casual interest in say a handful of datasets. Generating and storing a password
 is a burden on the user, and for casual use just using temporary email links,
 as in this extension, is more appropriate.
 
+.. image:: doc/sign-up.png
+
+More screenshots: https://github.com/davidread/ckanext-subscribe/tree/master/doc
+
 ------------
 Requirements
 ------------

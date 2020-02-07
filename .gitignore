@@ -44,3 +44,6 @@ docs/_build/
 
 # coverage output dir
 cover
+
+# OSX
+.DS_Store
