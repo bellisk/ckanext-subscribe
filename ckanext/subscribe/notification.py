@@ -4,7 +4,7 @@ from collections import defaultdict
 from sqlalchemy import func
 
 from ckan import model
-from ckan.model import Activity
+from ckan.model import Activity, Package, Group, Member
 from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
 from ckan.lib.email_notifications import string_to_timedelta
@@ -117,10 +117,9 @@ def get_immediate_notifications(notification_datetime=None):
     '''
     # just interested in activity which is recent and has a subscriber
     subscription_frequency = Frequency.IMMEDIATE.value
-    objects_subscribed_to = set(
-        (r[0] for r in model.Session.query(Subscription.object_id)
-         .filter(Subscription.frequency == subscription_frequency).all())
-    )
+
+    # {object_id: [subscriptions]}
+    objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
         return {}
 
@@ -140,7 +139,7 @@ def get_immediate_notifications(notification_datetime=None):
         Activity.object_id, func.min(Activity.timestamp),
         func.max(Activity.timestamp)) \
         .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to)) \
+        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
         .group_by(Activity.object_id) \
         .all()
 
@@ -160,7 +159,40 @@ def get_immediate_notifications(notification_datetime=None):
     if not objects_to_notify:
         return {}
     return get_notifications_by_email(objects_to_notify,
+                                      objects_subscribed_to,
                                       subscription_frequency)
+
+
+def get_objects_subscribed_to(subscription_frequency):
+    ''' Returns the objects we're listening for activity to, and the
+    subscriptions they are related to
+
+    :returns: {object_id: [subscriptions]}
+    '''
+    objects_subscribed_to = defaultdict(list)  # {object_id: [subscriptions]}
+    # direct subscriptions - i.e. datasets, orgs & groups
+    for subscription in model.Session.query(Subscription) \
+            .filter(Subscription.frequency == subscription_frequency).all():
+        objects_subscribed_to[subscription.object_id].append(subscription)
+    # also include the datasets attached to the subscribed orgs
+    for subscription, package_id in model.Session.query(Subscription, Package.id) \
+            .join(Group, Group.id == Subscription.object_id) \
+            .filter(Group.state == 'active') \
+            .filter(Group.is_organization == True) \
+            .join(Package, Package.owner_org == Group.id) \
+            .all():
+        objects_subscribed_to[package_id].append(subscription)
+    # also include the datasets attached to the subscribed orgs
+    for subscription, package_id in model.Session.query(Subscription, Package.id) \
+            .join(Group, Group.id == Subscription.object_id) \
+            .filter(Group.state == 'active') \
+            .filter(Group.is_organization == False) \
+            .join(Member, Member.group_id == Group.id) \
+            .filter(Member.state == 'active') \
+            .join(Package, Package.id == Member.table_id) \
+            .all():
+        objects_subscribed_to[package_id].append(subscription)
+    return objects_subscribed_to
 
 
 def is_it_time_to_send_weekly_notifications():
@@ -210,10 +242,9 @@ def get_weekly_notifications(notification_datetime=None):
     '''
     # interested in activity which is this week and has a subscriber
     subscription_frequency = Frequency.WEEKLY.value
-    objects_subscribed_to = set(
-        (r[0] for r in model.Session.query(Subscription.object_id)
-         .filter(Subscription.frequency == subscription_frequency).all())
-    )
+
+    # {object_id: [subsciptions]}
+    objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
         return {}
 
@@ -229,7 +260,7 @@ def get_weekly_notifications(notification_datetime=None):
         include_activity_from = (now - week)
     object_activity = model.Session.query(Activity.object_id) \
         .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to)) \
+        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
         .group_by(Activity.object_id) \
         .all()
 
@@ -237,6 +268,7 @@ def get_weekly_notifications(notification_datetime=None):
     if not objects_to_notify:
         return {}
     return get_notifications_by_email(objects_to_notify,
+                                      objects_subscribed_to,
                                       subscription_frequency)
 
 
@@ -246,10 +278,9 @@ def get_daily_notifications(notification_datetime=None):
     '''
     # interested in activity which is this week and has a subscriber
     subscription_frequency = Frequency.DAILY.value
-    objects_subscribed_to = set(
-        (r[0] for r in model.Session.query(Subscription.object_id)
-         .filter(Subscription.frequency == subscription_frequency).all())
-    )
+
+    # {object_id: [subscriptions]}
+    objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
         return {}
 
@@ -265,7 +296,7 @@ def get_daily_notifications(notification_datetime=None):
         include_activity_from = (now - day)
     object_activity = model.Session.query(Activity.object_id) \
         .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to)) \
+        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
         .group_by(Activity.object_id) \
         .all()
 
@@ -273,16 +304,15 @@ def get_daily_notifications(notification_datetime=None):
     if not objects_to_notify:
         return {}
     return get_notifications_by_email(objects_to_notify,
+                                      objects_subscribed_to,
                                       subscription_frequency)
 
 
-def get_notifications_by_email(objects_to_notify, subscription_frequency):
-    # get subscriptions for these activities
-    subscription_activity = model.Session.query(
-        Subscription, Activity) \
-        .join(Activity, Subscription.object_id == Activity.object_id) \
-        .filter(Subscription.frequency == subscription_frequency) \
-        .filter(Subscription.object_id.in_(objects_to_notify)) \
+def get_notifications_by_email(objects_to_notify, objects_subscribed_to,
+                               subscription_frequency):
+    # get activities for the objects_to_notify
+    activities = model.Session.query(Activity) \
+        .filter(Activity.object_id.in_(objects_to_notify)) \
         .all()
 
     # group by email address
@@ -291,12 +321,13 @@ def get_notifications_by_email(objects_to_notify, subscription_frequency):
     # (done in a loop rather than sql merely because of ease/clarity)
     # email: {subscription: [activity, ...], ...}
     notifications = defaultdict(lambda: defaultdict(list))
-    for subscription, activity in subscription_activity:
-        # ignore activity that occurs before this subscription was created
-        if subscription.created > activity.timestamp:
-            continue
+    for activity in activities:
+        for subscription in objects_subscribed_to[activity.object_id]:
+            # ignore activity that occurs before this subscription was created
+            if subscription.created > activity.timestamp:
+                continue
 
-        notifications[subscription.email][subscription].append(activity)
+            notifications[subscription.email][subscription].append(activity)
 
     # dictize
     notifications_by_email_dictized = defaultdict(list)

@@ -6,7 +6,7 @@ import mock
 from nose.tools import assert_equal, assert_in
 
 from ckan.tests import helpers
-from ckan.tests.factories import Dataset
+from ckan.tests.factories import Dataset, Organization, Group
 from ckan import model
 
 from ckanext.subscribe import model as subscribe_model
@@ -65,6 +65,36 @@ class TestGetImmediateNotifications(object):
         dataset = factories.DatasetActivity()
         _ = factories.DatasetActivity()  # decoy
         subscription = factories.Subscription(dataset_id=dataset['id'])
+
+        notifies = get_immediate_notifications()
+
+        eq(notifies.keys(),
+           [subscription['email']])
+        eq(_get_activities(notifies),
+           [(u'bob@example.com', u'new package', dataset['id'])])
+
+    def test_subscribe_to_an_org_and_its_dataset_has_activity(self):
+        org = Organization()
+        subscription = factories.Subscription(organization_id=org['id'])
+        subscribe_model.Subscribe.set_emails_last_sent(
+            Frequency.IMMEDIATE.value,
+            datetime.datetime.now())
+        dataset = Dataset(owner_org=org['id'])
+
+        notifies = get_immediate_notifications()
+
+        eq(notifies.keys(),
+           [subscription['email']])
+        eq(_get_activities(notifies),
+           [(u'bob@example.com', u'new package', dataset['id'])])
+
+    def test_subscribe_to_an_group_and_its_dataset_has_activity(self):
+        group = Group()
+        subscription = factories.Subscription(group_id=group['id'])
+        subscribe_model.Subscribe.set_emails_last_sent(
+            Frequency.IMMEDIATE.value,
+            datetime.datetime.now())
+        dataset = Dataset(groups=[{'id': group['id']}])
 
         notifies = get_immediate_notifications()
 
