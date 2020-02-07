@@ -1,4 +1,5 @@
 from jinja2 import Template
+from webhelpers.html import HTML, literal
 
 from ckan import plugins as p
 from ckan import model
@@ -42,6 +43,9 @@ def get_notification_email_contents(code, email, notifications):
     <p>
       - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} -
       {{ activity.activity_type }}
+      {% if notification.object_type != 'dataset' %}
+        - {{ activity.dataset_link }}
+      {% endif %}
     </p>
   {% endfor %}
 {% endfor %}
@@ -56,7 +60,8 @@ Changes have occurred in relation to your subscription(s)
   "{{ notification.object_title }}" - {{ notification.object_link }}
 
   {% for activity in notification.activities %}
-      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }}
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }} {% if notification.object_type != 'dataset' %} - {{ activity.dataset_href }} {% endif %}
+
   {% endfor %}
 {% endfor %}
 
@@ -76,6 +81,8 @@ def get_notification_email_vars(email, notifications):
             activities_vars.append(dict(
                 activity_type=activity['activity_type'].replace('package', 'dataset'),
                 timestamp=p.toolkit.h.date_str_to_datetime(activity['timestamp']),
+                dataset_link=dataset_link_from_activity(activity),
+                dataset_href=dataset_href_from_activity(activity),
             ))
         # get the package/group's name & title
         object_type_ = \
@@ -113,3 +120,25 @@ def get_notification_email_vars(email, notifications):
         notifications=notifications_vars,
     )
     return extra_vars
+
+
+def dataset_link_from_activity(activity):
+    href = dataset_href_from_activity(activity)
+    if not href:
+        return ''
+    try:
+        title = activity['data']['package']['title']
+        return HTML.a(title, href=href)
+    except KeyError:
+        return ''
+
+
+def dataset_href_from_activity(activity):
+    try:
+        name = activity['data']['package']['name']
+        return p.toolkit.url_for(
+            'dataset_read',
+            id=name,
+            qualified=True)
+    except KeyError:
+        return ''
