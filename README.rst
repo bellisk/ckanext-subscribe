@@ -151,19 +151,6 @@ To install ckanext-subscribe:
 Config settings
 ---------------
 
-# Delay sending notification emails until after a grace period, in case there
-# are further changes. When further changes occur, the grace period is extended
-# to this period after the latest change. However there is also a maximum grace
-# period, after which the notification will be sent, no matter if there are
-# further changes to the object subcribed to.
-# Applies only to subscriptions which are set to frequency 'immediate'.
-# The default values are shown. If you set these to 0, it will send
-# notifications as soon as a change is made (well, as soon as
-# send-any-notifications is called next).
-# Units: minutes
-ckanext.subscribe.immediate_notification_grace_period_minutes = 0
-ckanext.subscribe.immediate_notification_grace_period_max_minutes = 60
-
 # Email notifications older than this time period will not be sent.
 # So, after a pause in the sending of emails, when it restarts, it will not
 # notify about activity which is:

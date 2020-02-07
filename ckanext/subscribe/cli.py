@@ -85,12 +85,10 @@ class subscribeCommand(cli.CkanCommand):
 
     def _create_test_activity(self, object_id):
         from ckan import model
-        from ckanext.subscribe import notification
         if p.toolkit.check_ckan_version(max_version='2.8.99'):
             model.repo.new_revision()
         obj = model.Package.get(object_id) or model.Group.get(object_id)
         assert obj, 'Object could not be found'
-        grace = notification.get_config('immediate_notification_grace_period')
         site_user = p.toolkit.get_action('get_site_user')({
             'model': model,
             'ignore_auth': True},
@@ -103,8 +101,7 @@ class subscribeCommand(cli.CkanCommand):
             activity_type='test activity',
             revision_id=None,
         )
-        # put it slightly in the past, so it notifies immediately
-        activity.timestamp = datetime.datetime.now() - grace
+        activity.timestamp = datetime.datetime.now()
         model.Session.add(activity)
         print(activity)
         model.Session.commit()

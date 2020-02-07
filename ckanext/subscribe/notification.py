@@ -1,8 +1,6 @@
 import datetime
 from collections import defaultdict
 
-from sqlalchemy import func
-
 from ckan import model
 from ckan.model import Activity, Package, Group, Member
 from ckan.lib.dictization import model_dictize
@@ -26,16 +24,6 @@ _config = {}
 def get_config(key):
     global _config
     if not _config:
-        _config['immediate_notification_grace_period'] = \
-            datetime.timedelta(minutes=int(
-                toolkit.config.get(
-                    'ckanext.subscribe.immediate_notification_grace_period_minutes',
-                    0)))
-        _config['immediate_notification_grace_period_max'] = \
-            datetime.timedelta(minutes=int(
-                toolkit.config.get(
-                    'ckanext.subscribe.immediate_notification_grace_period_max_minutes',
-                    60)))
         _config['email_notifications_since'] = string_to_timedelta(
             toolkit.config.get(
                 'ckan.email_notifications_since', '2 days')
@@ -126,8 +114,6 @@ def get_immediate_notifications(notification_datetime=None):
     emails_last_sent = Subscribe.get_emails_last_sent(
         frequency=Frequency.IMMEDIATE.value)
     now = notification_datetime or datetime.datetime.now()
-    grace = get_config('immediate_notification_grace_period')
-    grace_max = get_config('immediate_notification_grace_period_max')
     catch_up_period = get_config('email_notifications_since')
     if emails_last_sent:
         include_activity_from = max(
@@ -135,30 +121,13 @@ def get_immediate_notifications(notification_datetime=None):
     else:
         include_activity_from = (now - catch_up_period)
 
-    object_activity_oldest_newest = model.Session.query(
-        Activity.object_id, func.min(Activity.timestamp),
-        func.max(Activity.timestamp)) \
+    activities = model.Session.query(Activity) \
         .filter(Activity.timestamp > include_activity_from) \
         .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .group_by(Activity.object_id) \
         .all()
-
-    # filter activities further by their timestamp
-    objects_to_notify = []
-    for object_id, oldest, newest in object_activity_oldest_newest:
-        if oldest < (now - grace_max):
-            # we've waited long enough to report the oldest activity, never
-            # mind the newer activity on this object
-            objects_to_notify.append(object_id)
-        elif newest > (now - grace):
-            # recent activity on this object - don't notify yet
-            pass
-        else:
-            # notify by default
-            objects_to_notify.append(object_id)
-    if not objects_to_notify:
+    if not activities:
         return {}
-    return get_notifications_by_email(objects_to_notify,
+    return get_notifications_by_email(activities,
                                       objects_subscribed_to,
                                       subscription_frequency)
 
@@ -258,16 +227,14 @@ def get_weekly_notifications(notification_datetime=None):
             emails_last_sent, (now - week - catch_up_period))
     else:
         include_activity_from = (now - week)
-    object_activity = model.Session.query(Activity.object_id) \
+
+    activities = model.Session.query(Activity) \
         .filter(Activity.timestamp > include_activity_from) \
         .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .group_by(Activity.object_id) \
         .all()
-
-    objects_to_notify = [object_id for object_id in object_activity]
-    if not objects_to_notify:
+    if not activities:
         return {}
-    return get_notifications_by_email(objects_to_notify,
+    return get_notifications_by_email(activities,
                                       objects_subscribed_to,
                                       subscription_frequency)
 
@@ -294,27 +261,20 @@ def get_daily_notifications(notification_datetime=None):
             emails_last_sent, (now - day - catch_up_period))
     else:
         include_activity_from = (now - day)
-    object_activity = model.Session.query(Activity.object_id) \
+
+    activities = model.Session.query(Activity) \
         .filter(Activity.timestamp > include_activity_from) \
         .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .group_by(Activity.object_id) \
         .all()
-
-    objects_to_notify = [object_id for object_id in object_activity]
-    if not objects_to_notify:
+    if not activities:
         return {}
-    return get_notifications_by_email(objects_to_notify,
+    return get_notifications_by_email(activities,
                                       objects_subscribed_to,
                                       subscription_frequency)
 
 
-def get_notifications_by_email(objects_to_notify, objects_subscribed_to,
+def get_notifications_by_email(activities, objects_subscribed_to,
                                subscription_frequency):
-    # get activities for the objects_to_notify
-    activities = model.Session.query(Activity) \
-        .filter(Activity.object_id.in_(objects_to_notify)) \
-        .all()
-
     # group by email address
     # so we can send each email address one email with all their notifications
     # and also have access to the subscription object with the object_type etc
