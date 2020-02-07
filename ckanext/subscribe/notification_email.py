@@ -1,5 +1,5 @@
 from jinja2 import Template
-from webhelpers.html import HTML, literal
+from webhelpers.html import HTML
 
 from ckan import plugins as p
 from ckan import model
@@ -60,7 +60,8 @@ Changes have occurred in relation to your subscription(s)
   "{{ notification.object_title }}" - {{ notification.object_link }}
 
   {% for activity in notification.activities %}
-      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }} {% if notification.object_type != 'dataset' %} - {{ activity.dataset_href }} {% endif %}
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }} {% if (
+          notification.object_type != 'dataset') %} - {{ activity.dataset_href }} {% endif %}
 
   {% endfor %}
 {% endfor %}

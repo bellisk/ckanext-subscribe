@@ -8,7 +8,6 @@ from webhelpers.html import literal
 
 from ckan.tests import helpers
 import ckan.tests.factories as ckan_factories
-import ckan.lib.dictization.model_dictize as model_dictize
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
@@ -278,6 +277,7 @@ CUSTOM_ACTIVITY = {
         'count': 5,
     }
 }
+
 
 class TestDatasetLinkFromActivity(object):
 

@@ -178,7 +178,7 @@ def get_objects_subscribed_to(subscription_frequency):
     for subscription, package_id in model.Session.query(Subscription, Package.id) \
             .join(Group, Group.id == Subscription.object_id) \
             .filter(Group.state == 'active') \
-            .filter(Group.is_organization == True) \
+            .filter(Group.is_organization.is_(True)) \
             .join(Package, Package.owner_org == Group.id) \
             .all():
         objects_subscribed_to[package_id].append(subscription)
@@ -186,7 +186,7 @@ def get_objects_subscribed_to(subscription_frequency):
     for subscription, package_id in model.Session.query(Subscription, Package.id) \
             .join(Group, Group.id == Subscription.object_id) \
             .filter(Group.state == 'active') \
-            .filter(Group.is_organization == False) \
+            .filter(Group.is_organization.is_(False)) \
             .join(Member, Member.group_id == Group.id) \
             .filter(Member.state == 'active') \
             .join(Package, Package.id == Member.table_id) \
