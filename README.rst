@@ -191,7 +191,7 @@ Troubleshooting
 
      Jan 10 15:24:01 ip-172-30-3-71 CRON[29231]: (ubuntu) CMD (/usr/lib/ckan/default/bin/paster --plugin=ckanext-subscribe subscribe run --config=/etc/ckan/default/production.ini)
 
-1. Create a test activity for a dataset/group/org you are subscribed to::
+2. Create a test activity for a dataset/group/org you are subscribed to::
 
      paster --plugin=ckanext-subscribe subscribe create-test-activity mydataset --config=/etc/ckan/default/production.ini
 
@@ -205,7 +205,7 @@ Troubleshooting
      2020-01-06 16:30:40,628 DEBUG [ckanext.subscribe.notification] sending 1 emails (immediate frequency)
      2020-01-06 16:30:42,116 INFO  [ckanext.subscribe.mailer] Sent email to david.read@hackneyworkshop.com
 
-1. Clean up all test activity afterwards::
+3. Clean up all test activity afterwards::
 
      paster --plugin=ckanext-subscribe subscribe delete-test-activity --config=/etc/ckan/default/production.ini
 
