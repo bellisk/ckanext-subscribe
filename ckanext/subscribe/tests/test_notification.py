@@ -259,9 +259,29 @@ class TestGetWeeklyNotifications(object):
 
         eq(_get_activities(notifies), [])
 
+    def test_daily_frequency_subscriptions_of_an_org_are_not_included(self):
+        org = Organization()
+        factories.Subscription(organization_id=org['id'],
+                               frequency='daily')
+        Dataset(owner_org=org['id'])
+
+        notifies = get_weekly_notifications()
+
+        eq(_get_activities(notifies), [])
+
     def test_immediate_frequency_subscriptions_are_not_included(self):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset['id'], frequency='immediate')
+
+        notifies = get_weekly_notifications()
+
+        eq(_get_activities(notifies), [])
+
+    def test_immediate_frequency_subscriptions_of_an_group_are_not_included(self):
+        group = Group()
+        factories.Subscription(group_id=group['id'],
+                               frequency='immediate')
+        Dataset(groups=[{'id': group['id']}])
 
         notifies = get_weekly_notifications()
 
