@@ -5,8 +5,8 @@
 .. image:: https://travis-ci.org/davidread/ckanext-subscribe.svg?branch=master
     :target: https://travis-ci.org/davidread/ckanext-subscribe
 
-.. image:: https://coveralls.io/repos/davidread/ckanext-subscribe/badge.svg
-  :target: https://coveralls.io/r/davidread/ckanext-subscribe
+.. image:: https://coveralls.io/repos/github/davidread/ckanext-subscribe/badge.svg?branch=master
+  :target: https://coveralls.io/github/davidread/ckanext-subscribe?branch=master
 
 .. image:: https://img.shields.io/pypi/v/ckanext-subscribe.svg
     :target: https://pypi.org/project/ckanext-subscribe/
