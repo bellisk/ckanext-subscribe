@@ -279,7 +279,7 @@ To publish a new version to PyPI follow these steps:
 
 2. Make sure you have the latest version of necessary packages::
 
-    pip install --upgrade setuptools wheel twine
+       pip install --upgrade setuptools wheel twine
 
 3. Create a source and binary distributions of the new version::
 
