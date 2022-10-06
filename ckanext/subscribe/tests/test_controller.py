@@ -374,8 +374,7 @@ class TestUnsubscribeAll(FunctionalTestBase):
             status=302)
 
         assert_equal(response.location,
-                     'http://test.ckan.net/?__no_cache__=True'
-                     .format(dataset['name']))
+                     'http://test.ckan.net/?__no_cache__=True')
         response = response.follow()
         assert_in('You are no longer subscribed to notifications from CKAN',
                   response.body.decode('utf8'))

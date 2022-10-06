@@ -41,5 +41,5 @@ class ISubscribe(Interface):
         return subscribe_get_notification_email_contents(email_vars)
 
     def get_verification_email_contents(self, subscription, subject=None,
-                                        plain_text_body=None, html_body= None):
+                                        plain_text_body=None, html_body=None):
         return subscribe_get_verification_email_contents(subscription)
