@@ -9,6 +9,8 @@ from ckanext.subscribe.utils import get_manage_email_contents as \
 from ckanext.subscribe.utils import \
     get_subscription_confirmation_email_contents \
     as subscribe_get_subscription_confirmation_email_contents
+from ckanext.subscribe.utils import get_notification_email_contents as\
+    subscribe_get_notification_email_contents
 
 
 class ISubscribe(Interface):
@@ -32,3 +34,6 @@ class ISubscribe(Interface):
         return subscribe_get_subscription_confirmation_email_contents(
             email_vars)
 
+    def get_notification_email_contents(self, email_vars, subject=None,
+                                        plain_text_body=None, html_body=None):
+        return subscribe_get_notification_email_contents(email_vars)

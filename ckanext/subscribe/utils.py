@@ -1,4 +1,5 @@
 # encoding: utf-8
+from jinja2 import Template
 
 import ckan.plugins as p
 from ckan import model
@@ -156,4 +157,49 @@ To manage subscriptions for {email}, click this link:
 --
 {plain_text_footer}
 '''.format(**email_vars)
+    return subject, plain_text_body, html_body
+
+
+def get_notification_email_contents(email_vars):
+    subject = '{site_title} notification'.format(**email_vars)
+    # Make sure subject is only one line
+    subject = subject.split('\n')[0]
+
+    html_body = Template('''
+<p>Changes have occurred in relation to your subscription(s)</p>
+
+{% for notification in notifications %}
+
+  <h3><a href="{{ notification.object_link }}">"{{ notification.object_title }}" ({{ notification.object_name }})</a>:</h3>
+
+  {% for activity in notification.activities %}
+    <p>
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} -
+      {{ activity.activity_type }}
+      {% if notification.object_type != 'dataset' %}
+        - {{ activity.dataset_link }}
+      {% endif %}
+    </p>
+  {% endfor %}
+{% endfor %}
+
+--
+{{ html_footer }}
+''').render(**email_vars)
+    plain_text_body = Template('''
+Changes have occurred in relation to your subscription(s)
+
+{% for notification in notifications %}
+  "{{ notification.object_title }}" - {{ notification.object_link }}
+
+  {% for activity in notification.activities %}
+      - {{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }} - {{ activity.activity_type }} {% if (
+          notification.object_type != 'dataset') %} - {{ activity.dataset_href }} {% endif %}
+
+  {% endfor %}
+{% endfor %}
+
+--
+{{ plain_text_footer }}
+''').render(**email_vars)
     return subject, plain_text_body, html_body
