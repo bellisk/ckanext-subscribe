@@ -5,7 +5,7 @@ from ckan import plugins as p
 from ckan import model
 
 from ckanext.subscribe import mailer
-from ckanext.subscribe.email_auth import get_footer_contents
+from ckanext.subscribe.utils import get_footer_contents
 
 config = p.toolkit.config
 
