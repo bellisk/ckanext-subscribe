@@ -24,7 +24,7 @@ def send_notification_email(code, email, notifications):
 def get_notification_email_contents(code, email, notifications):
     email_vars = get_notification_email_vars(email, notifications)
     plain_text_footer, html_footer = \
-        get_footer_contents(code=code, email=email)
+        get_footer_contents(email_vars)
     email_vars['plain_text_footer'] = plain_text_footer
     email_vars['html_footer'] = html_footer
 

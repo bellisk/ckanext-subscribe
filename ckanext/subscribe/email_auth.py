@@ -36,27 +36,17 @@ CODE_EXPIRY = datetime.timedelta(days=7)
 
 
 def send_subscription_confirmation_email(code, subscription=None):
-    subject, plain_text_body, html_body = \
-        get_subscription_confirmation_email_contents(
-            code=code, subscription=subscription)
-    mailer.mail_recipient(recipient_name=subscription.email,
-                          recipient_email=subscription.email,
-                          subject=subject,
-                          body=plain_text_body,
-                          body_html=html_body,
-                          headers={})
-
-
-def get_subscription_confirmation_email_contents(code, subscription):
     email_vars = {}
     for subscribe in p.PluginImplementations(ISubscribe):
         email_vars = subscribe.get_email_vars(
-            email_vars=email_vars, subscription=subscription, code=code)
+            subscription=subscription, code=code, email_vars=email_vars)
 
     plain_text_footer = html_footer = ""
     for subscribe in p.PluginImplementations(ISubscribe):
         plain_text_footer, html_footer = \
-            subscribe.get_footer_contents(code, subscription=subscription)
+            subscribe.get_footer_contents(email_vars, subscription=subscription,
+                                          plain_text_footer=plain_text_footer,
+                                          html_footer=html_footer)
 
     email_vars['plain_text_footer'] = plain_text_footer
     email_vars['html_footer'] = html_footer
@@ -65,17 +55,40 @@ def get_subscription_confirmation_email_contents(code, subscription):
     for subscribe in p.PluginImplementations(ISubscribe):
         subject, plain_text_body, html_body = \
             subscribe.get_subscription_confirmation_email_contents(
-                subject, plain_text_body, html_body, code, subscription)
+                email_vars, subject=subject,
+                plain_text_body=plain_text_body, html_body=html_body)
 
-    return subject, plain_text_body, html_body
+    mailer.mail_recipient(recipient_name=subscription.email,
+                          recipient_email=subscription.email,
+                          subject=subject,
+                          body=plain_text_body,
+                          body_html=html_body,
+                          headers={})
 
 
 def send_manage_email(code, subscription=None, email=None):
+    email_vars = {}
+    for subscribe in p.PluginImplementations(ISubscribe):
+        email_vars = subscribe.get_email_vars(
+            code=code, subscription=subscription, email=email,
+            email_vars=email_vars)
+
+    plain_text_footer = html_footer = ""
+    for subscribe in p.PluginImplementations(ISubscribe):
+        plain_text_footer, html_footer = \
+            subscribe.get_footer_contents(email_vars, subscription=subscription,
+                                          plain_text_footer=plain_text_footer,
+                                          html_footer=html_footer)
+
+    email_vars['plain_text_footer'] = plain_text_footer
+    email_vars['html_footer'] = html_footer
+
     subject = plain_text_body = html_body = ""
     for subscribe in p.PluginImplementations(ISubscribe):
         subject, plain_text_body, html_body = \
             subscribe.get_manage_email_contents(
-                code, subscription=subscription, email=email)
+                email_vars, subject=subject, plain_text_body=plain_text_body,
+                html_body=html_body)
 
     mailer.mail_recipient(recipient_name=email,
                           recipient_email=email,

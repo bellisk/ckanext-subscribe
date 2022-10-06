@@ -6,9 +6,7 @@ from ckan import model
 config = p.toolkit.config
 
 
-def get_footer_contents(code, subscription=None, email=None):
-    email_vars = get_email_vars(code, subscription=subscription, email=email)
-
+def get_footer_contents(email_vars, subscription=None):
     html_lines = []
     if subscription:
         html_lines.append(
@@ -106,13 +104,7 @@ def get_email_vars(code, subscription=None, email=None):
     return extra_vars
 
 
-def get_manage_email_contents(code, subscription=None, email=None):
-    email_vars = get_email_vars(code, subscription=subscription, email=email)
-    plain_text_footer, html_footer = \
-        get_footer_contents(code, subscription=subscription, email=email)
-    email_vars['plain_text_footer'] = plain_text_footer
-    email_vars['html_footer'] = html_footer
-
+def get_manage_email_contents(email_vars):
     subject = 'Manage {site_title} subscription'.format(**email_vars)
     # Make sure subject is only one line
     subject = subject.split('\n')[0]
@@ -138,8 +130,7 @@ def get_manage_email_contents(code, subscription=None, email=None):
     return subject, plain_text_body, html_body
 
 
-def get_subscription_confirmation_email_contents(code, subscription):
-    email_vars = get_email_vars(code, subscription=subscription)
+def get_subscription_confirmation_email_contents(email_vars):
     subject = '{site_title} subscription confirmed'.format(**email_vars)
     # Make sure subject is only one line
     subject = subject.split('\n')[0]

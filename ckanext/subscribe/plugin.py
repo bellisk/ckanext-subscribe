@@ -14,7 +14,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IRoutes)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
-    plugins.implements(ISubscribe)
+    plugins.implements(ISubscribe, inherit=True)
 
     # IConfigurer
 
