@@ -65,7 +65,12 @@ cd -
 
 echo "Creating the PostgreSQL user and database..."
 sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
-sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
+if [ $CKANVERSION == '2.7' ]
+then
+  sudo -u postgres psql -c 'CREATE DATABASE ckan_test_27 WITH OWNER ckan_default;'
+else
+  sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
+fi
 
 echo "Setting up Solr..."
 # Solr is multicore for tests on ckan master, but it's easier to run tests on
