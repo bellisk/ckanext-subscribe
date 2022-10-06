@@ -203,3 +203,25 @@ Changes have occurred in relation to your subscription(s)
 {{ plain_text_footer }}
 ''').render(**email_vars)
     return subject, plain_text_body, html_body
+
+
+def get_verification_email_contents(email_vars):
+    subject = 'Confirm your request for {site_title} subscription'.format(**email_vars)
+    # Make sure subject is only one line
+    subject = subject.split('\n')[0]
+
+    html_body = '''
+<p>{site_title} subscription requested<br/>
+    {object_type}: "{object_title}" ({object_name})</p>
+
+<p>To confirm this email subscription, click this link:<br/>
+<a href="{verification_link}">{verification_link}</a></p>
+'''.format(**email_vars)
+    plain_text_body = '''
+{site_title} subscription requested:
+{object_type}: {object_title} ({object_name})
+
+To confirm this email subscription, click this link:
+{verification_link}
+'''.format(**email_vars)
+    return subject, plain_text_body, html_body
