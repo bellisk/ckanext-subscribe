@@ -11,7 +11,10 @@ from ckanext.subscribe.email_verification import (
     get_verification_email_vars,
 )
 from ckanext.subscribe.tests import factories
-from ckanext.subscribe.utils import get_verification_email_contents
+from ckanext.subscribe.utils import (
+    get_footer_contents,
+    get_verification_email_contents
+)
 
 config = p.toolkit.config
 
@@ -48,6 +51,9 @@ class TestEmailVerification(object):
         subscription.verification_code = 'testcode'
 
         email_vars = get_verification_email_vars(subscription)
+        plain_text_footer, html_footer = get_footer_contents(email_vars)
+        email_vars['plain_text_footer'] = plain_text_footer
+        email_vars['html_footer'] = html_footer
         subject, body_plain_text, body_html = \
             get_verification_email_contents(email_vars)
 

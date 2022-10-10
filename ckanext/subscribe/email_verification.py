@@ -17,6 +17,19 @@ CODE_EXPIRY = datetime.timedelta(hours=8)
 
 def send_request_email(subscription):
     email_vars = get_verification_email_vars(subscription)
+
+    plain_text_footer = html_footer = ""
+    for subscribe in p.PluginImplementations(ISubscribe):
+        # We pass in subscription=None here because there is no active
+        # subscription yet, so we don't want to include an unsubscribe link.
+        plain_text_footer, html_footer = \
+            subscribe.get_footer_contents(email_vars, subscription=None,
+                                          plain_text_footer=plain_text_footer,
+                                          html_footer=html_footer)
+
+    email_vars['plain_text_footer'] = plain_text_footer
+    email_vars['html_footer'] = html_footer
+
     subject = plain_text_body = html_body = ''
     for subscribe in p.PluginImplementations(ISubscribe):
         subject, plain_text_body, html_body = \
