@@ -218,6 +218,9 @@ def get_verification_email_contents(email_vars):
 
 <p>To confirm this email subscription, click this link:<br/>
 <a href="{verification_link}">{verification_link}</a></p>
+
+--
+{html_footer}
 '''.format(**email_vars)
     plain_text_body = '''
 {site_title} subscription requested:
@@ -225,5 +228,8 @@ def get_verification_email_contents(email_vars):
 
 To confirm this email subscription, click this link:
 {verification_link}
+
+--
+{plain_text_footer}
 '''.format(**email_vars)
     return subject, plain_text_body, html_body
