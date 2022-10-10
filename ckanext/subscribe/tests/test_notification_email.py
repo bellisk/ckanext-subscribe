@@ -13,12 +13,12 @@ from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
 from ckanext.subscribe.notification_email import (
     send_notification_email,
-    get_notification_email_contents,
     get_notification_email_vars,
     dataset_link_from_activity,
     dataset_href_from_activity,
 )
 from ckanext.subscribe.tests import factories
+from ckanext.subscribe.utils import get_notification_email_contents
 
 eq = assert_equal
 
@@ -78,10 +78,10 @@ class TestGetNotificationEmailContents(object):
             [activity]
         }
         notifications = dictize_notifications(subscription_activities)
-
-        get_notification_email_contents(
-            code='the-code', email='bob@example.com',
-            notifications=notifications)
+        email_vars = get_notification_email_vars(code='the-code',
+                                                 email='bob@example.com',
+                                                 notifications=notifications)
+        get_notification_email_contents(email_vars)
 
         # just check there are no exceptions
 
@@ -100,10 +100,10 @@ class TestGetNotificationEmailContents(object):
             [activity]
         }
         notifications = dictize_notifications(subscription_activities)
-
-        email = get_notification_email_contents(
-            code='the-code', email='bob@example.com',
-            notifications=notifications)
+        email_vars = get_notification_email_vars(code='the-code',
+                                                 email='bob@example.com',
+                                                 notifications=notifications)
+        email = get_notification_email_contents(email_vars)
         # Check we link to the dataset, not just the org
         assert_in('http://test.ckan.net/dataset/{}'.format(dataset['name']),
                   email[1])
@@ -132,6 +132,7 @@ class TestGetNotificationEmailVars(object):
         notifications = dictize_notifications(subscription_activities)
 
         email_vars = get_notification_email_vars(
+            code='the-code',
             email='bob@example.com',
             notifications=notifications)
 
@@ -164,6 +165,7 @@ class TestGetNotificationEmailVars(object):
         notifications = dictize_notifications(subscription_activities)
 
         email_vars = get_notification_email_vars(
+            code='the-code',
             email='bob@example.com',
             notifications=notifications)
 
@@ -192,6 +194,7 @@ class TestGetNotificationEmailVars(object):
         notifications = dictize_notifications(subscription_activities)
 
         email_vars = get_notification_email_vars(
+            code='the-code',
             email='bob@example.com',
             notifications=notifications)
 
