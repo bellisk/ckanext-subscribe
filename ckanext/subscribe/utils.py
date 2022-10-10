@@ -62,12 +62,14 @@ def get_email_vars(code, subscription=None, email=None):
         controller='ckanext.subscribe.controller:SubscribeController',
         action='unsubscribe_all',
         code=code,
-        qualified=True)
+        qualified=True
+    )
     manage_link = p.toolkit.url_for(
         controller='ckanext.subscribe.controller:SubscribeController',
         action='manage',
         code=code,
-        qualified=True)
+        qualified=True
+    )
     extra_vars = dict(
         site_title=config.get('ckan.site_title'),
         site_url=config.get('ckan.site_url'),
