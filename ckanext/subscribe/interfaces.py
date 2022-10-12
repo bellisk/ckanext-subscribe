@@ -128,13 +128,13 @@ class ISubscribe(Interface):
         """
         return subscribe_get_notification_email_contents(email_vars)
 
-    def get_verification_email_contents(self, subscription, subject=None,
+    def get_verification_email_contents(self, email_vars, subject=None,
                                         plain_text_body=None, html_body=None):
         """Get the plain-text body and html body of an email with a link to
         verify (confirm) that a subscription should be created.
 
-        :param subscription: A Subscription object
-        :type subscription: object
+        :param email_vars: Dict of strings to substitute into the text
+        :type email_vars: dict
         :param subject: Subject line of the email
         :type subject: string
         :param plain_text_body: Plain-text body of the email, passed in here so
@@ -148,4 +148,4 @@ class ISubscribe(Interface):
         :return: The plain-text body and html body
         :rtype: (string, string)
         """
-        return subscribe_get_verification_email_contents(subscription)
+        return subscribe_get_verification_email_contents(email_vars)
