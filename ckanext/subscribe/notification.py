@@ -2,11 +2,13 @@ import datetime
 from collections import defaultdict
 
 from ckan import model
-from ckan.model import Activity, Package, Group, Member
+from ckan.model import Package, Group, Member
 from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
+from ckan import plugins as p
 from ckan.lib.email_notifications import string_to_timedelta
 
+from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe import dictization
 from ckanext.subscribe.model import (
     Subscription,
@@ -121,10 +123,10 @@ def get_immediate_notifications(notification_datetime=None):
     else:
         include_activity_from = (now - catch_up_period)
 
-    activities = model.Session.query(Activity) \
-        .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .all()
+    activities = get_subscribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
@@ -230,10 +232,10 @@ def get_weekly_notifications(notification_datetime=None):
     else:
         include_activity_from = (now - week)
 
-    activities = model.Session.query(Activity) \
-        .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .all()
+    activities = get_subscribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
@@ -263,16 +265,27 @@ def get_daily_notifications(notification_datetime=None):
             emails_last_sent, (now - day - catch_up_period))
     else:
         include_activity_from = (now - day)
-
-    activities = model.Session.query(Activity) \
-        .filter(Activity.timestamp > include_activity_from) \
-        .filter(Activity.object_id.in_(objects_subscribed_to.keys())) \
-        .all()
+    activities = get_subscribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
                                       objects_subscribed_to,
                                       subscription_frequency)
+
+
+def get_subscribed_to_activities(
+    include_activity_from,
+    objects_subscribed_to_keys
+):
+    activities = []
+    for subscribe_interface_implementaion in p.PluginImplementations(ISubscribe):
+        activities = \
+            subscribe_interface_implementaion.get_activities(
+                include_activity_from, objects_subscribed_to_keys)
+    return activities
 
 
 def get_notifications_by_email(activities, objects_subscribed_to,
