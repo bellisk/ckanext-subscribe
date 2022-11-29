@@ -276,8 +276,10 @@ def get_daily_notifications(notification_datetime=None):
                                       subscription_frequency)
 
 
-def get_subscribed_to_activities(include_activity_from,
-                                objects_subscribed_to_keys):
+def get_subscribed_to_activities(
+    include_activity_from,
+    objects_subscribed_to_keys
+):
     activities = []
     for subscribe_interface_implementaion in p.PluginImplementations(ISubscribe):
         activities = \
