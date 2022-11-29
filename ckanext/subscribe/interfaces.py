@@ -13,6 +13,8 @@ from ckanext.subscribe.utils import get_notification_email_contents as\
     subscribe_get_notification_email_contents
 from ckanext.subscribe.utils import get_verification_email_contents as\
     subscribe_get_verification_email_contents
+from ckanext.subscribe.utils import \
+    filter_activities as notification_filter_activities
 
 
 class ISubscribe(Interface):
@@ -149,3 +151,15 @@ class ISubscribe(Interface):
         :rtype: (string, string)
         """
         return subscribe_get_verification_email_contents(email_vars)
+
+    def get_activities(self, include_activity_from,
+                       objects_subscribed_to_keys):
+        """Get the activities for object subscription keys and date.
+        :param include_activity_from: timestamps for actvity selection
+        :type include_activity_from: timestamp
+        :param objects_subscribed_to_keys: Subject line of the email
+        :type objects_subscribed_to_keys: list of strings
+        :return: activities from the database
+        :rtype: list of objects
+        """
+        return notification_filter_activities(include_activity_from, objects_subscribed_to_keys)
