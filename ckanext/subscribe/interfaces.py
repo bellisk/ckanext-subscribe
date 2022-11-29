@@ -14,7 +14,7 @@ from ckanext.subscribe.utils import get_notification_email_contents as\
 from ckanext.subscribe.utils import get_verification_email_contents as\
     subscribe_get_verification_email_contents
 from ckanext.subscribe.utils import \
-    filter_activities as notification_filter_activities
+    filter_activities as subscribe_filter_activities
 
 
 class ISubscribe(Interface):
@@ -162,4 +162,4 @@ class ISubscribe(Interface):
         :return: activities from the database
         :rtype: list of objects
         """
-        return notification_filter_activities(include_activity_from, objects_subscribed_to_keys)
+        return subscribe_filter_activities(include_activity_from, objects_subscribed_to_keys)

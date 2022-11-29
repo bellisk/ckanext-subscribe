@@ -123,7 +123,10 @@ def get_immediate_notifications(notification_datetime=None):
     else:
         include_activity_from = (now - catch_up_period)
 
-    activities = get_notification_activities(include_activity_from, objects_subscribed_to.keys())
+    activities = get_subcribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
@@ -229,7 +232,10 @@ def get_weekly_notifications(notification_datetime=None):
     else:
         include_activity_from = (now - week)
 
-    activities = get_notification_activities(include_activity_from, objects_subscribed_to.keys())
+    activities = get_subcribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
@@ -259,7 +265,10 @@ def get_daily_notifications(notification_datetime=None):
             emails_last_sent, (now - day - catch_up_period))
     else:
         include_activity_from = (now - day)
-    activities = get_notification_activities(include_activity_from, objects_subscribed_to.keys())
+    activities = get_subcribed_to_activities(
+        include_activity_from,
+        objects_subscribed_to.keys()
+    )
     if not activities:
         return {}
     return get_notifications_by_email(activities,
@@ -267,7 +276,8 @@ def get_daily_notifications(notification_datetime=None):
                                       subscription_frequency)
 
 
-def get_notification_activities(include_activity_from, objects_subscribed_to_keys):
+def get_subcribed_to_activities(include_activity_from,
+                                objects_subscribed_to_keys):
     activities = []
     for notification in p.PluginImplementations(ISubscribe):
         activities = \
