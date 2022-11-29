@@ -2,7 +2,7 @@ import datetime
 from collections import defaultdict
 
 from ckan import model
-from ckan.model import Activity, Package, Group, Member
+from ckan.model import Package, Group, Member
 from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
 from ckan import plugins as p
