@@ -238,7 +238,7 @@ To confirm this email subscription, click this link:
 
 def filter_activities(include_activity_from, objects_subscribed_to_keys):
     activities = model.Session.query(Activity)\
-    .filter(Activity.timestamp > include_activity_from) \
-    .filter(Activity.object_id.in_(objects_subscribed_to_keys)) \
-    .all()
+                              .filter(Activity.timestamp > include_activity_from) \
+                              .filter(Activity.object_id.in_(objects_subscribed_to_keys)) \
+                              .all()
     return activities
