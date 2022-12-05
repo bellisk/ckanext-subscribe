@@ -6,6 +6,7 @@ import datetime
 import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
 from ckan.lib.mailer import MailerException
+from ckan.plugins.toolkit import side_effect_free
 
 from ckanext.subscribe.model import Subscription, Frequency
 from ckanext.subscribe import (
@@ -329,11 +330,17 @@ def subscribe_request_manage_code(context, data_dict):
     return None
 
 
+@side_effect_free
 def subscribe_send_any_notifications(context, data_dict):
     '''Check for activity and for any subscribers, send emails with the
     notifications.
     '''
-    notification.send_any_immediate_notifications()
-    notification.send_weekly_notifications_if_its_time_to()
-    notification.send_daily_notifications_if_its_time_to()
-    return None
+    if 'test' in data_dict:
+        test = True
+    else:
+        test = False
+    results = {}
+    results['immediate'] = notification.send_any_immediate_notifications(test=test)
+    results['weekly'] = notification.send_weekly_notifications_if_its_time_to(test=test)
+    results['daily'] = notification.send_daily_notifications_if_its_time_to(test=test)
+    return results

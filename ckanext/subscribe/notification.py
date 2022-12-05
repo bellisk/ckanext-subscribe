@@ -44,12 +44,13 @@ def get_config(key):
     return _config[key]
 
 
-def send_any_immediate_notifications():
-    log.debug('send_any_immediate_notifications')
+def send_any_immediate_notifications(test=False):
     notification_datetime = datetime.datetime.now()
     notifications_by_email = get_immediate_notifications(notification_datetime)
     if not notifications_by_email:
         log.debug('no emails to send (immediate frequency)')
+    elif test:
+        return _prepare_result(notifications_by_email)
     else:
         log.debug('sending {} emails (immediate frequency)'
                   .format(len(notifications_by_email)))
@@ -61,7 +62,18 @@ def send_any_immediate_notifications():
     model.Session.commit()
 
 
-def send_weekly_notifications_if_its_time_to():
+def _prepare_result(result):
+    output = []
+    users = result.keys()
+    for user in users:
+        user_result = result[user]
+        if user_result:
+            activities = user_result[0].get('activities')
+            output.append({user: { 'count': len(activities), 'activities': activities }})
+    return output
+
+
+def send_weekly_notifications_if_its_time_to(test=False):
     if not is_it_time_to_send_weekly_notifications():
         return
 
@@ -70,6 +82,8 @@ def send_weekly_notifications_if_its_time_to():
     notifications_by_email = get_weekly_notifications(notification_datetime)
     if not notifications_by_email:
         log.debug('no emails to send (weekly frequency)')
+    elif test:
+        return _prepare_result(notifications_by_email)
     else:
         log.debug('sending {} emails (weekly frequency)'
                   .format(len(notifications_by_email)))
@@ -81,7 +95,7 @@ def send_weekly_notifications_if_its_time_to():
     model.Session.commit()
 
 
-def send_daily_notifications_if_its_time_to():
+def send_daily_notifications_if_its_time_to(test=False):
     if not is_it_time_to_send_daily_notifications():
         return
 
@@ -90,6 +104,8 @@ def send_daily_notifications_if_its_time_to():
     notifications_by_email = get_daily_notifications(notification_datetime)
     if not notifications_by_email:
         log.debug('no emails to send (daily frequency)')
+    elif test:
+        return _prepare_result(notifications_by_email)
     else:
         log.debug('sending {} emails (daily frequency)'
                   .format(len(notifications_by_email)))
