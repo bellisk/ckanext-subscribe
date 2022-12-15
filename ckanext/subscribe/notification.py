@@ -301,7 +301,8 @@ def get_notifications_by_email(activities, objects_subscribed_to,
             # ignore activity that occurs before this subscription was created
             if subscription.created > activity.timestamp:
                 continue
-
+            if not subscription.verified:
+                continue
             notifications[subscription.email][subscription].append(activity)
 
     # dictize
