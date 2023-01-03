@@ -3,6 +3,7 @@ from jinja2 import Template
 
 import ckan.plugins as p
 from ckan import model
+from ckan.model import Activity
 
 config = p.toolkit.config
 
@@ -233,3 +234,11 @@ To confirm this email subscription, click this link:
 {plain_text_footer}
 '''.format(**email_vars)
     return subject, plain_text_body, html_body
+
+
+def filter_activities(include_activity_from, objects_subscribed_to_keys):
+    activities = model.Session.query(Activity)\
+                              .filter(Activity.timestamp > include_activity_from) \
+                              .filter(Activity.object_id.in_(objects_subscribed_to_keys)) \
+                              .all()
+    return activities
