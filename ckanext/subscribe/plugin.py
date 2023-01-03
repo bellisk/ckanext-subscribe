@@ -6,6 +6,7 @@ import ckan.plugins.toolkit as toolkit
 from ckanext.subscribe import action
 from ckanext.subscribe import auth
 from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe.interfaces import ISubscribe
 
 
 class SubscribePlugin(plugins.SingletonPlugin):
@@ -13,6 +14,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IRoutes)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
+    plugins.implements(ISubscribe, inherit=True)
 
     # IConfigurer
 

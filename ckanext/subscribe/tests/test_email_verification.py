@@ -9,9 +9,12 @@ from ckan.tests import helpers
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.email_verification import (
     get_verification_email_vars,
-    get_verification_email_contents
 )
 from ckanext.subscribe.tests import factories
+from ckanext.subscribe.utils import (
+    get_footer_contents,
+    get_verification_email_contents
+)
 
 config = p.toolkit.config
 
@@ -47,8 +50,12 @@ class TestEmailVerification(object):
             dataset_id=dataset['id'], return_object=True)
         subscription.verification_code = 'testcode'
 
+        email_vars = get_verification_email_vars(subscription)
+        plain_text_footer, html_footer = get_footer_contents(email_vars)
+        email_vars['plain_text_footer'] = plain_text_footer
+        email_vars['html_footer'] = html_footer
         subject, body_plain_text, body_html = \
-            get_verification_email_contents(subscription)
+            get_verification_email_contents(email_vars)
 
         assert_equal(subject, 'Confirm your request for CKAN subscription')
         assert body_plain_text.strip().startswith(

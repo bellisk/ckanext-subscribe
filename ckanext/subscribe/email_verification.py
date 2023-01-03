@@ -8,6 +8,7 @@ from six import text_type
 import ckan.plugins as p
 from ckan import model
 from ckanext.subscribe import mailer
+from ckanext.subscribe.interfaces import ISubscribe
 
 config = p.toolkit.config
 
@@ -15,8 +16,27 @@ CODE_EXPIRY = datetime.timedelta(hours=8)
 
 
 def send_request_email(subscription):
-    subject, plain_text_body, html_body = \
-        get_verification_email_contents(subscription)
+    email_vars = get_verification_email_vars(subscription)
+
+    plain_text_footer = html_footer = ""
+    for subscribe in p.PluginImplementations(ISubscribe):
+        # We pass in subscription=None here because there is no active
+        # subscription yet, so we don't want to include an unsubscribe link.
+        plain_text_footer, html_footer = \
+            subscribe.get_footer_contents(email_vars, subscription=None,
+                                          plain_text_footer=plain_text_footer,
+                                          html_footer=html_footer)
+
+    email_vars['plain_text_footer'] = plain_text_footer
+    email_vars['html_footer'] = html_footer
+
+    subject = plain_text_body = html_body = ''
+    for subscribe in p.PluginImplementations(ISubscribe):
+        subject, plain_text_body, html_body = \
+            subscribe.get_verification_email_contents(email_vars, subject,
+                                                      plain_text_body,
+                                                      html_body)
+
     mailer.mail_recipient(recipient_name=subscription.email,
                           recipient_email=subscription.email,
                           subject=subject,
@@ -25,31 +45,13 @@ def send_request_email(subscription):
                           headers={})
 
 
-def get_verification_email_contents(subscription):
-    email_vars = get_verification_email_vars(subscription)
-
-    subject = 'Confirm your request for {site_title} subscription'.format(**email_vars)
-    # Make sure subject is only one line
-    subject = subject.split('\n')[0]
-
-    html_body = '''
-<p>{site_title} subscription requested<br/>
-    {object_type}: "{object_title}" ({object_name})</p>
-
-<p>To confirm this email subscription, click this link:<br/>
-<a href="{verification_link}">{verification_link}</a></p>
-'''.format(**email_vars)
-    plain_text_body = '''
-{site_title} subscription requested:
-{object_type}: {object_title} ({object_name})
-
-To confirm this email subscription, click this link:
-{verification_link}
-'''.format(**email_vars)
-    return subject, plain_text_body, html_body
-
-
 def get_verification_email_vars(subscription):
+    email_vars = {}
+    for subscribe in p.PluginImplementations(ISubscribe):
+        email_vars = subscribe.get_email_vars(
+            code=subscription.verification_code, subscription=subscription,
+            email_vars=email_vars)
+
     verification_link = p.toolkit.url_for(
         controller='ckanext.subscribe.controller:SubscribeController',
         action='verify_subscription',
@@ -59,28 +61,11 @@ def get_verification_email_vars(subscription):
         controller='ckanext.subscribe.controller:SubscribeController',
         action='manage',
         qualified=True)
-    if subscription.object_type == 'dataset':
-        subscription_object = model.Package.get(subscription.object_id)
-    else:
-        subscription_object = model.Group.get(subscription.object_id)
-    object_link = p.toolkit.url_for(
-        controller='package' if subscription.object_type == 'dataset'
-        else subscription.object_type,
-        action='read',
-        id=subscription.object_id,  # prefer id because it is invariant
-        qualified=True)
-    extra_vars = dict(
-        site_title=config.get('ckan.site_title'),
-        site_url=config.get('ckan.site_url'),
-        object_type=subscription.object_type,
-        object_title=subscription_object.title or subscription_object.name,
-        object_name=subscription_object.name,
-        object_link=object_link,
+    email_vars.update(
         verification_link=verification_link,
-        email=subscription.email,
         manage_link=manage_link,
     )
-    return extra_vars
+    return email_vars
 
 
 def create_code(subscription):
