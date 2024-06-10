@@ -2,10 +2,12 @@
 
 import logging
 import datetime
+import requests
 
 import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
 from ckan.lib.mailer import MailerException
+import ckan.plugins.toolkit as tk
 
 from ckanext.subscribe.model import Subscription, Frequency
 from ckanext.subscribe import (
@@ -20,6 +22,16 @@ log = logging.getLogger(__name__)
 _check_access = p.toolkit.check_access
 NotFound = p.toolkit.ObjectNotFound
 
+CAPTCHA_API_URL = 'https://www.google.com/recaptcha/api/siteverify'
+secret_key = tk.config.get('ckan.captcha_secret')
+
+def _verify_recaptcha(recaptcha_response):
+    response = requests.post(
+        CAPTCHA_API_URL,
+        data={'secret': secret_key, 'response': recaptcha_response}
+    )
+    result = response.json()
+    return result.get('success', False)
 
 @validate(schema.subscribe_schema)
 def subscribe_signup(context, data_dict):
@@ -44,6 +56,11 @@ def subscribe_signup(context, data_dict):
 
     '''
     model = context['model']
+
+    # Verify reCAPTCHA response
+    recaptcha_response = tk.request.form.get('g-recaptcha-response')
+    if not _verify_recaptcha(recaptcha_response):
+        return "Invalid reCAPTCHA. Please try again.", 400
 
     _check_access(u'subscribe_signup', context, data_dict)
 
