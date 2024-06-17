@@ -222,6 +222,106 @@ class TestSubscribeSignup(object):
 
         assert not send_request_email.called
 
+    # Adding the reCAPTCHA tests
+    @mock.patch('requests.post')
+    def test_verify_recaptcha_success(self, mock_post):
+        mock_post.return_value = mock.Mock(status_code=200)
+        mock_post.return_value.json.return_value = {'success': True}
+
+        response = helpers.call_action(
+            "subscribe_signup",
+            {},
+            email='bob@example.com',
+            dataset_id=factories.Dataset()["id"],
+            __extras={'g-recaptcha-response': 'test-recaptcha-response'}
+        )
+        assert 'email' in response
+
+    @mock.patch('requests.post')
+    def test_verify_recaptcha_failure(self, mock_post):
+        mock_post.return_value = mock.Mock(status_code=200)
+        mock_post.return_value.json.return_value = {'success': False}
+
+        with assert_raises(ValidationError):
+            helpers.call_action(
+                "subscribe_signup",
+                {},
+                email='bob@example.com',
+                dataset_id=factories.Dataset()["id"],
+                __extras={'g-recaptcha-response': 'test-recaptcha-response'}
+            )
+
+    @mock.patch('requests.post')
+    @mock.patch('ckanext.subscribe.email_verification.send_request_email')
+    def test_recaptcha_frontend_form(self, mock_post, send_request_email):
+        mock_post.return_value = mock.Mock(status_code=200)
+        mock_post.return_value.json.return_value = {'success': True}
+
+        dataset = factories.Dataset()
+
+        subscription = helpers.call_action(
+            "subscribe_signup",
+            {},
+            email='bob@example.com',
+            dataset_id=dataset["id"],
+            __extras={'g-recaptcha-response': 'test-recaptcha-response'}
+        )
+
+        send_request_email.assert_called_once()
+        eq(send_request_email.call_args[0][0].object_type, 'dataset')
+        eq(send_request_email.call_args[0][0].object_id, dataset['id'])
+        eq(send_request_email.call_args[0][0].email, 'bob@example.com')
+        eq(subscription['object_type'], 'dataset')
+        eq(subscription['object_id'], dataset['id'])
+        eq(subscription['email'], 'bob@example.com')
+        eq(subscription['verified'], False)
+        assert 'verification_code' not in subscription
+        subscription_obj = model.Session.query(Subscription).get(
+            subscription['id'])
+        assert subscription_obj
+
+        # Verify that 'g-recaptcha-response' was passed in __extras
+        extras = subscription['__extras']
+        assert 'g-recaptcha-response' in extras
+        eq(extras['g-recaptcha-response'], 'test-recaptcha-response')
+
+@mock.patch('requests.post')
+@mock.patch('ckanext.subscribe.email_verification.send_request_email')
+@mock.patch('ckan.plugins.toolkit.request')
+def test_recaptcha_backend_form(self, mock_request, mock_post,
+                                send_request_email):
+    mock_post.return_value = mock.Mock(status_code=200)
+    mock_post.return_value.json.return_value = {'success': True}
+
+    # Mock the request parameters to include g-recaptcha-response
+    mock_request.params = {'g-recaptcha-response': 'test-recaptcha-response'}
+
+    dataset = factories.Dataset()
+
+    subscription = helpers.call_action(
+        "subscribe_signup",
+        {},
+        email='bob@example.com',
+        dataset_id=dataset["id"],
+    )
+
+    send_request_email.assert_called_once()
+    eq(send_request_email.call_args[0][0].object_type, 'dataset')
+    eq(send_request_email.call_args[0][0].object_id, dataset['id'])
+    eq(send_request_email.call_args[0][0].email, 'bob@example.com')
+    eq(subscription['object_type'], 'dataset')
+    eq(subscription['object_id'], dataset['id'])
+    eq(subscription['email'], 'bob@example.com')
+    eq(subscription['verified'], False)
+    assert 'verification_code' not in subscription
+    subscription_obj = model.Session.query(Subscription).get(
+        subscription['id'])
+    assert subscription_obj
+
+    # Verify that 'g-recaptcha-response' was passed in request params
+    eq(mock_request.params.get('g-recaptcha-response'),
+       'test-recaptcha-response')
+
 
 class TestSubscribeVerify(object):
     def setup(self):
