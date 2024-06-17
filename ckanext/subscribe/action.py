@@ -3,7 +3,6 @@
 import logging
 import datetime
 import requests
-
 import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
 from ckan.lib.mailer import MailerException
@@ -23,14 +22,21 @@ _check_access = p.toolkit.check_access
 NotFound = p.toolkit.ObjectNotFound
 
 CAPTCHA_API_URL = 'https://www.google.com/recaptcha/api/siteverify'
-secret_key = tk.config.get('ckan.captcha_secret')
 
 def _verify_recaptcha(recaptcha_response):
-    response = requests.post(
-        CAPTCHA_API_URL,
-        data={'secret': secret_key, 'response': recaptcha_response}
-    )
-    result = response.json()
+    secret_key = tk.config.get('ckan.recaptcha.privatekey', '')
+
+    if not secret_key:
+        log.error("reCAPTCHA secret key is not configured.")
+        return False
+
+    payload = {
+        'secret': secret_key,
+        'response': recaptcha_response
+    }
+    r = requests.post(CAPTCHA_API_URL, data=payload)
+    result = r.json()
+
     return result.get('success', False)
 
 @validate(schema.subscribe_schema)
@@ -50,6 +56,7 @@ def subscribe_signup(context, data_dict):
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
+    :param g-recaptcha-response: Recaptcha response from frontend signup form
 
     :returns: the newly created subscription
     :rtype: dictionary
@@ -58,9 +65,18 @@ def subscribe_signup(context, data_dict):
     model = context['model']
 
     # Verify reCAPTCHA response
-    recaptcha_response = tk.request.form.get('g-recaptcha-response')
+    # Recaptcha response from backend signup form
+    # comes in as a request params
+    recaptcha_response = tk.request.params.get('g-recaptcha-response')
+    if not recaptcha_response:
+        # Recaptcha response from frontend signup form
+        # comes in as an extras of the data_dict
+        if '__extras' in data_dict:
+            recaptcha_response = \
+                data_dict['__extras'].get('g-recaptcha-response', [None])[0]
     if not _verify_recaptcha(recaptcha_response):
-        return "Invalid reCAPTCHA. Please try again.", 400
+        raise tk.ValidationError("Invalid reCAPTCHA. Please try again.")
+    log.info("reCAPTCHA verification passed.")
 
     _check_access(u'subscribe_signup', context, data_dict)
 
