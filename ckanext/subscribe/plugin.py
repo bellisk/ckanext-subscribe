@@ -1,13 +1,13 @@
 # encoding: utf-8
 
 import ckan.plugins as plugins
-import ckan.plugins.toolkit as toolkit
+import ckan.plugins.toolkit as tk
 
 from ckanext.subscribe import action
 from ckanext.subscribe import auth
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.interfaces import ISubscribe
-
+import ckanext.subscribe.helpers as subscribe_helpers
 
 class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
@@ -15,13 +15,14 @@ class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(ISubscribe, inherit=True)
+    plugins.implements(plugins.ITemplateHelpers)
 
     # IConfigurer
 
     def update_config(self, config_):
-        toolkit.add_template_directory(config_, 'templates')
-        toolkit.add_public_directory(config_, 'public')
-        toolkit.add_resource('fanstatic', 'subscribe')
+        tk.add_template_directory(config_, 'templates')
+        tk.add_public_directory(config_, 'public')
+        tk.add_resource('fanstatic', 'subscribe')
 
         subscribe_model.setup()
 
@@ -80,4 +81,14 @@ class SubscribePlugin(plugins.SingletonPlugin):
             auth.subscribe_request_manage_code,
             'subscribe_send_any_notifications':
             auth.subscribe_send_any_notifications,
+        }
+
+    # ITemplateHelpers
+    def get_helpers(self):
+        """Provide template helper functions
+        """
+
+        return {
+            'get_recaptcha_publickey': subscribe_helpers.get_recaptcha_publickey,  # noqa
+            'apply_recaptcha': subscribe_helpers.apply_recaptcha,
         }
