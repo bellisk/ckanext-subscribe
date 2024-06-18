@@ -16,6 +16,7 @@ from ckan.plugins.toolkit import (
     render,
     redirect_to,
     config,
+    asbool,
 )
 from ckan.lib.mailer import MailerException
 
@@ -75,6 +76,13 @@ class SubscribeController(BaseController):
                   'link in the email just sent to you'))
             return self._redirect_back_to_subscribe_page(
                 subscription['object_name'], subscription['object_type'])
+
+    def apply_recaptcha(self):
+        apply_recaptcha = asbool(config.get(
+            'ckanext.subscribe.apply_recaptcha', True))
+        return render('package/info.html', {
+            'apply_recaptcha': apply_recaptcha
+        })
 
     def verify_subscription(self):
         data_dict = {'code': request.params.get('code')}
