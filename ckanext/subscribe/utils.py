@@ -97,15 +97,12 @@ def get_email_vars(code, subscription=None, email=None):
             qualified=True,
             **{subscription.object_type: subscription.object_id}
         )
-        recaptcha_publickey = p.toolkit.config.get(
-            'ckanext.subscribe.recaptcha.publickey')
         extra_vars.update(
             object_type=subscription.object_type,
             object_title=subscription_object.title or subscription_object.name,
             object_name=subscription_object.name,
             object_link=object_link,
             unsubscribe_link=unsubscribe_link,
-            recaptcha_publickey=recaptcha_publickey,
         )
 
     return extra_vars
