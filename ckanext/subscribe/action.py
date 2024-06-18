@@ -21,20 +21,24 @@ log = logging.getLogger(__name__)
 _check_access = p.toolkit.check_access
 NotFound = p.toolkit.ObjectNotFound
 
-CAPTCHA_API_URL = 'https://www.google.com/recaptcha/api/siteverify'
 
 def _verify_recaptcha(recaptcha_response):
-    secret_key = tk.config.get('ckan.recaptcha.privatekey', '')
-
+    secret_key = tk.config.get('ckanext.subscribe.recaptcha.privatekey', '')
     if not secret_key:
-        log.error("reCAPTCHA secret key is not configured.")
+        log.error('reCAPTCHA secret key is not configured.')
         return False
 
     payload = {
         'secret': secret_key,
         'response': recaptcha_response
     }
-    r = requests.post(CAPTCHA_API_URL, data=payload)
+
+    recaptcha_api_url = tk.config.get(
+        'ckanext.subscribe.recaptcha.api_url',
+        'https://www.google.com/recaptcha/api/siteverify'
+    )
+
+    r = requests.post(recaptcha_api_url, data=payload)
     result = r.json()
 
     return result.get('success', False)
@@ -64,19 +68,23 @@ def subscribe_signup(context, data_dict):
     '''
     model = context['model']
 
-    # Verify reCAPTCHA response
-    # Recaptcha response from backend signup form
-    # comes in as a request params
-    recaptcha_response = tk.request.params.get('g-recaptcha-response')
-    if not recaptcha_response:
-        # Recaptcha response from frontend signup form
-        # comes in as an extras of the data_dict
-        if '__extras' in data_dict:
-            recaptcha_response = \
-                data_dict['__extras'].get('g-recaptcha-response', [None])[0]
-    if not _verify_recaptcha(recaptcha_response):
-        raise tk.ValidationError("Invalid reCAPTCHA. Please try again.")
-    log.info("reCAPTCHA verification passed.")
+    # Retrieve the configuration value to apply recaptcha
+    apply_recaptcha = tk.asbool(tk.config.get(
+        'ckanext.subscribe.apply_recaptcha', True
+    ))
+
+    if apply_recaptcha:
+        # Verify reCAPTCHA response
+        # Check the recaptcha response comes in as a request params
+        recaptcha_response = tk.request.params.get('g-recaptcha-response')
+        if not recaptcha_response:
+            # Check the recaptcha response comes in as a data_dict extras
+            if '__extras' in data_dict:
+                recaptcha_response = data_dict['__extras'].get(
+                    'g-recaptcha-response', [None])[0]
+        if not _verify_recaptcha(recaptcha_response):
+            raise tk.ValidationError('Invalid reCAPTCHA. Please try again.')
+        log.info('reCAPTCHA verification passed.')
 
     _check_access(u'subscribe_signup', context, data_dict)
 
