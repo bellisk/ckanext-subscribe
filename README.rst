@@ -176,6 +176,20 @@ Config settings
   # The day of the week that weekly notification subscriptions are sent
   ckanext.subscribe.weekly_notification_day = friday
 
+  *** reCAPTCHA implementation ***
+  Applying reCAPTCHA helps enhance the security of the dataset subscription form by preventing automated bots from submitting them.
+
+  To integrate reCAPTCHA, you must first register your domain at https://www.google.com/recaptcha and obtain private and public keys.
+  These keys, along with the reCAPTCHA API URL, need to be configured in your setup::
+
+   ckanext.subscribe.recaptcha.privatekey = [Your_Private_Key]
+   ckanext.subscribe.recaptcha.publickey = [Your_Public_Key]
+   ckanext.subscribe.recaptcha.api_url = [Your_API_URL], e.g., https://www.google.com/recaptcha/api/siteverify
+
+  Additionally, ensure that the `apply_recaptcha` configuration is set to true in order to enable reCAPTCHA::
+
+   ckanext.subscribe.apply_recaptcha = false
+
 
 ---------------
 Troubleshooting
