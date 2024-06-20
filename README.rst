@@ -1,9 +1,8 @@
 .. You should enable this project on travis-ci.org and coveralls.io to make
    these badges work. The necessary Travis and Coverage config files have been
    generated for you.
-
-.. image:: https://travis-ci.org/bellisk/ckanext-subscribe.svg?branch=master
-    :target: https://travis-ci.org/bellisk/ckanext-subscribe
+.. image:: https://github.com/bellisk/ckanext-subscribe/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/bellisk/ckanext-subscribe/actions/workflows/test.yml
 
 .. image:: https://coveralls.io/repos/github/bellisk/ckanext-subscribe/badge.svg?branch=master
   :target: https://coveralls.io/github/bellisk/ckanext-subscribe?branch=master
