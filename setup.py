@@ -22,7 +22,7 @@ setup(
     long_description_content_type='text/x-rst',
 
     # The project's main homepage.
-    url='https://github.com/davidread/ckanext-subscribe',
+    url='https://github.com/bellisk/ckanext-subscribe',
 
     # Author details
     author='''David Read''',

@@ -2,11 +2,11 @@
    these badges work. The necessary Travis and Coverage config files have been
    generated for you.
 
-.. image:: https://travis-ci.org/davidread/ckanext-subscribe.svg?branch=master
-    :target: https://travis-ci.org/davidread/ckanext-subscribe
+.. image:: https://travis-ci.org/bellisk/ckanext-subscribe.svg?branch=master
+    :target: https://travis-ci.org/bellisk/ckanext-subscribe
 
-.. image:: https://coveralls.io/repos/github/davidread/ckanext-subscribe/badge.svg?branch=master
-  :target: https://coveralls.io/github/davidread/ckanext-subscribe?branch=master
+.. image:: https://coveralls.io/repos/github/bellisk/ckanext-subscribe/badge.svg?branch=master
+  :target: https://coveralls.io/github/bellisk/ckanext-subscribe?branch=master
 
 .. image:: https://img.shields.io/pypi/v/ckanext-subscribe.svg
     :target: https://pypi.org/project/ckanext-subscribe/
@@ -39,7 +39,7 @@ as in this extension, is more appropriate.
 
 .. image:: doc/sign-up.png
 
-More screenshots: https://github.com/davidread/ckanext-subscribe/tree/master/doc
+More screenshots: https://github.com/bellisk/ckanext-subscribe/tree/master/doc
 
 ------------
 Requirements
@@ -244,7 +244,7 @@ Developer installation
 To install ckanext-subscribe for development, activate your CKAN virtualenv and
 do::
 
-    git clone https://github.com/davidread/ckanext-subscribe.git
+    git clone https://github.com/bellisk/ckanext-subscribe.git
     cd ckanext-subscribe
     python setup.py develop
     pip install -r dev-requirements.txt
