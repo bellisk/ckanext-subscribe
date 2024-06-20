@@ -63,3 +63,15 @@ jobs:
           paster --plugin=ckan db init -c test.ini
       - name: Run tests
         run: nosetests --ckan --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests ckanext/subscribe
+
+  finish:
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel: true
+          parallel-finished: true
+          carryforward: "run-1,run-2"
