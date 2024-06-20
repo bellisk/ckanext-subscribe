@@ -45,6 +45,10 @@ class SubscribeController(BaseController):
             'dataset_id': request.POST.get('dataset'),
             'group_id': request.POST.get('group'),
             'organization_id': request.POST.get('organization'),
+            '__extras': [{
+                'g-recaptcha-response':
+                    [request.POST.get('g-recaptcha-response')]
+            }]
         }
         context = {
             u'model': model,
