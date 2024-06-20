@@ -13,7 +13,6 @@ package_id_or_name_exists = get_validator('package_id_or_name_exists')
 group_id_or_name_exists = get_validator('group_id_or_name_exists')
 ignore_missing = get_validator('ignore_missing')
 boolean_validator = get_validator('boolean_validator')
-not_empty = get_validator('not_empty')
 
 def one_package_or_group_or_org(key, data, errors, context):
     num_objects_specified = len(filter(None, [data[('dataset_id',)],
@@ -44,9 +43,7 @@ def subscribe_schema():
         u'email': [email],
         u'frequency': [ignore_empty, frequency_name_to_int],
         u'skip_verification': [boolean_validator],
-        u'__extras': {
-            u'g_recaptcha_response': [not_empty]
-        }
+        u'g_recaptcha_response': [ignore_empty],
     }
 
 

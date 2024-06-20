@@ -44,16 +44,6 @@ def _verify_recaptcha(recaptcha_response):
     return result.get('success', False)
 
 
-def _get_extras(data_dict):
-    extras = data_dict.get('__extras')
-    if isinstance(extras, dict):
-        extras = [extras]
-
-    if not isinstance(extras, list):
-        raise tk.ValidationError('__extras should be a list of dictionaries.')
-    return extras
-
-
 @validate(schema.subscribe_schema)
 def subscribe_signup(context, data_dict):
     '''Signup to get notifications of email. Causes a email to be sent,
@@ -86,9 +76,7 @@ def subscribe_signup(context, data_dict):
 
     if apply_recaptcha:
         # Verify reCAPTCHA response
-        recaptcha_response = _get_extras(data_dict)[0].get(
-                'g_recaptcha_response', [None])
-
+        recaptcha_response = data_dict['g_recaptcha_response']
         if not _verify_recaptcha(recaptcha_response):
             raise tk.ValidationError('Invalid reCAPTCHA. Please try again.')
         log.info('reCAPTCHA verification passed.')
