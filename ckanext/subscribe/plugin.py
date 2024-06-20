@@ -3,8 +3,7 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
-from ckanext.subscribe import action
-from ckanext.subscribe import auth
+from ckanext.subscribe import action, auth
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.interfaces import ISubscribe
 

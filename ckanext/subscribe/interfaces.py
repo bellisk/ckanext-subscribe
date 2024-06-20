@@ -1,20 +1,20 @@
 from ckan.plugins.interfaces import Interface
 
-from ckanext.subscribe.utils import get_footer_contents as subscribe_get_footer_contents
+from ckanext.subscribe.utils import filter_activities as subscribe_filter_activities
 from ckanext.subscribe.utils import get_email_vars as subscribe_get_email_vars
+from ckanext.subscribe.utils import get_footer_contents as subscribe_get_footer_contents
 from ckanext.subscribe.utils import (
     get_manage_email_contents as subscribe_get_manage_email_contents,
-)
-from ckanext.subscribe.utils import (
-    get_subscription_confirmation_email_contents as subscribe_get_subscription_confirmation_email_contents,
 )
 from ckanext.subscribe.utils import (
     get_notification_email_contents as subscribe_get_notification_email_contents,
 )
 from ckanext.subscribe.utils import (
+    get_subscription_confirmation_email_contents as subscribe_get_subscription_confirmation_email_contents,
+)
+from ckanext.subscribe.utils import (
     get_verification_email_contents as subscribe_get_verification_email_contents,
 )
-from ckanext.subscribe.utils import filter_activities as subscribe_filter_activities
 
 
 class ISubscribe(Interface):

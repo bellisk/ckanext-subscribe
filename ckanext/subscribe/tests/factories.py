@@ -2,13 +2,12 @@
 
 import datetime
 
-import factory
-
+import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.plugins as p
 import ckan.tests.factories as ckan_factories
+import factory
 from ckan import model
 from ckan.lib.dictization import table_dictize
-import ckan.lib.dictization.model_dictize as model_dictize
 
 import ckanext.subscribe.model
 from ckanext.subscribe import dictization

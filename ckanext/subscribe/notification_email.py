@@ -1,7 +1,6 @@
-from webhelpers.html import HTML
-
-from ckan import plugins as p
 from ckan import model
+from ckan import plugins as p
+from webhelpers.html import HTML
 
 from ckanext.subscribe import mailer
 from ckanext.subscribe.interfaces import ISubscribe

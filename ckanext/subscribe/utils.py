@@ -1,9 +1,8 @@
 # encoding: utf-8
-from jinja2 import Template
-
 import ckan.plugins as p
 from ckan import model
 from ckan.model import Activity
+from jinja2 import Template
 
 config = p.toolkit.config
 

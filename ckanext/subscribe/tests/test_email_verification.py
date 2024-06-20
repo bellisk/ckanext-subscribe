@@ -1,15 +1,12 @@
 # encoding: utf-8
 
-from nose.tools import assert_equal
-
 from ckan import plugins as p
 from ckan.tests import factories as ckan_factories
 from ckan.tests import helpers
+from nose.tools import assert_equal
 
 from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe.email_verification import (
-    get_verification_email_vars,
-)
+from ckanext.subscribe.email_verification import get_verification_email_vars
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_footer_contents, get_verification_email_contents
 

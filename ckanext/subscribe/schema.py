@@ -3,7 +3,7 @@
 import ckan.plugins as p
 from ckan.common import _
 
-from ckanext.subscribe.model import Subscription, Frequency
+from ckanext.subscribe.model import Frequency, Subscription
 
 get_validator = p.toolkit.get_validator
 Invalid = p.toolkit.Invalid
