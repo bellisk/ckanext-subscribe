@@ -43,6 +43,17 @@ def _verify_recaptcha(recaptcha_response):
 
     return result.get('success', False)
 
+
+def _get_extras(data_dict):
+    extras = data_dict.get('__extras')
+    if isinstance(extras, dict):
+        extras = [extras]
+
+    if not isinstance(extras, list):
+        raise tk.ValidationError('__extras should be a list of dictionaries.')
+    return extras
+
+
 @validate(schema.subscribe_schema)
 def subscribe_signup(context, data_dict):
     '''Signup to get notifications of email. Causes a email to be sent,
@@ -60,7 +71,7 @@ def subscribe_signup(context, data_dict):
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
-    :param g-recaptcha-response: Recaptcha response from frontend signup form
+    :param g_recaptcha_response: Recaptcha response from the signup form
 
     :returns: the newly created subscription
     :rtype: dictionary
@@ -75,13 +86,9 @@ def subscribe_signup(context, data_dict):
 
     if apply_recaptcha:
         # Verify reCAPTCHA response
-        # Check the recaptcha response comes in as a request params
-        recaptcha_response = tk.request.params.get('g-recaptcha-response')
-        if not recaptcha_response:
-            # Check the recaptcha response comes in as a data_dict extras
-            if '__extras' in data_dict:
-                recaptcha_response = data_dict['__extras'].get(
-                    'g-recaptcha-response', [None])[0]
+        recaptcha_response = _get_extras(data_dict)[0].get(
+                'g_recaptcha_response', [None])
+
         if not _verify_recaptcha(recaptcha_response):
             raise tk.ValidationError('Invalid reCAPTCHA. Please try again.')
         log.info('reCAPTCHA verification passed.')

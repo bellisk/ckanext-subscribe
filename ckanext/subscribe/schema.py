@@ -45,7 +45,7 @@ def subscribe_schema():
         u'frequency': [ignore_empty, frequency_name_to_int],
         u'skip_verification': [boolean_validator],
         u'__extras': {
-            u'g-recaptcha-response': [not_empty]
+            u'g_recaptcha_response': [not_empty]
         }
     }
 
