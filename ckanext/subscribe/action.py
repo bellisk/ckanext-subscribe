@@ -2,10 +2,11 @@
 
 import logging
 import datetime
-
+import requests
 import ckan.plugins as p
 from ckan.logic import validate  # put in toolkit?
 from ckan.lib.mailer import MailerException
+import ckan.plugins.toolkit as tk
 
 from ckanext.subscribe.model import Subscription, Frequency
 from ckanext.subscribe import (
@@ -19,6 +20,28 @@ from ckanext.subscribe import (
 log = logging.getLogger(__name__)
 _check_access = p.toolkit.check_access
 NotFound = p.toolkit.ObjectNotFound
+
+
+def _verify_recaptcha(recaptcha_response):
+    secret_key = tk.config.get('ckanext.subscribe.recaptcha.privatekey', '')
+    if not secret_key:
+        log.error('reCAPTCHA secret key is not configured.')
+        return False
+
+    payload = {
+        'secret': secret_key,
+        'response': recaptcha_response
+    }
+
+    recaptcha_api_url = tk.config.get(
+        'ckanext.subscribe.recaptcha.api_url',
+        'https://www.google.com/recaptcha/api/siteverify'
+    )
+
+    r = requests.post(recaptcha_api_url, data=payload)
+    result = r.json()
+
+    return result.get('success', False)
 
 
 @validate(schema.subscribe_schema)
@@ -38,12 +61,25 @@ def subscribe_signup(context, data_dict):
     :param skip_verification: Doesn't send email - instead it marks the
         subscription as verified. Can be used by sysadmins only.
         (optional, default=False)
+    :param g_recaptcha_response: Recaptcha response from the signup form
 
     :returns: the newly created subscription
     :rtype: dictionary
 
     '''
     model = context['model']
+
+    # Retrieve the configuration value to apply recaptcha
+    apply_recaptcha = tk.asbool(tk.config.get(
+        'ckanext.subscribe.apply_recaptcha', True
+    ))
+
+    if apply_recaptcha:
+        # Verify reCAPTCHA response
+        recaptcha_response = data_dict['g_recaptcha_response']
+        if not _verify_recaptcha(recaptcha_response):
+            raise tk.ValidationError('Invalid reCAPTCHA. Please try again.')
+        log.info('reCAPTCHA verification passed.')
 
     _check_access(u'subscribe_signup', context, data_dict)
 
