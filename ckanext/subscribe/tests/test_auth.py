@@ -1,11 +1,10 @@
 # encoding: utf-8
 
-from nose.tools import assert_raises, assert_in
-
-import ckan.tests.helpers as helpers
-import ckan.tests.factories as factories
 import ckan.logic as logic
+import ckan.tests.factories as factories
+import ckan.tests.helpers as helpers
 from ckan import model
+from nose.tools import assert_in, assert_raises
 
 
 class TestSubscribeSignupToDataset(object):

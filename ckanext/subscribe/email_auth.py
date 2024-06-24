@@ -21,10 +21,11 @@ This login is separate to CKAN's normal login, which uses a password.
 import datetime
 import random
 import string
-from six import text_type
 
 import ckan.plugins as p
 from ckan import model
+from six import text_type
+
 from ckanext.subscribe import mailer
 from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe.model import LoginCode

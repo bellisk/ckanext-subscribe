@@ -1,13 +1,12 @@
-import logging
 import datetime
+import logging
 from enum import Enum
 
-from sqlalchemy import Table, Column, types
-
 from ckan import model
-from ckan.model.meta import metadata, mapper, Session
-from ckan.model.types import make_uuid
 from ckan.model.domain_object import DomainObject
+from ckan.model.meta import Session, mapper, metadata
+from ckan.model.types import make_uuid
+from sqlalchemy import Column, Table, types
 
 log = logging.getLogger(__name__)
 

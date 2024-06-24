@@ -5,19 +5,10 @@ import re
 import ckan.lib.helpers as h
 from ckan import model
 from ckan.common import g
-from ckan.plugins.toolkit import (
-    ValidationError,
-    ObjectNotFound,
-    get_action,
-    _,
-    request,
-    BaseController,
-    abort,
-    render,
-    redirect_to,
-    config,
-)
 from ckan.lib.mailer import MailerException
+from ckan.plugins.toolkit import (BaseController, ObjectNotFound,
+                                  ValidationError, _, abort, config,
+                                  get_action, redirect_to, render, request)
 
 from ckanext.subscribe import email_auth
 from ckanext.subscribe import model as subscribe_model

@@ -2,15 +2,13 @@
 
 # For sending HTML emails. Based on core ckan's mailer
 
-from time import time
 import smtplib
 import socket
-
-
+from email import utils
+from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.header import Header
-from email import utils
+from time import time
 
 import ckan
 import ckan.plugins as p

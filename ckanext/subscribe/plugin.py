@@ -3,11 +3,10 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 
-from ckanext.subscribe import action
-from ckanext.subscribe import auth
+import ckanext.subscribe.helpers as subscribe_helpers
+from ckanext.subscribe import action, auth
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.interfaces import ISubscribe
-import ckanext.subscribe.helpers as subscribe_helpers
 
 
 class SubscribePlugin(plugins.SingletonPlugin):

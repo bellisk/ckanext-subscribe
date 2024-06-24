@@ -1,21 +1,17 @@
 # encoding: utf-8
 
-import logging
 import datetime
-import requests
-import ckan.plugins as p
-from ckan.logic import validate  # put in toolkit?
-from ckan.lib.mailer import MailerException
-import ckan.plugins.toolkit as tk
+import logging
 
-from ckanext.subscribe.model import Subscription, Frequency
-from ckanext.subscribe import (
-    schema,
-    dictization,
-    email_verification,
-    email_auth,
-    notification,
-)
+import ckan.plugins as p
+import ckan.plugins.toolkit as tk
+import requests
+from ckan.lib.mailer import MailerException
+from ckan.logic import validate  # put in toolkit?
+
+from ckanext.subscribe import (dictization, email_auth, email_verification,
+                               notification, schema)
+from ckanext.subscribe.model import Frequency, Subscription
 
 log = logging.getLogger(__name__)
 _check_access = p.toolkit.check_access

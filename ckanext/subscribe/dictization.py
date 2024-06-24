@@ -1,9 +1,9 @@
 import uuid
 
-from ckan.lib.dictization import table_dict_save, table_dictize
 from ckan import model
+from ckan.lib.dictization import table_dict_save, table_dictize
 
-from ckanext.subscribe.model import Subscription, Frequency
+from ckanext.subscribe.model import Frequency, Subscription
 
 
 def subscription_save(subscription_dict, context):

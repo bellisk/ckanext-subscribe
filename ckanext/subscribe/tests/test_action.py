@@ -3,19 +3,15 @@
 import datetime
 
 import mock
-from nose.tools import assert_equal as eq
-from nose.tools import assert_raises, assert_in
-
-from ckan.tests import helpers, factories
-from ckan.plugins.toolkit import ValidationError
 from ckan import model
+from ckan.plugins.toolkit import ValidationError
+from ckan.tests import factories, helpers
+from nose.tools import assert_equal as eq
+from nose.tools import assert_in, assert_raises
 
-from ckanext.subscribe.tests.factories import (
-    Subscription,
-    SubscriptionLowLevel,
-    DatasetActivity,
-)
 from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe.tests.factories import (DatasetActivity, Subscription,
+                                               SubscriptionLowLevel)
 
 
 class TestSubscribeSignup(object):

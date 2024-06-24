@@ -3,26 +3,20 @@
 import datetime
 
 import mock
+from ckan import model
+from ckan.tests import helpers
+from ckan.tests.factories import Dataset, Group, Organization
 from nose.tools import assert_equal, assert_in
 
-from ckan.tests import helpers
-from ckan.tests.factories import Dataset, Organization, Group
-from ckan import model
-
 from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe import notification as subscribe_notification
 from ckanext.subscribe.model import Frequency
 from ckanext.subscribe.notification import (
-    send_any_immediate_notifications,
-    get_immediate_notifications,
-    send_weekly_notifications_if_its_time_to,
-    get_weekly_notifications,
-    send_daily_notifications_if_its_time_to,
-    get_daily_notifications,
-    send_emails,
-    dictize_notifications,
-    most_recent_weekly_notification_datetime,
-)
-from ckanext.subscribe import notification as subscribe_notification
+    dictize_notifications, get_daily_notifications,
+    get_immediate_notifications, get_weekly_notifications,
+    most_recent_weekly_notification_datetime, send_any_immediate_notifications,
+    send_daily_notifications_if_its_time_to, send_emails,
+    send_weekly_notifications_if_its_time_to)
 from ckanext.subscribe.tests import factories
 
 eq = assert_equal

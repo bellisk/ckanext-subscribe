@@ -2,21 +2,18 @@
 
 import datetime
 
+import ckan.tests.factories as ckan_factories
 import mock
+from ckan.tests import helpers
 from nose.tools import assert_equal, assert_in
 from webhelpers.html import literal
 
-from ckan.tests import helpers
-import ckan.tests.factories as ckan_factories
-
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
-from ckanext.subscribe.notification_email import (
-    send_notification_email,
-    get_notification_email_vars,
-    dataset_link_from_activity,
-    dataset_href_from_activity,
-)
+from ckanext.subscribe.notification_email import (dataset_href_from_activity,
+                                                  dataset_link_from_activity,
+                                                  get_notification_email_vars,
+                                                  send_notification_email)
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_notification_email_contents
 
