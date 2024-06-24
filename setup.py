@@ -24,6 +24,8 @@ setup(
     # Author details
     author="""David Read""",
     author_email="""david.read@hackneyworkshop.com""",
+    maintainer="""Liip AG""",
+    maintainer_email="""ogdch@liip.ch""",
     # Choose your license
     license="AGPL",
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
