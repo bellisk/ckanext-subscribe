@@ -9,8 +9,7 @@ from nose.tools import assert_equal, assert_in
 
 from ckanext.subscribe import email_auth
 from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe.tests.factories import (Subscription,
-                                               SubscriptionLowLevel)
+from ckanext.subscribe.tests.factories import Subscription, SubscriptionLowLevel
 
 eq = assert_equal
 

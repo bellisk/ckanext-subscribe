@@ -10,8 +10,11 @@ from nose.tools import assert_equal as eq
 from nose.tools import assert_in, assert_raises
 
 from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe.tests.factories import (DatasetActivity, Subscription,
-                                               SubscriptionLowLevel)
+from ckanext.subscribe.tests.factories import (
+    DatasetActivity,
+    Subscription,
+    SubscriptionLowLevel,
+)
 
 
 class TestSubscribeSignup(object):

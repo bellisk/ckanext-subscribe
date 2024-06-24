@@ -10,10 +10,12 @@ from webhelpers.html import literal
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
-from ckanext.subscribe.notification_email import (dataset_href_from_activity,
-                                                  dataset_link_from_activity,
-                                                  get_notification_email_vars,
-                                                  send_notification_email)
+from ckanext.subscribe.notification_email import (
+    dataset_href_from_activity,
+    dataset_link_from_activity,
+    get_notification_email_vars,
+    send_notification_email,
+)
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_notification_email_contents
 

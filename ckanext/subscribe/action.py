@@ -9,8 +9,13 @@ import requests
 from ckan.lib.mailer import MailerException
 from ckan.logic import validate  # put in toolkit?
 
-from ckanext.subscribe import (dictization, email_auth, email_verification,
-                               notification, schema)
+from ckanext.subscribe import (
+    dictization,
+    email_auth,
+    email_verification,
+    notification,
+    schema,
+)
 from ckanext.subscribe.model import Frequency, Subscription
 
 log = logging.getLogger(__name__)
