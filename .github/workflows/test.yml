@@ -70,4 +70,7 @@ jobs:
         run: nosetests --ckan --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests ckanext/subscribe
 
       - name: Coveralls
-        run: coveralls
+        run: |
+          # Upgrade certi to fix SSL error due to the version installed in CKAN-2.8 image 
+          pip install --upgrade certifi
+          coveralls
