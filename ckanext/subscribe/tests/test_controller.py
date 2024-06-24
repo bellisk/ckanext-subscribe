@@ -1,19 +1,15 @@
 # encoding: utf-8
 
-import mock
 import datetime
 
+import mock
+from ckan.tests.factories import Dataset, Group, Organization
+from ckan.tests.helpers import FunctionalTestBase, reset_db, submit_and_follow
 from nose.tools import assert_equal, assert_in
 
-from ckan.tests.helpers import FunctionalTestBase, reset_db, submit_and_follow
-from ckan.tests.factories import Dataset, Group, Organization
-
-from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe.tests.factories import (
-    Subscription,
-    SubscriptionLowLevel,
-)
 from ckanext.subscribe import email_auth
+from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe.tests.factories import Subscription, SubscriptionLowLevel
 
 eq = assert_equal
 

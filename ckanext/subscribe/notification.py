@@ -1,22 +1,16 @@
 import datetime
 from collections import defaultdict
 
-from ckan import model
-from ckan.model import Package, Group, Member
-from ckan.lib.dictization import model_dictize
 import ckan.plugins.toolkit as toolkit
+from ckan import model
 from ckan import plugins as p
+from ckan.lib.dictization import model_dictize
 from ckan.lib.email_notifications import string_to_timedelta
+from ckan.model import Group, Member, Package
 
+from ckanext.subscribe import dictization, email_auth, notification_email
 from ckanext.subscribe.interfaces import ISubscribe
-from ckanext.subscribe import dictization
-from ckanext.subscribe.model import (
-    Subscription,
-    Subscribe,
-    Frequency,
-)
-from ckanext.subscribe import notification_email
-from ckanext.subscribe import email_auth
+from ckanext.subscribe.model import Frequency, Subscribe, Subscription
 
 log = __import__("logging").getLogger(__name__)
 

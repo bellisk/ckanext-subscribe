@@ -1,5 +1,5 @@
-import sys
 import datetime
+import sys
 import time
 
 import ckan.lib.cli as cli
