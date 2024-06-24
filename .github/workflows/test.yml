@@ -50,7 +50,9 @@ jobs:
       CKAN_SITE_URL: http://test.ckan.net
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Install requirements
         run: |
           # Replace default path to CKAN core config file with the one on the container
@@ -58,11 +60,20 @@ jobs:
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
           pip install -e .
+
       - name: Setup extension
         run: |
           paster --plugin=ckan db init -c test.ini
+
       - name: Run tests
         run: nosetests --ckan --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests ckanext/subscribe
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: test-ckan-${{ matrix.ckan-version }}
+          parallel: true
 
   finish:
     needs: test
@@ -72,6 +83,4 @@ jobs:
       - name: Coveralls Finished
         uses: coverallsapp/github-action@v2
         with:
-          parallel: true
           parallel-finished: true
-          carryforward: "run-1,run-2"
