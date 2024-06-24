@@ -1,26 +1,26 @@
 from ckan.plugins.interfaces import Interface
 
-from ckanext.subscribe.utils import get_footer_contents as \
-    subscribe_get_footer_contents
-from ckanext.subscribe.utils import get_email_vars as \
-    subscribe_get_email_vars
-from ckanext.subscribe.utils import get_manage_email_contents as \
-    subscribe_get_manage_email_contents
-from ckanext.subscribe.utils import \
-    get_subscription_confirmation_email_contents \
-    as subscribe_get_subscription_confirmation_email_contents
-from ckanext.subscribe.utils import get_notification_email_contents as\
-    subscribe_get_notification_email_contents
-from ckanext.subscribe.utils import get_verification_email_contents as\
-    subscribe_get_verification_email_contents
-from ckanext.subscribe.utils import \
-    filter_activities as subscribe_filter_activities
+from ckanext.subscribe.utils import get_footer_contents as subscribe_get_footer_contents
+from ckanext.subscribe.utils import get_email_vars as subscribe_get_email_vars
+from ckanext.subscribe.utils import (
+    get_manage_email_contents as subscribe_get_manage_email_contents,
+)
+from ckanext.subscribe.utils import (
+    get_subscription_confirmation_email_contents as subscribe_get_subscription_confirmation_email_contents,
+)
+from ckanext.subscribe.utils import (
+    get_notification_email_contents as subscribe_get_notification_email_contents,
+)
+from ckanext.subscribe.utils import (
+    get_verification_email_contents as subscribe_get_verification_email_contents,
+)
+from ckanext.subscribe.utils import filter_activities as subscribe_filter_activities
 
 
 class ISubscribe(Interface):
-
-    def get_footer_contents(self, email_vars, subscription=None,
-                            plain_text_footer=None, html_footer=None):
+    def get_footer_contents(
+        self, email_vars, subscription=None, plain_text_footer=None, html_footer=None
+    ):
         """Create a plain-text footer and html footer for an email.
 
         :param email_vars: Dict of strings to substitute into the text
@@ -41,8 +41,7 @@ class ISubscribe(Interface):
         """
         return subscribe_get_footer_contents(email_vars, subscription)
 
-    def get_email_vars(self, code, subscription=None, email=None,
-                       email_vars=None):
+    def get_email_vars(self, code, subscription=None, email=None, email_vars=None):
         """Get a dictionary of strings that can be substituted into email or
         footer text.
 
@@ -61,8 +60,9 @@ class ISubscribe(Interface):
         """
         return subscribe_get_email_vars(code, subscription, email)
 
-    def get_manage_email_contents(self, email_vars, subject=None,
-                                  plain_text_body=None, html_body=None):
+    def get_manage_email_contents(
+        self, email_vars, subject=None, plain_text_body=None, html_body=None
+    ):
         """Get the plain-text body and html body of an email that links to the
         page for managing one email address's subscriptions.
 
@@ -83,10 +83,9 @@ class ISubscribe(Interface):
         """
         return subscribe_get_manage_email_contents(email_vars)
 
-    def get_subscription_confirmation_email_contents(self, email_vars,
-                                                     subject=None,
-                                                     plain_text_body=None,
-                                                     html_body=None):
+    def get_subscription_confirmation_email_contents(
+        self, email_vars, subject=None, plain_text_body=None, html_body=None
+    ):
         """Get the plain-text body and html body of an email confirming that
         a subscription has been created.
 
@@ -105,11 +104,11 @@ class ISubscribe(Interface):
         :return: The plain-text body and html body
         :rtype: (string, string)
         """
-        return subscribe_get_subscription_confirmation_email_contents(
-            email_vars)
+        return subscribe_get_subscription_confirmation_email_contents(email_vars)
 
-    def get_notification_email_contents(self, email_vars, subject=None,
-                                        plain_text_body=None, html_body=None):
+    def get_notification_email_contents(
+        self, email_vars, subject=None, plain_text_body=None, html_body=None
+    ):
         """Get the plain-text body and html body of an email with update
         notifications.
 
@@ -130,8 +129,9 @@ class ISubscribe(Interface):
         """
         return subscribe_get_notification_email_contents(email_vars)
 
-    def get_verification_email_contents(self, email_vars, subject=None,
-                                        plain_text_body=None, html_body=None):
+    def get_verification_email_contents(
+        self, email_vars, subject=None, plain_text_body=None, html_body=None
+    ):
         """Get the plain-text body and html body of an email with a link to
         verify (confirm) that a subscription should be created.
 
@@ -152,8 +152,7 @@ class ISubscribe(Interface):
         """
         return subscribe_get_verification_email_contents(email_vars)
 
-    def get_activities(self, include_activity_from,
-                       objects_subscribed_to_keys):
+    def get_activities(self, include_activity_from, objects_subscribed_to_keys):
         """Get the activities for object subscription keys and date.
         :param include_activity_from: timestamps for actvity selection
         :type include_activity_from: timestamp
@@ -162,4 +161,6 @@ class ISubscribe(Interface):
         :return: activities from the database
         :rtype: list of objects
         """
-        return subscribe_filter_activities(include_activity_from, objects_subscribed_to_keys)
+        return subscribe_filter_activities(
+            include_activity_from, objects_subscribed_to_keys
+        )

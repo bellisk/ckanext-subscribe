@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-'''
+"""
 "Email auth" is a way to authenticate to access certain pages to
 ckanext-subscribe. It is used for changing your subscription options. Rather
 than using a password, the user clicks on a link containing a code in an email,
@@ -16,7 +16,7 @@ the history. But arguably there's not a lot of harm that an attacker could do,
 messing with your subscriptions.
 
 This login is separate to CKAN's normal login, which uses a password.
-'''
+"""
 
 import datetime
 import random
@@ -29,7 +29,7 @@ from ckanext.subscribe import mailer
 from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe.model import LoginCode
 
-log = __import__('logging').getLogger(__name__)
+log = __import__("logging").getLogger(__name__)
 config = p.toolkit.config
 
 CODE_EXPIRY = datetime.timedelta(days=7)
@@ -39,83 +39,103 @@ def send_subscription_confirmation_email(code, subscription=None):
     email_vars = {}
     for subscribe in p.PluginImplementations(ISubscribe):
         email_vars = subscribe.get_email_vars(
-            subscription=subscription, code=code, email_vars=email_vars)
+            subscription=subscription, code=code, email_vars=email_vars
+        )
 
     plain_text_footer = html_footer = ""
     for subscribe in p.PluginImplementations(ISubscribe):
-        plain_text_footer, html_footer = \
-            subscribe.get_footer_contents(email_vars, subscription=subscription,
-                                          plain_text_footer=plain_text_footer,
-                                          html_footer=html_footer)
+        plain_text_footer, html_footer = subscribe.get_footer_contents(
+            email_vars,
+            subscription=subscription,
+            plain_text_footer=plain_text_footer,
+            html_footer=html_footer,
+        )
 
-    email_vars['plain_text_footer'] = plain_text_footer
-    email_vars['html_footer'] = html_footer
+    email_vars["plain_text_footer"] = plain_text_footer
+    email_vars["html_footer"] = html_footer
 
     subject = plain_text_body = html_body = ""
     for subscribe in p.PluginImplementations(ISubscribe):
-        subject, plain_text_body, html_body = \
-            subscribe.get_subscription_confirmation_email_contents(
-                email_vars, subject=subject,
-                plain_text_body=plain_text_body, html_body=html_body)
+        (
+            subject,
+            plain_text_body,
+            html_body,
+        ) = subscribe.get_subscription_confirmation_email_contents(
+            email_vars,
+            subject=subject,
+            plain_text_body=plain_text_body,
+            html_body=html_body,
+        )
 
-    mailer.mail_recipient(recipient_name=subscription.email,
-                          recipient_email=subscription.email,
-                          subject=subject,
-                          body=plain_text_body,
-                          body_html=html_body,
-                          headers={})
+    mailer.mail_recipient(
+        recipient_name=subscription.email,
+        recipient_email=subscription.email,
+        subject=subject,
+        body=plain_text_body,
+        body_html=html_body,
+        headers={},
+    )
 
 
 def send_manage_email(code, subscription=None, email=None):
     email_vars = {}
     for subscribe in p.PluginImplementations(ISubscribe):
         email_vars = subscribe.get_email_vars(
-            code=code, subscription=subscription, email=email,
-            email_vars=email_vars)
+            code=code, subscription=subscription, email=email, email_vars=email_vars
+        )
 
     plain_text_footer = html_footer = ""
     for subscribe in p.PluginImplementations(ISubscribe):
-        plain_text_footer, html_footer = \
-            subscribe.get_footer_contents(email_vars, subscription=subscription,
-                                          plain_text_footer=plain_text_footer,
-                                          html_footer=html_footer)
+        plain_text_footer, html_footer = subscribe.get_footer_contents(
+            email_vars,
+            subscription=subscription,
+            plain_text_footer=plain_text_footer,
+            html_footer=html_footer,
+        )
 
-    email_vars['plain_text_footer'] = plain_text_footer
-    email_vars['html_footer'] = html_footer
+    email_vars["plain_text_footer"] = plain_text_footer
+    email_vars["html_footer"] = html_footer
 
     subject = plain_text_body = html_body = ""
     for subscribe in p.PluginImplementations(ISubscribe):
-        subject, plain_text_body, html_body = \
-            subscribe.get_manage_email_contents(
-                email_vars, subject=subject, plain_text_body=plain_text_body,
-                html_body=html_body)
+        subject, plain_text_body, html_body = subscribe.get_manage_email_contents(
+            email_vars,
+            subject=subject,
+            plain_text_body=plain_text_body,
+            html_body=html_body,
+        )
 
-    mailer.mail_recipient(recipient_name=email,
-                          recipient_email=email,
-                          subject=subject,
-                          body=plain_text_body,
-                          body_html=html_body,
-                          headers={})
+    mailer.mail_recipient(
+        recipient_name=email,
+        recipient_email=email,
+        subject=subject,
+        body=plain_text_body,
+        body_html=html_body,
+        headers={},
+    )
 
 
 def create_code(email):
-    if p.toolkit.check_ckan_version(max_version='2.8.99'):
+    if p.toolkit.check_ckan_version(max_version="2.8.99"):
         model.repo.new_revision()
     code = text_type(make_code())
-    model.Session.add(LoginCode(
-        email=email,
-        code=code,
-        expires=datetime.datetime.now() + CODE_EXPIRY,
-    ))
+    model.Session.add(
+        LoginCode(
+            email=email,
+            code=code,
+            expires=datetime.datetime.now() + CODE_EXPIRY,
+        )
+    )
     model.repo.commit_and_remove()
     return code
 
 
 def make_code():
     # random.SystemRandom() is documented as suitable for cryptographic use
-    return ''.join(
+    return "".join(
         random.SystemRandom().choice(string.ascii_letters + string.digits)
-        for _ in range(32))
+        for _ in range(32)
+    )
 
 
 def authenticate_with_code(code):
