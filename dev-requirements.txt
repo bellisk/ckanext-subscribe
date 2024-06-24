@@ -1,1 +1,1 @@
-flake8    # for the travis build
+coveralls  # for reporting test coverage to coveralls.io in .github/workflows/test.yml
