@@ -22,11 +22,13 @@ setup(
     long_description_content_type='text/x-rst',
 
     # The project's main homepage.
-    url='https://github.com/davidread/ckanext-subscribe',
+    url='https://github.com/bellisk/ckanext-subscribe',
 
     # Author details
     author='''David Read''',
     author_email='''david.read@hackneyworkshop.com''',
+    maintainer="""Liip AG""",
+    maintainer_email="""ogdch@liip.ch""",
 
     # Choose your license
     license='AGPL',
