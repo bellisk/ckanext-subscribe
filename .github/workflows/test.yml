@@ -73,4 +73,9 @@ jobs:
         run: |
           # Upgrade certi to fix SSL error due to the version installed in CKAN-2.8 image 
           pip install --upgrade certifi
-          coveralls
+          # Run coveralls command with retry logic to handle potential transient issues
+          for attempt in 1 2 3; do
+            coveralls && break
+            echo "Attempt $attempt: Failed to submit coverage, retrying in 10 seconds..."
+            sleep 10
+          done
