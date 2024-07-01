@@ -2,6 +2,7 @@
 
 import datetime
 
+import ckan.plugins.toolkit as tk
 import mock
 from ckan import model
 from ckan.plugins.toolkit import ValidationError
@@ -222,6 +223,86 @@ class TestSubscribeSignup(object):
         )
 
         assert not send_request_email.called
+
+
+# The reCAPTCHA tests
+class TestRecaptchaOfSubscribeSignup(object):
+    def setup(self):
+        helpers.reset_db()
+        tk.config["ckanext.subscribe.apply_recaptcha"] = "true"
+
+    def teardown(self):
+        tk.config["ckanext.subscribe.apply_recaptcha"] = "false"
+
+    # mock the _verify_recaptcha function and test both
+    # successful and unsuccessful reCAPTCHA verification scenarios
+    @mock.patch("requests.post")
+    @mock.patch("ckanext.subscribe.email_verification.send_request_email")
+    @mock.patch("ckanext.subscribe.action._verify_recaptcha")
+    def test_verify_recaptcha_success(
+        self, mock_verify_recaptcha, send_request_email, mock_post
+    ):
+        # Mocking the reCAPTCHA verification to return True
+        mock_verify_recaptcha.return_value = True
+        mock_post.return_value = mock.Mock(
+            status_code=200, json=lambda: {"success": True}
+        )
+
+        dataset = factories.Dataset()
+
+        # Calling the subscribe_signup action with a mock reCAPTCHA response
+        subscription = helpers.call_action(
+            "subscribe_signup",
+            {},
+            email="bob@example.com",
+            dataset_id=dataset["id"],
+            g_recaptcha_response="test-recaptcha-response",
+        )
+
+        # Asserting that the email verification function was called once
+        send_request_email.assert_called_once()
+        eq(send_request_email.call_args[0][0].object_type, "dataset")
+        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
+        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+
+        # Asserting that the subscription was created with the correct details
+        eq(subscription["object_type"], "dataset")
+        eq(subscription["object_id"], dataset["id"])
+        eq(subscription["email"], "bob@example.com")
+        eq(subscription["verified"], False)
+        assert "verification_code" not in subscription
+
+        # Checking that the subscription object exists in the database
+        subscription_obj = model.Session.query(subscribe_model.Subscription).get(
+            subscription["id"]
+        )
+        assert subscription_obj
+
+    @mock.patch("ckanext.subscribe.email_verification.send_request_email")
+    @mock.patch("ckanext.subscribe.action._verify_recaptcha")
+    def test_verify_recaptcha_failure(self, mock_verify_recaptcha, send_request_email):
+        # Mocking the reCAPTCHA verification to return False
+        mock_verify_recaptcha.return_value = False
+
+        dataset = factories.Dataset()
+
+        # Attempting to call subscribe_signup action with an invalid reCAPTCHA
+        try:
+            helpers.call_action(
+                "subscribe_signup",
+                {},
+                email="bob@example.com",
+                dataset_id=dataset["id"],
+                g_recaptcha_response="wrong_recaptcha",
+            )
+        except ValidationError as e:
+            # Asserting that the error is raised with the correct message
+            assert "Invalid reCAPTCHA. Please try again." in str(e.error_dict)
+
+            # Ensuring the email is not sent due to invalid reCAPTCHA
+            assert not send_request_email.called
+        else:
+            assert False, "ValidationError not raised"
 
 
 class TestSubscribeVerify(object):
