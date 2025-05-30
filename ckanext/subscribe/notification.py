@@ -349,7 +349,7 @@ def dictize_notifications(subscription_activities):
 def send_emails(notifications_by_email, deletions_by_email):
     for email, notifications in notifications_by_email.items():
         code = email_auth.create_code(email)
-        notification_email.send_notification_email(code, email, notifications)
+        notification_email.send_notification_email(code, email, notifications, "notification")
     for email, notifications in deletions_by_email.items():
         code = email_auth.create_code(email)
-        notification_email.send_deletion_email(code, email, notifications)
+        notification_email.send_notification_email(code, email, notifications, "deletion")
