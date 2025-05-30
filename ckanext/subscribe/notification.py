@@ -73,14 +73,23 @@ def send_weekly_notifications_if_its_time_to():
 
     log.debug("send_weekly_notifications")
     notification_datetime = datetime.datetime.now()
-    notifications_by_email = get_weekly_notifications(notification_datetime)
-    if not notifications_by_email:
+    notifications_by_email, deletions_by_email = get_weekly_notifications(
+        notification_datetime
+    )
+    if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (weekly frequency)")
     else:
         log.debug(
-            "sending {} emails (weekly frequency)".format(len(notifications_by_email))
+            "sending {} notification emails (weekly frequency)".format(
+                len(notifications_by_email)
+            )
         )
-        send_emails(notifications_by_email)
+        log.debug(
+            "sending {} deletion emails (weekly frequency)".format(
+                len(deletions_by_email)
+            )
+        )
+        send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time
     Subscribe.set_emails_last_sent(
@@ -95,14 +104,23 @@ def send_daily_notifications_if_its_time_to():
 
     log.debug("send_daily_notifications")
     notification_datetime = datetime.datetime.now()
-    notifications_by_email = get_daily_notifications(notification_datetime)
-    if not notifications_by_email:
+    notifications_by_email, deletions_by_email = get_daily_notifications(
+        notification_datetime
+    )
+    if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (daily frequency)")
     else:
         log.debug(
-            "sending {} emails (daily frequency)".format(len(notifications_by_email))
+            "sending {} notification emails (daily frequency)".format(
+                len(notifications_by_email)
+            )
         )
-        send_emails(notifications_by_email)
+        log.debug(
+            "sending {} deletion emails (daily frequency)".format(
+                len(deletions_by_email)
+            )
+        )
+        send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time
     Subscribe.set_emails_last_sent(
@@ -121,7 +139,7 @@ def get_immediate_notifications(notification_datetime=None):
     # {object_id: [subscriptions]}
     objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
-        return {}
+        return {}, {}
 
     emails_last_sent = Subscribe.get_emails_last_sent(
         frequency=Frequency.IMMEDIATE.value
@@ -137,7 +155,7 @@ def get_immediate_notifications(notification_datetime=None):
         include_activity_from, objects_subscribed_to.keys()
     )
     if not activities:
-        return {}
+        return {}, {}
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
     ), get_notifications_by_email(
@@ -240,7 +258,7 @@ def get_weekly_notifications(notification_datetime=None):
     # {object_id: [subsciptions]}
     objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
-        return {}
+        return {}, {}
 
     emails_last_sent = Subscribe.get_emails_last_sent(frequency=Frequency.WEEKLY.value)
     now = notification_datetime or datetime.datetime.now()
@@ -255,9 +273,11 @@ def get_weekly_notifications(notification_datetime=None):
         include_activity_from, objects_subscribed_to.keys()
     )
     if not activities:
-        return {}
+        return {}, {}
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
+    ), get_notifications_by_email(
+        activities, objects_subscribed_to, subscription_frequency, "deleted"
     )
 
 
@@ -271,7 +291,7 @@ def get_daily_notifications(notification_datetime=None):
     # {object_id: [subscriptions]}
     objects_subscribed_to = get_objects_subscribed_to(subscription_frequency)
     if not objects_subscribed_to:
-        return {}
+        return {}, {}
 
     emails_last_sent = Subscribe.get_emails_last_sent(frequency=Frequency.DAILY.value)
     now = notification_datetime or datetime.datetime.now()
@@ -285,9 +305,11 @@ def get_daily_notifications(notification_datetime=None):
         include_activity_from, objects_subscribed_to.keys()
     )
     if not activities:
-        return {}
+        return {}, {}
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
+    ), get_notifications_by_email(
+        activities, objects_subscribed_to, subscription_frequency, "deleted"
     )
 
 
@@ -301,7 +323,7 @@ def get_subscribed_to_activities(include_activity_from, objects_subscribed_to_ke
 
 
 def get_notifications_by_email(
-    activities, objects_subscribed_to, subscription_frequency, activity_type="changed"
+    activities, objects_subscribed_to, subscription_frequency, activity_type=None
 ):
     # group by email address
     # so we can send each email address one email with all their notifications
@@ -309,12 +331,15 @@ def get_notifications_by_email(
     # (done in a loop rather than sql merely because of ease/clarity)
     # email: {subscription: [activity, ...], ...}
     notifications = defaultdict(lambda: defaultdict(list))
+
     for activity in activities:
         for subscription in objects_subscribed_to[activity.object_id]:
             # ignore activity that occurs before this subscription was created
             if subscription.created > activity.timestamp:
                 continue
-            if activity_type in activity.activity_type:
+            if activity_type and activity_type in activity.activity_type:
+                notifications[subscription.email][subscription].append(activity)
+            else:
                 notifications[subscription.email][subscription].append(activity)
 
     # dictize
@@ -323,7 +348,6 @@ def get_notifications_by_email(
         notifications_by_email_dictized[email] = dictize_notifications(
             subscription_activities
         )
-
     return notifications_by_email_dictized
 
 
