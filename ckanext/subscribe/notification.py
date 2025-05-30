@@ -159,7 +159,7 @@ def get_immediate_notifications(notification_datetime=None):
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
     ), get_notifications_by_email(
-        activities, objects_subscribed_to, subscription_frequency, "deleted"
+        activities, objects_subscribed_to, subscription_frequency, ["deleted"]
     )
 
 
@@ -277,7 +277,7 @@ def get_weekly_notifications(notification_datetime=None):
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
     ), get_notifications_by_email(
-        activities, objects_subscribed_to, subscription_frequency, "deleted"
+        activities, objects_subscribed_to, subscription_frequency, ["deleted"]
     )
 
 
@@ -309,7 +309,7 @@ def get_daily_notifications(notification_datetime=None):
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
     ), get_notifications_by_email(
-        activities, objects_subscribed_to, subscription_frequency, "deleted"
+        activities, objects_subscribed_to, subscription_frequency, ["deleted"]
     )
 
 
@@ -323,7 +323,7 @@ def get_subscribed_to_activities(include_activity_from, objects_subscribed_to_ke
 
 
 def get_notifications_by_email(
-    activities, objects_subscribed_to, subscription_frequency, activity_type=None
+    activities, objects_subscribed_to, subscription_frequency, activity_types=None
 ):
     # group by email address
     # so we can send each email address one email with all their notifications
@@ -332,14 +332,15 @@ def get_notifications_by_email(
     # email: {subscription: [activity, ...], ...}
     notifications = defaultdict(lambda: defaultdict(list))
 
+    if not activity_types:
+        activity_types = ["new", "changed", "updated", "created"]
+
     for activity in activities:
         for subscription in objects_subscribed_to[activity.object_id]:
             # ignore activity that occurs before this subscription was created
             if subscription.created > activity.timestamp:
                 continue
-            if activity_type and activity_type in activity.activity_type:
-                notifications[subscription.email][subscription].append(activity)
-            else:
+            if activity.activity_type.split()[0] in activity_types:
                 notifications[subscription.email][subscription].append(activity)
 
     # dictize
