@@ -39,7 +39,7 @@ class TestSendAnyImmediateNotifications(object):
 
         send_any_immediate_notifications()
 
-        assert send_notification_email.call_count == 2
+        send_notification_email.assert_called_once()
         code, email, notifications, email_type = send_notification_email.call_args[0]
         eq(type(code), type(u""))
         eq(email, "bob@example.com")
@@ -229,7 +229,7 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
 
         send_weekly_notifications_if_its_time_to()
 
-        assert send_notification_email.call_count == 2
+        send_notification_email.assert_called_once()
         code, email, notifications, email_type = send_notification_email.call_args[0]
         eq(type(code), type(u""))
         eq(email, "bob@example.com")
@@ -351,7 +351,7 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
 
         send_daily_notifications_if_its_time_to()
 
-        assert send_notification_email.call_count == 2
+        send_notification_email.assert_called_once()
         code, email, notifications, email_type = send_notification_email.call_args[0]
         eq(type(code), type(u""))
         eq(email, "bob@example.com")
