@@ -42,16 +42,21 @@ def get_config(key):
 def send_any_immediate_notifications():
     log.debug("send_any_immediate_notifications")
     notification_datetime = datetime.datetime.now()
-    notifications_by_email = get_immediate_notifications(notification_datetime)
-    if not notifications_by_email:
+    notifications_by_email, deletions_by_email = get_immediate_notifications(notification_datetime)
+    if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (immediate frequency)")
     else:
         log.debug(
-            "sending {} emails (immediate frequency)".format(
+            "sending {} notification emails (immediate frequency)".format(
                 len(notifications_by_email)
             )
         )
-        send_emails(notifications_by_email)
+        log.debug(
+            "sending {} deletion emails (immediate frequency)".format(
+                len(deletions_by_email)
+            )
+        )
+        send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time
     Subscribe.set_emails_last_sent(
@@ -133,6 +138,8 @@ def get_immediate_notifications(notification_datetime=None):
         return {}
     return get_notifications_by_email(
         activities, objects_subscribed_to, subscription_frequency
+    ), get_notifications_by_email(
+        activities, objects_subscribed_to, subscription_frequency, "deleted"
     )
 
 
@@ -292,7 +299,7 @@ def get_subscribed_to_activities(include_activity_from, objects_subscribed_to_ke
 
 
 def get_notifications_by_email(
-    activities, objects_subscribed_to, subscription_frequency
+    activities, objects_subscribed_to, subscription_frequency, activity_type="changed"
 ):
     # group by email address
     # so we can send each email address one email with all their notifications
@@ -305,8 +312,8 @@ def get_notifications_by_email(
             # ignore activity that occurs before this subscription was created
             if subscription.created > activity.timestamp:
                 continue
-
-            notifications[subscription.email][subscription].append(activity)
+            if activity_type in activity.activity_type:
+                notifications[subscription.email][subscription].append(activity)
 
     # dictize
     notifications_by_email_dictized = defaultdict(list)
@@ -339,7 +346,10 @@ def dictize_notifications(subscription_activities):
     return notifications_dictized
 
 
-def send_emails(notifications_by_email):
+def send_emails(notifications_by_email, deletions_by_email):
     for email, notifications in notifications_by_email.items():
         code = email_auth.create_code(email)
         notification_email.send_notification_email(code, email, notifications)
+    for email, notifications in deletions_by_email.items():
+        code = email_auth.create_code(email)
+        notification_email.send_deletion_email(code, email, notifications)

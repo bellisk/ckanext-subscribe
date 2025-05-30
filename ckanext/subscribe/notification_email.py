@@ -35,6 +35,32 @@ def send_notification_email(code, email, notifications):
         headers={},
     )
 
+def send_deletion_email(code, email, notifications):
+    email_vars = get_notification_email_vars(code, email, notifications)
+
+    plain_text_footer = html_footer = ""
+    for subscribe in p.PluginImplementations(ISubscribe):
+        plain_text_footer, html_footer = subscribe.get_footer_contents(
+            email_vars, plain_text_footer=plain_text_footer, html_footer=html_footer
+        )
+
+    email_vars["plain_text_footer"] = plain_text_footer
+    email_vars["html_footer"] = html_footer
+
+    subject = plain_text_body = html_body = ""
+    for subscribe in p.PluginImplementations(ISubscribe):
+        subject, plain_text_body, html_body = subscribe.get_deletion_email_contents(
+            email_vars, subject, plain_text_body, html_body
+        )
+
+    mailer.mail_recipient(
+        recipient_name=email,
+        recipient_email=email,
+        subject=subject,
+        body=plain_text_body,
+        body_html=html_body,
+        headers={},
+    )
 
 def get_notification_email_vars(code, email, notifications):
     email_vars = {}
