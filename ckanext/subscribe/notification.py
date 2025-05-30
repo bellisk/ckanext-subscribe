@@ -15,6 +15,7 @@ log = __import__("logging").getLogger(__name__)
 
 _config = {}
 
+
 def get_config(key):
     global _config
     if not _config:
@@ -40,7 +41,9 @@ def get_config(key):
 def send_any_immediate_notifications():
     log.debug("send_any_immediate_notifications")
     notification_datetime = datetime.datetime.now()
-    notifications_by_email, deletions_by_email = get_immediate_notifications(notification_datetime)
+    notifications_by_email, deletions_by_email = get_immediate_notifications(
+        notification_datetime
+    )
     if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (immediate frequency)")
     else:
@@ -347,7 +350,11 @@ def dictize_notifications(subscription_activities):
 def send_emails(notifications_by_email, deletions_by_email):
     for email, notifications in notifications_by_email.items():
         code = email_auth.create_code(email)
-        notification_email.send_notification_email(code, email, notifications, "notification")
+        notification_email.send_notification_email(
+            code, email, notifications, "notification"
+        )
     for email, notifications in deletions_by_email.items():
         code = email_auth.create_code(email)
-        notification_email.send_notification_email(code, email, notifications, "deletion")
+        notification_email.send_notification_email(
+            code, email, notifications, "deletion"
+        )

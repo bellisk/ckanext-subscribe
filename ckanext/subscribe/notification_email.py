@@ -34,6 +34,7 @@ def send_notification_email(code, email, notifications, email_type="notification
         headers={},
     )
 
+
 def get_notification_email_vars(code, email, notifications):
     email_vars = {}
     for subscribe in p.PluginImplementations(ISubscribe):
