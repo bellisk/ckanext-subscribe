@@ -57,6 +57,47 @@ class TestSendAnyImmediateNotifications(object):
         ) < datetime.timedelta(seconds=1)
 
 
+class TestGetDeletions(object):
+    def setup(self):
+        helpers.reset_db()
+        subscribe_model.setup()
+        subscribe_notification._config = {}
+
+    def test_basic(self):
+        dataset = factories.DatasetActivity(activity_type="deleted package")
+        _ = factories.DatasetActivity()  # decoy
+        subscription = factories.Subscription(dataset_id=dataset["id"])
+
+        notifies, deletions = get_immediate_notifications()
+
+        eq(deletions.keys(), [subscription["email"]])
+        eq(
+            _get_activities(deletions),
+            [(u"bob@example.com", u"deleted package", dataset["id"])],
+        )
+
+    def test_get_separate_mails(self):
+        dataset = factories.DatasetActivity(activity_type="changed package")
+        _ = factories.DatasetActivity()  # decoy
+        dataset_deleted = factories.DatasetActivity(activity_type="deleted package")
+        _ = factories.DatasetActivity()  # decoy
+        subscription_update = factories.Subscription(dataset_id=dataset["id"])
+        subscription_delete = factories.Subscription(dataset_id=dataset_deleted["id"])
+
+        notifies, deletions = get_immediate_notifications()
+
+        eq(notifies.keys(), [subscription_update["email"]])
+        eq(deletions.keys(), [subscription_delete["email"]])
+        eq(
+            _get_activities(notifies),
+            [(u"bob@example.com", u"changed package", dataset["id"])],
+        )
+        eq(
+            _get_activities(deletions),
+            [(u"bob@example.com", u"deleted package", dataset_deleted["id"])],
+        )
+
+
 class TestGetImmediateNotifications(object):
     def setup(self):
         helpers.reset_db()
