@@ -8,7 +8,7 @@ from ckanext.subscribe.interfaces import ISubscribe
 config = p.toolkit.config
 
 
-def send_notification_email(code, email, notifications):
+def send_notification_email(code, email, notifications, email_type="notification"):
     email_vars = get_notification_email_vars(code, email, notifications)
 
     plain_text_footer = html_footer = ""
@@ -23,7 +23,7 @@ def send_notification_email(code, email, notifications):
     subject = plain_text_body = html_body = ""
     for subscribe in p.PluginImplementations(ISubscribe):
         subject, plain_text_body, html_body = subscribe.get_notification_email_contents(
-            email_vars, subject, plain_text_body, html_body
+            email_vars, email_type, subject, plain_text_body, html_body
         )
 
     mailer.mail_recipient(

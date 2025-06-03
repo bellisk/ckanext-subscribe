@@ -107,13 +107,20 @@ class ISubscribe(Interface):
         return subscribe_get_subscription_confirmation_email_contents(email_vars)
 
     def get_notification_email_contents(
-        self, email_vars, subject=None, plain_text_body=None, html_body=None
+        self,
+        email_vars,
+        type="notification",
+        subject=None,
+        plain_text_body=None,
+        html_body=None,
     ):
         """Get the plain-text body and html body of an email with update
         notifications.
 
         :param email_vars: Dict of strings to substitute into the text
         :type email_vars: dict
+        :param type: String to indicate which kind of notification is to be send
+        :type type: string
         :param subject: Subject line of the email
         :type subject: string
         :param plain_text_body: Plain-text body of the email, passed in here so

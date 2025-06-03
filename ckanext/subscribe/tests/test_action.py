@@ -635,7 +635,7 @@ class TestSendAnyNotifications(object):
         helpers.call_action("subscribe_send_any_notifications", {})
 
         send_notification_email.assert_called_once()
-        code, email, notifications = send_notification_email.call_args[0]
+        code, email, notifications, email_type = send_notification_email.call_args[0]
         eq(type(code), type(u""))
         eq(email, "bob@example.com")
         eq(len(notifications), 1)
