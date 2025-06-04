@@ -56,6 +56,7 @@ def get_notification_email_vars(code, email, notifications):
                     timestamp=p.toolkit.h.date_str_to_datetime(activity["timestamp"]),
                     dataset_link=dataset_link_from_activity(activity),
                     dataset_href=dataset_href_from_activity(activity),
+                    dataset_id=activity["object_id"],
                 )
             )
         # get the package/group's name & title

@@ -380,7 +380,8 @@ def send_emails(notifications_by_email, deletions_by_email):
             code, email, notifications, "notification"
         )
     for email, notifications in deletions_by_email.items():
-        code = email_auth.create_code(email)
-        notification_email.send_notification_email(
-            code, email, notifications, "deletion"
-        )
+        for notification in notifications:
+            code = email_auth.create_code(email)
+            notification_email.send_notification_email(
+                code, email, [notification], "deletion"
+            )
