@@ -4,7 +4,7 @@ import os
 
 import ckan.plugins as p
 from ckan import model
-import ckan.logic as tk
+from ckan.plugins import toolkit as tk
 from jinja2 import Template
 
 HARVEST_USER = "harvest"
