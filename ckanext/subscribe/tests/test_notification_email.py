@@ -107,7 +107,8 @@ class TestGetNotificationEmailContents(object):
         # Check we link to the dataset, not just the org
         assert_in(f"http://test.ckan.net/dataset/{dataset['name']}", email[1])
         assert_in(
-            f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">Test Dataset</a>",
+            f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">"
+            f"Test Dataset</a>",
             email[2],
         )
 

@@ -101,6 +101,6 @@ class SubscribePlugin(plugins.SingletonPlugin):
         """Provide template helper functions"""
 
         return {
-            "get_recaptcha_publickey": subscribe_helpers.get_recaptcha_publickey,  # noqa
+            "get_recaptcha_publickey": subscribe_helpers.get_recaptcha_publickey,
             "apply_recaptcha": subscribe_helpers.apply_recaptcha,
         }

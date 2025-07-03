@@ -248,15 +248,11 @@ class SubscribeController(BaseController):
                     error_messages.extend(err.error_dict.pop(key_ignored))
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
-            h.flash_error(
-                _(f"Error unsubscribing: {'; '.join(error_messages)}")
-            )
+            h.flash_error(_(f"Error unsubscribing: {'; '.join(error_messages)}"))
         except ObjectNotFound as err:
             h.flash_error(_(f"Error unsubscribing: {err}"))
         else:
-            h.flash_success(
-                _(f"You are no longer subscribed to this {object_type}")
-            )
+            h.flash_success(_(f"You are no longer subscribed to this {object_type}"))
             return self._redirect_back_to_subscribe_page(object_name, object_type)
         return self._redirect_back_to_subscribe_page_from_request(data_dict)
 
@@ -296,15 +292,14 @@ class SubscribeController(BaseController):
                     error_messages.extend(err.error_dict.pop(key_ignored))
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
-            h.flash_error(
-                _(f"Error unsubscribing: {'; '.join(error_messages)}")
-            )
+            h.flash_error(_(f"Error unsubscribing: {'; '.join(error_messages)}"))
         except ObjectNotFound as err:
             h.flash_error(_(f"Error unsubscribing: {err}"))
         else:
             h.flash_success(
                 _(
-                    f"You are no longer subscribed to notifications from {config.get('ckan.site_title')}"
+                    f"You are no longer subscribed to notifications from "
+                    f"{config.get('ckan.site_title')}"
                 )
             )
             return redirect_to("home")
@@ -368,9 +363,7 @@ class SubscribeController(BaseController):
                     error_messages.extend(err.error_dict.pop(key_ignored))
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
-            h.flash_error(
-                _(f"Error requesting code: {'; '.join(error_messages)}")
-            )
+            h.flash_error(_(f"Error requesting code: {'; '.join(error_messages)}"))
         except ObjectNotFound as err:
             h.flash_error(_(f"Error requesting code: {err}"))
         except MailerException:

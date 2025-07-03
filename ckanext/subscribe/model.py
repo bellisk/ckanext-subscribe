@@ -88,7 +88,9 @@ class Subscription(_DomainObject):
 
     def __repr__(self):
         return (
-            f"<Subscription id={self.id} email={self.email} object_type={self.object_type} verified={self.verified} frequency={Frequency(self.frequency).name}>"
+            f"<Subscription id={self.id} email={self.email} "
+            f"object_type={self.object_type} verified={self.verified} "
+            f"frequency={Frequency(self.frequency).name}>"
         )
 
 
@@ -106,7 +108,10 @@ class LoginCode(_DomainObject):
     """
 
     def __repr__(self):
-        return f"<LoginCode id={self.id} email={self.email} code={self.code[:4]}... expires={self.expires}>"
+        return (
+            f"<LoginCode id={self.id} email={self.email} "
+            f"code={self.code[:4]}... expires={self.expires}>"
+        )
 
     @classmethod
     def validate_code(cls, code):
