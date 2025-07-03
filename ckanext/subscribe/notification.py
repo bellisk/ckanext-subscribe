@@ -127,7 +127,7 @@ def get_immediate_notifications(notification_datetime=None):
         include_activity_from = now - catch_up_period
 
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}
@@ -243,7 +243,7 @@ def get_weekly_notifications(notification_datetime=None):
         include_activity_from = now - week
 
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}
@@ -273,7 +273,7 @@ def get_daily_notifications(notification_datetime=None):
     else:
         include_activity_from = now - day
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}
@@ -310,7 +310,7 @@ def get_notifications_by_email(
 
     # dictize
     notifications_by_email_dictized = defaultdict(list)
-    for email, subscription_activities in notifications.items():
+    for email, subscription_activities in list(notifications.items()):
         notifications_by_email_dictized[email] = dictize_notifications(
             subscription_activities
         )
@@ -327,7 +327,7 @@ def dictize_notifications(subscription_activities):
     """
     context = {"model": model, "session": model.Session}
     notifications_dictized = []
-    for subscription, activities in subscription_activities.items():
+    for subscription, activities in list(subscription_activities.items()):
         subscription_dict = dictization.dictize_subscription(subscription, context)
         activity_dicts = model_dictize.activity_list_dictize(activities, context)
         notifications_dictized.append(
@@ -340,6 +340,6 @@ def dictize_notifications(subscription_activities):
 
 
 def send_emails(notifications_by_email):
-    for email, notifications in notifications_by_email.items():
+    for email, notifications in list(notifications_by_email.items()):
         code = email_auth.create_code(email)
         notification_email.send_notification_email(code, email, notifications)

@@ -41,7 +41,7 @@ class TestSendAnyImmediateNotifications(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(u""))
+        eq(type(code), type(""))
         eq(email, "bob@example.com")
         eq(len(notifications), 1)
         eq(
@@ -70,10 +70,10 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(notifies.keys(), [subscription["email"]])
+        eq(list(notifies.keys()), [subscription["email"]])
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"new package", dataset["id"])],
+            [("bob@example.com", "new package", dataset["id"])],
         )
 
     def test_subscribe_to_an_org_and_its_dataset_has_activity(self):
@@ -86,10 +86,10 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(notifies.keys(), [subscription["email"]])
+        eq(list(notifies.keys()), [subscription["email"]])
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"new package", dataset["id"])],
+            [("bob@example.com", "new package", dataset["id"])],
         )
 
     def test_subscribe_to_an_group_and_its_dataset_has_activity(self):
@@ -102,10 +102,10 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(notifies.keys(), [subscription["email"]])
+        eq(list(notifies.keys()), [subscription["email"]])
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"new package", dataset["id"])],
+            [("bob@example.com", "new package", dataset["id"])],
         )
 
     def test_old_activity_not_notified(self):
@@ -145,7 +145,7 @@ class TestGetImmediateNotifications(object):
 
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"changed package", dataset["id"])],
+            [("bob@example.com", "changed package", dataset["id"])],
         )
 
     def test_lots_of_users_and_datasets(self):
@@ -178,14 +178,14 @@ class TestGetImmediateNotifications(object):
             set(_get_activities(notifies)),
             set(
                 (
-                    (u"user@a.com", u"new package", datasetx["id"]),
-                    (u"user@a.com", u"changed package", datasetx["id"]),
-                    (u"user@a.com", u"changed package", datasetx["id"]),
-                    (u"user@b.com", u"new package", datasetx["id"]),
-                    (u"user@b.com", u"changed package", datasetx["id"]),
-                    (u"user@b.com", u"changed package", datasetx["id"]),
-                    (u"user@b.com", u"new package", datasety["id"]),
-                    (u"user@b.com", u"changed package", datasety["id"]),
+                    ("user@a.com", "new package", datasetx["id"]),
+                    ("user@a.com", "changed package", datasetx["id"]),
+                    ("user@a.com", "changed package", datasetx["id"]),
+                    ("user@b.com", "new package", datasetx["id"]),
+                    ("user@b.com", "changed package", datasetx["id"]),
+                    ("user@b.com", "changed package", datasetx["id"]),
+                    ("user@b.com", "new package", datasety["id"]),
+                    ("user@b.com", "changed package", datasety["id"]),
                 )
             ),
         )
@@ -231,7 +231,7 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(u""))
+        eq(type(code), type(""))
         eq(email, "bob@example.com")
         eq(len(notifications), 1)
         eq(
@@ -272,10 +272,10 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(notifies.keys(), [subscription["email"]])
+        eq(list(notifies.keys()), [subscription["email"]])
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"new package", dataset["id"])],
+            [("bob@example.com", "new package", dataset["id"])],
         )
 
     def test_daily_frequency_subscriptions_are_not_included(self):
@@ -353,7 +353,7 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(u""))
+        eq(type(code), type(""))
         eq(email, "bob@example.com")
         eq(len(notifications), 1)
         eq(
@@ -394,10 +394,10 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(notifies.keys(), [subscription["email"]])
+        eq(list(notifies.keys()), [subscription["email"]])
         eq(
             _get_activities(notifies),
-            [(u"bob@example.com", u"new package", dataset["id"])],
+            [("bob@example.com", "new package", dataset["id"])],
         )
 
     def test_weekly_frequency_subscriptions_are_not_included(self):
@@ -443,7 +443,7 @@ class TestGetDailyNotifications(object):
 
 def _get_activities(notifications_by_email):
     activities = []
-    for email, notifications in notifications_by_email.items():
+    for email, notifications in list(notifications_by_email.items()):
         for notification in notifications:
             for activity in notification["activities"]:
                 activities.append(

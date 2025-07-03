@@ -143,12 +143,12 @@ class TestGetNotificationEmailVars(object):
                 {
                     "activities": [
                         {
-                            "activity_type": u"new dataset",
+                            "activity_type": "new dataset",
                             "dataset_href": "http://test.ckan.net/dataset/{}".format(
                                 dataset["name"]
                             ),
                             "dataset_link": literal(
-                                u'<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
+                                '<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
                                     dataset["name"], dataset["title"]
                                 )
                             ),
@@ -160,7 +160,7 @@ class TestGetNotificationEmailVars(object):
                     ),
                     "object_name": dataset["name"],
                     "object_title": dataset["title"],
-                    "object_type": u"dataset",
+                    "object_type": "dataset",
                 }
             ],
         )
@@ -186,16 +186,16 @@ class TestGetNotificationEmailVars(object):
                 {
                     "activities": [
                         {
-                            "activity_type": u"new group",
-                            "dataset_href": u"",
-                            "dataset_link": u"",
+                            "activity_type": "new group",
+                            "dataset_href": "",
+                            "dataset_link": "",
                             "timestamp": activity.timestamp,
                         }
                     ],
                     "object_link": "http://test.ckan.net/group/{}".format(group["id"]),
                     "object_name": group["name"],
                     "object_title": group["title"],
-                    "object_type": u"group",
+                    "object_type": "group",
                 }
             ],
         )
@@ -223,9 +223,9 @@ class TestGetNotificationEmailVars(object):
                 {
                     "activities": [
                         {
-                            "activity_type": u"new organization",
-                            "dataset_href": u"",
-                            "dataset_link": u"",
+                            "activity_type": "new organization",
+                            "dataset_href": "",
+                            "dataset_link": "",
                             "timestamp": activity.timestamp,
                         }
                     ],
@@ -234,7 +234,7 @@ class TestGetNotificationEmailVars(object):
                     ),
                     "object_name": org["name"],
                     "object_title": org["title"],
-                    "object_type": u"organization",
+                    "object_type": "organization",
                 }
             ],
         )
@@ -316,12 +316,12 @@ class TestDatasetLinkFromActivity(object):
     def test_basic(self):
         eq(
             dataset_link_from_activity(CHANGED_PACKAGE_ACTIVITY),
-            literal(u'<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
+            literal('<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
         )
 
     def test_custom_activity(self):
         # don't want an exception
-        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), literal(u""))
+        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), literal(""))
 
 
 class TestDatasetHrefFromActivity(object):

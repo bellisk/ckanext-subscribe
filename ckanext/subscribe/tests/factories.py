@@ -169,7 +169,7 @@ class DatasetActivity(factory.Factory):
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
@@ -208,7 +208,7 @@ class GroupActivity(factory.Factory):
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
@@ -247,7 +247,7 @@ class OrganizationActivity(factory.Factory):
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 

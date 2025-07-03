@@ -30,7 +30,7 @@ class SubscribeController(BaseController):
         # validate inputs
         email = request.POST.get("email")
         if not email:
-            abort(400, _(u"No email address supplied"))
+            abort(400, _("No email address supplied"))
         email = email.strip()
         # pattern from https://html.spec.whatwg.org/#e-mail-state-(type=email)
         email_re = (
@@ -39,7 +39,7 @@ class SubscribeController(BaseController):
             r"(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
         )
         if not re.match(email_re, email):
-            abort(400, _(u"Email supplied is invalid"))
+            abort(400, _("Email supplied is invalid"))
 
         # create subscription
         data_dict = {
@@ -50,13 +50,13 @@ class SubscribeController(BaseController):
             "g_recaptcha_response": request.POST.get("g-recaptcha-response"),
         }
         context = {
-            u"model": model,
-            u"session": model.Session,
-            u"user": g.user,
-            u"auth_user_obj": g.userobj,
+            "model": model,
+            "session": model.Session,
+            "user": g.user,
+            "auth_user_obj": g.userobj,
         }
         try:
-            subscription = get_action(u"subscribe_signup")(context, data_dict)
+            subscription = get_action("subscribe_signup")(context, data_dict)
         except ValidationError as err:
             error_messages = []
             for key_ignored in ("message", "__before", "dataset_id", "group_id"):
@@ -85,14 +85,14 @@ class SubscribeController(BaseController):
     def verify_subscription(self):
         data_dict = {"code": request.params.get("code")}
         context = {
-            u"model": model,
-            u"session": model.Session,
-            u"user": g.user,
-            u"auth_user_obj": g.userobj,
+            "model": model,
+            "session": model.Session,
+            "user": g.user,
+            "auth_user_obj": g.userobj,
         }
 
         try:
-            subscription = get_action(u"subscribe_verify")(context, data_dict)
+            subscription = get_action("subscribe_verify")(context, data_dict)
         except ValidationError as err:
             h.flash_error(_("Error subscribing: {}".format(err.error_dict["message"])))
             return redirect_to("home")
@@ -125,10 +125,10 @@ class SubscribeController(BaseController):
             {"model": model, "ignore_auth": True}, {}
         )
         context = {
-            u"model": model,
-            u"user": site_user["name"],
+            "model": model,
+            "user": site_user["name"],
         }
-        subscriptions = get_action(u"subscribe_list_subscriptions")(
+        subscriptions = get_action("subscribe_list_subscriptions")(
             context, {"email": email}
         )
         frequency_options = [
@@ -139,7 +139,7 @@ class SubscribeController(BaseController):
             for f in sorted(subscribe_model.Frequency, key=lambda x: x.value)
         ]
         return render(
-            u"subscribe/manage.html",
+            "subscribe/manage.html",
             extra_vars={
                 "email": email,
                 "code": code,
@@ -163,12 +163,12 @@ class SubscribeController(BaseController):
 
         subscription_id = request.POST.get("id")
         if not subscription_id:
-            abort(400, _(u"No id supplied"))
+            abort(400, _("No id supplied"))
         subscription = model.Session.query(subscribe_model.Subscription).get(
             subscription_id
         )
         if not subscription:
-            abort(404, _(u"That subscription ID does not exist."))
+            abort(404, _("That subscription ID does not exist."))
         if subscription.email != email:
             h.flash_error("Code is invalid for that subscription")
             log.debug("Code is invalid for that subscription")
@@ -176,7 +176,7 @@ class SubscribeController(BaseController):
 
         frequency = request.POST.get("frequency")
         if not frequency:
-            abort(400, _(u"No frequency supplied"))
+            abort(400, _("No frequency supplied"))
 
         # user has done auth, but it's an email rather than a ckan user, so
         # use site_user
@@ -184,16 +184,16 @@ class SubscribeController(BaseController):
             {"model": model, "ignore_auth": True}, {}
         )
         context = {
-            u"model": model,
-            u"session": model.Session,
-            u"user": site_user["name"],
+            "model": model,
+            "session": model.Session,
+            "user": site_user["name"],
         }
         data_dict = {
             "id": subscription_id,
             "frequency": frequency,
         }
         try:
-            get_action(u"subscribe_update")(context, data_dict)
+            get_action("subscribe_update")(context, data_dict)
         except ValidationError as err:
             h.flash_error(
                 _("Error updating subscription: {}".format(err.error_dict["message"]))
@@ -228,8 +228,8 @@ class SubscribeController(BaseController):
             {"model": model, "ignore_auth": True}, {}
         )
         context = {
-            u"model": model,
-            u"user": site_user["name"],
+            "model": model,
+            "user": site_user["name"],
         }
         data_dict = {
             "email": email,
@@ -238,7 +238,7 @@ class SubscribeController(BaseController):
             "organization_id": request.params.get("organization"),
         }
         try:
-            object_name, object_type = get_action(u"subscribe_unsubscribe")(
+            object_name, object_type = get_action("subscribe_unsubscribe")(
                 context, data_dict
             )
         except ValidationError as err:
@@ -281,14 +281,14 @@ class SubscribeController(BaseController):
             {"model": model, "ignore_auth": True}, {}
         )
         context = {
-            u"model": model,
-            u"user": site_user["name"],
+            "model": model,
+            "user": site_user["name"],
         }
         data_dict = {
             "email": email,
         }
         try:
-            get_action(u"subscribe_unsubscribe_all")(context, data_dict)
+            get_action("subscribe_unsubscribe_all")(context, data_dict)
         except ValidationError as err:
             error_messages = []
             for key_ignored in ("message", "__before"):
@@ -356,13 +356,13 @@ class SubscribeController(BaseController):
     def request_manage_code(self):
         email = request.POST.get("email")
         if not email:
-            return render(u"subscribe/request_manage_code.html", extra_vars={})
+            return render("subscribe/request_manage_code.html", extra_vars={})
 
         context = {
-            u"model": model,
+            "model": model,
         }
         try:
-            get_action(u"subscribe_request_manage_code")(context, dict(email=email))
+            get_action("subscribe_request_manage_code")(context, dict(email=email))
         except ValidationError as err:
             error_messages = []
             for key_ignored in ("message", "__before"):
@@ -383,5 +383,5 @@ class SubscribeController(BaseController):
             h.flash_success(_("An access link has been emailed to: {}".format(email)))
             return redirect_to("home")
         return render(
-            u"subscribe/request_manage_code.html", extra_vars={"email": email}
+            "subscribe/request_manage_code.html", extra_vars={"email": email}
         )
