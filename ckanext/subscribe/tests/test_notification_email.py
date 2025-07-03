@@ -6,7 +6,6 @@ import ckan.tests.factories as ckan_factories
 import mock
 from ckan.tests import helpers
 from nose.tools import assert_equal, assert_in
-from webhelpers.html import literal
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
@@ -147,8 +146,8 @@ class TestGetNotificationEmailVars(object):
                             "dataset_href": "http://test.ckan.net/dataset/{}".format(
                                 dataset["name"]
                             ),
-                            "dataset_link": literal(
-                                '<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
+                            "dataset_link": helpers.literal(
+                                u'<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
                                     dataset["name"], dataset["title"]
                                 )
                             ),
@@ -316,12 +315,12 @@ class TestDatasetLinkFromActivity(object):
     def test_basic(self):
         eq(
             dataset_link_from_activity(CHANGED_PACKAGE_ACTIVITY),
-            literal('<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
+            helpers.literal('<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
         )
 
     def test_custom_activity(self):
         # don't want an exception
-        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), literal(""))
+        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), helpers.literal(""))
 
 
 class TestDatasetHrefFromActivity(object):

@@ -1,6 +1,6 @@
 from ckan import model
 from ckan import plugins as p
-from webhelpers.html import HTML
+import dominate.tags as tags
 
 from ckanext.subscribe import mailer
 from ckanext.subscribe.interfaces import ISubscribe
@@ -100,7 +100,7 @@ def dataset_link_from_activity(activity):
         return ""
     try:
         title = activity["data"]["package"]["title"]
-        return HTML.a(title, href=href)
+        return tags.a(title, href=href)
     except KeyError:
         return ""
 
