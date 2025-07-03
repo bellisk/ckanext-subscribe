@@ -99,9 +99,11 @@ def get_email_vars(code, subscription=None, email=None):
         else:
             subscription_object = model.Group.get(subscription.object_id)
         object_link = p.toolkit.url_for(
-            controller="package"
-            if subscription.object_type == "dataset"
-            else subscription.object_type,
+            controller=(
+                "package"
+                if subscription.object_type == "dataset"
+                else subscription.object_type
+            ),
             action="read",
             id=subscription.object_id,
             qualified=True,
@@ -111,7 +113,7 @@ def get_email_vars(code, subscription=None, email=None):
             action="unsubscribe",
             code=code,
             qualified=True,
-            **{subscription.object_type: subscription.object_id}
+            **{subscription.object_type: subscription.object_id},
         )
         extra_vars.update(
             object_type=subscription.object_type,
@@ -272,39 +274,40 @@ def filter_activities(include_activity_from, objects_subscribed_to_keys):
     try:
         # Build a context that bypasses permission checks
         context = {
-            'model': model,
-            'ignore_auth': True,
+            "model": model,
+            "ignore_auth": True,
         }
         # Prepare parameters for the activity_list action
         params = {
-            'since': include_activity_from.isoformat(),
-            'object_ids': list(objects_subscribed_to_keys),
-            'limit': 1000,
+            "since": include_activity_from.isoformat(),
+            "object_ids": list(objects_subscribed_to_keys),
+            "limit": 1000,
         }
 
         # Call the CKAN action to get recent activities
-        result = tk.get_action('activity_list')(context, params)
-        items = result.get('items', [])
+        result = tk.get_action("activity_list")(context, params)
+        items = result.get("items", [])
 
         # Fetch user ids for users to exclude
         no_notification_user_ids = set()
         for username in (HARVEST_USER, MIGRATION_USER):
             try:
-                user = tk.get_action('user_show')(context, {'id': username})
-                no_notification_user_ids.add(user['id'])
+                user = tk.get_action("user_show")(context, {"id": username})
+                no_notification_user_ids.add(user["id"])
             except tk.ObjectNotFound:
                 log.warning(
-                    f"User '{username}' not found, skipping filter for this user.")
+                    f"User '{username}' not found, skipping filter for this user."
+                )
 
         # Filter out activities by no-notification users
         filtered_activities = [
-            activity for activity in items
-            if activity.get('user_id') not in no_notification_user_ids
+            activity
+            for activity in items
+            if activity.get("user_id") not in no_notification_user_ids
         ]
 
         return filtered_activities
 
     except Exception as e:
-        log.exception(
-            f"Error filtering activities since {include_activity_from}: {e}")
+        log.exception(f"Error filtering activities since {include_activity_from}: {e}")
         return []

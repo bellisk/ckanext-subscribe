@@ -382,6 +382,4 @@ class SubscribeController(BaseController):
         else:
             h.flash_success(_("An access link has been emailed to: {}".format(email)))
             return redirect_to("home")
-        return render(
-            "subscribe/request_manage_code.html", extra_vars={"email": email}
-        )
+        return render("subscribe/request_manage_code.html", extra_vars={"email": email})

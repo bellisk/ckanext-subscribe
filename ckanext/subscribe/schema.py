@@ -17,10 +17,16 @@ boolean_validator = get_validator("boolean_validator")
 
 def one_package_or_group_or_org(key, data, errors, context):
     num_objects_specified = len(
-        list(filter(
-            None,
-            [data[("dataset_id",)], data[("group_id",)], data[("organization_id",)]],
-        ))
+        list(
+            filter(
+                None,
+                [
+                    data[("dataset_id",)],
+                    data[("group_id",)],
+                    data[("organization_id",)],
+                ],
+            )
+        )
     )
     if num_objects_specified > 1:
         raise Invalid(

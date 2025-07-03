@@ -147,7 +147,7 @@ class TestGetNotificationEmailVars(object):
                                 dataset["name"]
                             ),
                             "dataset_link": helpers.literal(
-                                u'<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
+                                '<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
                                     dataset["name"], dataset["title"]
                                 )
                             ),

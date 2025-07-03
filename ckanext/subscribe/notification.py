@@ -5,9 +5,9 @@ import ckan.plugins.toolkit as toolkit
 from ckan import model
 from ckan import plugins as p
 from ckan.lib.dictization import model_dictize
-from ckanext.activity.email_notifications import string_to_timedelta
 from ckan.model import Group, Member, Package
 
+from ckanext.activity.email_notifications import string_to_timedelta
 from ckanext.subscribe import dictization, email_auth, notification_email
 from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe.model import Frequency, Subscribe, Subscription

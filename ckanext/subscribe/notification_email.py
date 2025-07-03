@@ -1,6 +1,6 @@
+import dominate.tags as tags
 from ckan import model
 from ckan import plugins as p
-import dominate.tags as tags
 
 from ckanext.subscribe import mailer
 from ckanext.subscribe.interfaces import ISubscribe
