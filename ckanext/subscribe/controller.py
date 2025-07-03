@@ -64,7 +64,7 @@ class SubscribeController(BaseController):
                     error_messages.extend(err.error_dict.pop(key_ignored))
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
-            h.flash_error(_("Error subscribing: {}".format("; ".join(error_messages))))
+            h.flash_error(_(f"Error subscribing: {'; '.join(error_messages)}"))
             return self._redirect_back_to_subscribe_page_from_request(data_dict)
         except MailerException:
             h.flash_error(
@@ -94,7 +94,7 @@ class SubscribeController(BaseController):
         try:
             subscription = get_action("subscribe_verify")(context, data_dict)
         except ValidationError as err:
-            h.flash_error(_("Error subscribing: {}".format(err.error_dict["message"])))
+            h.flash_error(_(f"Error subscribing: {err.error_dict['message']}"))
             return redirect_to("home")
 
         h.flash_success(_("Subscription confirmed"))
@@ -115,8 +115,8 @@ class SubscribeController(BaseController):
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
-            h.flash_error("Code is invalid: {}".format(exp))
-            log.debug("Code is invalid: {}".format(exp))
+            h.flash_error(f"Code is invalid: {exp}")
+            log.debug(f"Code is invalid: {exp}")
             return self._request_manage_code_form()
 
         # user has done auth, but it's an email rather than a ckan user, so
@@ -157,8 +157,8 @@ class SubscribeController(BaseController):
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
-            h.flash_error("Code is invalid: {}".format(exp))
-            log.debug("Code is invalid: {}".format(exp))
+            h.flash_error(f"Code is invalid: {exp}")
+            log.debug(f"Code is invalid: {exp}")
             return self._request_manage_code_form()
 
         subscription_id = request.POST.get("id")
@@ -196,7 +196,7 @@ class SubscribeController(BaseController):
             get_action("subscribe_update")(context, data_dict)
         except ValidationError as err:
             h.flash_error(
-                _("Error updating subscription: {}".format(err.error_dict["message"]))
+                _(f"Error updating subscription: {err.error_dict['message']}")
             )
         else:
             h.flash_success(_("Subscription updated"))
@@ -218,8 +218,8 @@ class SubscribeController(BaseController):
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
-            h.flash_error("Code is invalid: {}".format(exp))
-            log.debug("Code is invalid: {}".format(exp))
+            h.flash_error(f"Code is invalid: {exp}")
+            log.debug(f"Code is invalid: {exp}")
             return self._request_manage_code_form()
 
         # user has done auth, but it's an email rather than a ckan user, so
@@ -249,13 +249,13 @@ class SubscribeController(BaseController):
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
             h.flash_error(
-                _("Error unsubscribing: {}".format("; ".join(error_messages)))
+                _(f"Error unsubscribing: {'; '.join(error_messages)}")
             )
         except ObjectNotFound as err:
-            h.flash_error(_("Error unsubscribing: {}".format(err)))
+            h.flash_error(_(f"Error unsubscribing: {err}"))
         else:
             h.flash_success(
-                _("You are no longer subscribed to this {}".format(object_type))
+                _(f"You are no longer subscribed to this {object_type}")
             )
             return self._redirect_back_to_subscribe_page(object_name, object_type)
         return self._redirect_back_to_subscribe_page_from_request(data_dict)
@@ -271,8 +271,8 @@ class SubscribeController(BaseController):
         try:
             email = email_auth.authenticate_with_code(code)
         except ValueError as exp:
-            h.flash_error("Code is invalid: {}".format(exp))
-            log.debug("Code is invalid: {}".format(exp))
+            h.flash_error(f"Code is invalid: {exp}")
+            log.debug(f"Code is invalid: {exp}")
             return self._request_manage_code_form()
 
         # user has done auth, but it's an email rather than a ckan user, so
@@ -297,16 +297,14 @@ class SubscribeController(BaseController):
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
             h.flash_error(
-                _("Error unsubscribing: {}".format("; ".join(error_messages)))
+                _(f"Error unsubscribing: {'; '.join(error_messages)}")
             )
         except ObjectNotFound as err:
-            h.flash_error(_("Error unsubscribing: {}".format(err)))
+            h.flash_error(_(f"Error unsubscribing: {err}"))
         else:
             h.flash_success(
                 _(
-                    "You are no longer subscribed to notifications from {}".format(
-                        config.get("ckan.site_title")
-                    )
+                    f"You are no longer subscribed to notifications from {config.get('ckan.site_title')}"
                 )
             )
             return redirect_to("home")
@@ -371,15 +369,15 @@ class SubscribeController(BaseController):
             if err.error_dict:
                 error_messages.append(repr(err.error_dict))
             h.flash_error(
-                _("Error requesting code: {}".format("; ".join(error_messages)))
+                _(f"Error requesting code: {'; '.join(error_messages)}")
             )
         except ObjectNotFound as err:
-            h.flash_error(_("Error requesting code: {}".format(err)))
+            h.flash_error(_(f"Error requesting code: {err}"))
         except MailerException:
             h.flash_error(
                 _("Error sending email - please contact an " "administrator for help")
             )
         else:
-            h.flash_success(_("An access link has been emailed to: {}".format(email)))
+            h.flash_success(_(f"An access link has been emailed to: {email}"))
             return redirect_to("home")
         return render("subscribe/request_manage_code.html", extra_vars={"email": email})

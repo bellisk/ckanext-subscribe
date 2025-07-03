@@ -20,7 +20,7 @@ class Subscription(factory.Factory):
 
     FACTORY_FOR = ckanext.subscribe.model.Subscription
 
-    id = factory.Sequence(lambda n: "test_sub_{n}".format(n=n))
+    id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
     return_object = False
     created = datetime.datetime.now() - datetime.timedelta(hours=1)
@@ -67,7 +67,7 @@ class SubscriptionLowLevel(factory.Factory):
 
     FACTORY_FOR = ckanext.subscribe.model.Subscription
 
-    id = factory.Sequence(lambda n: "test_sub_{n}".format(n=n))
+    id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
     return_object = False
 

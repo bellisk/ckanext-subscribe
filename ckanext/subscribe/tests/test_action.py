@@ -486,9 +486,9 @@ class TestSubscribeListSubscriptions(object):
             set(sub["object_link"] for sub in sub_list),
             set(
                 [
-                    "/dataset/{}".format(dataset["name"]),
-                    "/group/{}".format(group["name"]),
-                    "/organization/{}".format(org["name"]),
+                    f"/dataset/{dataset['name']}",
+                    f"/group/{group['name']}",
+                    f"/organization/{org['name']}",
                 ]
             ),
         )

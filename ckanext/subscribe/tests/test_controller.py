@@ -32,7 +32,7 @@ class TestSignupSubmit(FunctionalTestBase):
         assert mock_mailer.called
         assert_equal(
             response.location,
-            "http://test.ckan.net/dataset/{}?__no_cache__=True".format(dataset["name"]),
+            f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True",
         )
 
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
@@ -46,7 +46,7 @@ class TestSignupSubmit(FunctionalTestBase):
         assert mock_mailer.called
         assert_equal(
             response.location,
-            "http://test.ckan.net/group/{}?__no_cache__=True".format(group["name"]),
+            f"http://test.ckan.net/group/{group['name']}?__no_cache__=True",
         )
 
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
@@ -60,9 +60,7 @@ class TestSignupSubmit(FunctionalTestBase):
         assert mock_mailer.called
         assert_equal(
             response.location,
-            "http://test.ckan.net/organization/{}?__no_cache__=True".format(
-                org["name"]
-            ),
+            f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True",
         )
 
     def test_get_not_post(self):
@@ -286,7 +284,7 @@ class TestUnsubscribe(FunctionalTestBase):
 
         assert_equal(
             response.location,
-            "http://test.ckan.net/dataset/{}?__no_cache__=True".format(dataset["name"]),
+            f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True",
         )
 
     def test_group(self):
@@ -306,7 +304,7 @@ class TestUnsubscribe(FunctionalTestBase):
 
         assert_equal(
             response.location,
-            "http://test.ckan.net/group/{}?__no_cache__=True".format(group["name"]),
+            f"http://test.ckan.net/group/{group['name']}?__no_cache__=True",
         )
 
     def test_org(self):
@@ -326,9 +324,7 @@ class TestUnsubscribe(FunctionalTestBase):
 
         assert_equal(
             response.location,
-            "http://test.ckan.net/organization/{}?__no_cache__=True".format(
-                org["name"]
-            ),
+            f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True",
         )
 
     def test_no_code(self):
@@ -366,7 +362,7 @@ class TestUnsubscribe(FunctionalTestBase):
         )
 
         assert response.location.startswith(
-            "http://test.ckan.net/dataset/{}".format(dataset["name"])
+            f"http://test.ckan.net/dataset/{dataset['name']}"
         )
         response = response.follow()
         assert_in(

@@ -130,7 +130,7 @@ def subscribe_signup(context, data_dict):
         try:
             email_verification.send_request_email(subscription)
         except MailerException as exc:
-            log.error("Could not email manage code: {}".format(exc))
+            log.error(f"Could not email manage code: {exc}")
             raise
 
     subscription_dict = dictization.dictize_subscription(subscription, context)
@@ -356,7 +356,7 @@ def subscribe_request_manage_code(context, data_dict):
     try:
         email_auth.send_manage_email(manage_code, email=email)
     except MailerException as exc:
-        log.error("Could not email manage code: {}".format(exc))
+        log.error(f"Could not email manage code: {exc}")
         raise
 
     return None

@@ -48,12 +48,12 @@ class TestSendNotificationEmail(object):
         body = mail_recipient.call_args[1]["body"]
         print(body)
         assert_in(dataset["title"], body)
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["id"]), body)
+        assert_in(f"http://test.ckan.net/dataset/{dataset['id']}", body)
         assert_in("new dataset", body)
         body = mail_recipient.call_args[1]["body_html"]
         print(body)
         assert_in(dataset["title"], body)
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["id"]), body)
+        assert_in(f"http://test.ckan.net/dataset/{dataset['id']}", body)
         assert_in("new dataset", body)
 
 
@@ -105,11 +105,9 @@ class TestGetNotificationEmailContents(object):
         )
         email = get_notification_email_contents(email_vars)
         # Check we link to the dataset, not just the org
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["name"]), email[1])
+        assert_in(f"http://test.ckan.net/dataset/{dataset['name']}", email[1])
         assert_in(
-            '<a href="http://test.ckan.net/dataset/{}">Test Dataset</a>'.format(
-                dataset["name"]
-            ),
+            f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">Test Dataset</a>",
             email[2],
         )
 
@@ -143,20 +141,14 @@ class TestGetNotificationEmailVars(object):
                     "activities": [
                         {
                             "activity_type": "new dataset",
-                            "dataset_href": "http://test.ckan.net/dataset/{}".format(
-                                dataset["name"]
-                            ),
+                            "dataset_href": f"http://test.ckan.net/dataset/{dataset['name']}",
                             "dataset_link": helpers.literal(
-                                '<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
-                                    dataset["name"], dataset["title"]
-                                )
+                                f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">{dataset['title']}</a>"
                             ),
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/dataset/{}".format(
-                        dataset["id"]
-                    ),
+                    "object_link": f"http://test.ckan.net/dataset/{dataset['id']}",
                     "object_name": dataset["name"],
                     "object_title": dataset["title"],
                     "object_type": "dataset",
@@ -191,7 +183,7 @@ class TestGetNotificationEmailVars(object):
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/group/{}".format(group["id"]),
+                    "object_link": f"http://test.ckan.net/group/{group['id']}",
                     "object_name": group["name"],
                     "object_title": group["title"],
                     "object_type": "group",
@@ -228,9 +220,7 @@ class TestGetNotificationEmailVars(object):
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/organization/{}".format(
-                        org["id"]
-                    ),
+                    "object_link": f"http://test.ckan.net/organization/{org['id']}",
                     "object_name": org["name"],
                     "object_title": org["title"],
                     "object_type": "organization",

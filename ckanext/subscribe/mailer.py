@@ -54,10 +54,10 @@ def _mail_recipient(
     subject = Header(subject.encode("utf-8"), "utf-8")
     msg["Subject"] = subject
     msg["From"] = _("%s <%s>") % (sender_name, mail_from)
-    recipient = "%s <%s>" % (recipient_name, recipient_email)
+    recipient = f"{recipient_name} <{recipient_email}>"
     msg["To"] = Header(recipient, "utf-8")
     msg["Date"] = utils.formatdate(time())
-    msg["X-Mailer"] = "CKAN %s" % ckan.__version__
+    msg["X-Mailer"] = f"CKAN {ckan.__version__}"
     if reply_to and reply_to != "":
         msg["Reply-to"] = reply_to
     _mail_payload(msg, mail_from, recipient_email)
@@ -84,7 +84,7 @@ def _mail_payload(msg, mail_from, recipient_email):
     except socket.error as e:
         log.exception(e)
         raise MailerException(
-            'SMTP server could not be connected to: "%s" %s' % (smtp_server, e)
+            f'SMTP server could not be connected to: "{smtp_server}" {e}'
         )
     try:
         # Identify ourselves and prompt the server for supported features.
@@ -109,10 +109,10 @@ def _mail_payload(msg, mail_from, recipient_email):
             smtp_connection.login(smtp_user, smtp_password)
 
         smtp_connection.sendmail(mail_from, [recipient_email], msg.as_string())
-        log.info("Sent email to {0}".format(recipient_email))
+        log.info(f"Sent email to {recipient_email}")
 
     except smtplib.SMTPException as e:
-        msg = "%r" % e
+        msg = f"{e!r}"
         log.exception(msg)
         raise MailerException(msg)
     finally:

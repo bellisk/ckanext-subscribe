@@ -38,7 +38,7 @@ class TestEmailVerification(object):
         )
         assert_equal(
             email_vars["object_link"],
-            "http://test.ckan.net/dataset/{}".format(dataset["id"]),
+            f"http://test.ckan.net/dataset/{dataset['id']}",
         )
 
     def test_get_verification_email_contents(self):

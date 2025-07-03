@@ -47,9 +47,7 @@ def frequency_name_to_int(name, context):
     except KeyError:
         raise Invalid(
             _(
-                "Frequency must be one of: {}".format(
-                    " ".join(f.name.lower() for f in Frequency)
-                )
+                f"Frequency must be one of: {' '.join(f.name.lower() for f in Frequency)}"
             )
         )
 

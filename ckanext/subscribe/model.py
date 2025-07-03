@@ -88,14 +88,7 @@ class Subscription(_DomainObject):
 
     def __repr__(self):
         return (
-            "<Subscription id={} email={} object_type={} verified={} "
-            "frequency={}>".format(
-                self.id,
-                self.email,
-                self.object_type,
-                self.verified,
-                Frequency(self.frequency).name,
-            )
+            f"<Subscription id={self.id} email={self.email} object_type={self.object_type} verified={self.verified} frequency={Frequency(self.frequency).name}>"
         )
 
 
@@ -113,9 +106,7 @@ class LoginCode(_DomainObject):
     """
 
     def __repr__(self):
-        return "<LoginCode id={} email={} code={}... expires={}>".format(
-            self.id, self.email, self.code[:4], self.expires
-        )
+        return f"<LoginCode id={self.id} email={self.email} code={self.code[:4]}... expires={self.expires}>"
 
     @classmethod
     def validate_code(cls, code):
@@ -133,7 +124,7 @@ class Subscribe(_DomainObject):
     """General state"""
 
     def __repr__(self):
-        return "<Subscribe email_last_sent={}>".format(self.email_last_sent)
+        return f"<Subscribe email_last_sent={self.email_last_sent}>"
 
     @classmethod
     def set_emails_last_sent(cls, frequency, emails_last_sent):

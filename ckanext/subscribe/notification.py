@@ -47,9 +47,7 @@ def send_any_immediate_notifications():
         log.debug("no emails to send (immediate frequency)")
     else:
         log.debug(
-            "sending {} emails (immediate frequency)".format(
-                len(notifications_by_email)
-            )
+            f"sending {len(notifications_by_email)} emails (immediate frequency)"
         )
         send_emails(notifications_by_email)
 
@@ -71,7 +69,7 @@ def send_weekly_notifications_if_its_time_to():
         log.debug("no emails to send (weekly frequency)")
     else:
         log.debug(
-            "sending {} emails (weekly frequency)".format(len(notifications_by_email))
+            f"sending {len(notifications_by_email)} emails (weekly frequency)"
         )
         send_emails(notifications_by_email)
 
@@ -93,7 +91,7 @@ def send_daily_notifications_if_its_time_to():
         log.debug("no emails to send (daily frequency)")
     else:
         log.debug(
-            "sending {} emails (daily frequency)".format(len(notifications_by_email))
+            f"sending {len(notifications_by_email)} emails (daily frequency)"
         )
         send_emails(notifications_by_email)
 
