@@ -4,7 +4,6 @@ import os
 
 import ckan.plugins as p
 from ckan import model
-from ckan.plugins import toolkit as tk
 from jinja2 import Template
 
 HARVEST_USER = "harvest"
@@ -285,16 +284,16 @@ def filter_activities(include_activity_from, objects_subscribed_to_keys):
         }
 
         # Call the CKAN action to get recent activities
-        result = tk.get_action("activity_list")(context, params)
+        result = p.toolkit.get_action("activity_list")(context, params)
         items = result.get("items", [])
 
         # Fetch user ids for users to exclude
         no_notification_user_ids = set()
         for username in (HARVEST_USER, MIGRATION_USER):
             try:
-                user = tk.get_action("user_show")(context, {"id": username})
+                user = p.toolkit.get_action("user_show")(context, {"id": username})
                 no_notification_user_ids.add(user["id"])
-            except tk.ObjectNotFound:
+            except p.toolkit.ObjectNotFound:
                 log.warning(
                     f"User '{username}' not found, skipping filter for this user."
                 )
