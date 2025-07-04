@@ -11,7 +11,6 @@ from ckanext.subscribe.interfaces import ISubscribe
 
 class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IRoutes)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(ISubscribe, inherit=True)
@@ -63,6 +62,8 @@ class SubscribePlugin(plugins.SingletonPlugin):
             controller=controller,
             action="request_manage_code",
         )
+        map.connect("perma", "/perma/{id}", controller="package",
+                    action="read")
         return map
 
     def after_map(self, map):
