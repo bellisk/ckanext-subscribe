@@ -6,13 +6,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
       - name: Install requirements
-        run: pip install flake8 pycodestyle black[python2]==21.12b0 click==8.0.4 isort
-      - name: Check syntax and complexity
-        run: |
-          flake8 . --count --select=C901,E901,E999,F401,F821,F822,F823 --show-source --statistics
+        run: pip install flake8 pycodestyle black isort
+      - name: Check syntax
+        run: flake8 . --count --select=C901,E721,E901,E999,F401,F821,F822,F823,F841 --show-source --statistics --extend-exclude ckan
       - name: Check codestyle
         run: |
           isort --diff --check ckanext/
@@ -22,16 +19,16 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ckan-version: [2.8, 2.7]
+        ckan-version: ["2.10", "2.11"]
       fail-fast: false
 
     name: CKAN ${{ matrix.ckan-version }}
     runs-on: ubuntu-latest
     container:
-      image: openknowledge/ckan-dev:${{ matrix.ckan-version }}
+      image: ckan/ckan-dev:${{ matrix.ckan-version }}
     services:
       solr:
-        image: ckan/ckan-solr:${{ matrix.ckan-version }}
+        image: ckan/ckan-solr:${{ matrix.ckan-version }}-solr9
       postgres:
         image: ckan/ckan-postgres-dev:${{ matrix.ckan-version }}
         env:
@@ -64,7 +61,8 @@ jobs:
 
       - name: Setup extension
         run: |
-          paster --plugin=ckan db init -c test.ini
+          ckan -c test.ini db init
+          ckan -c test.ini db pending-migrations --apply
 
       - name: Run tests
         run: nosetests --ckan --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests ckanext/subscribe
