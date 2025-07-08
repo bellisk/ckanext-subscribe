@@ -59,8 +59,6 @@ class SubscribePlugin(plugins.SingletonPlugin):
             controller=controller,
             action="request_manage_code",
         )
-        map.connect("perma", "/perma/{id}", controller="package",
-                    action="read")
         return map
 
     def after_map(self, map):
