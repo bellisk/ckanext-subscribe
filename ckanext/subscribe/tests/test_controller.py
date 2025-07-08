@@ -5,7 +5,7 @@ import unittest
 
 import mock
 from ckan.tests.factories import Dataset, Group, Organization
-from ckan.tests.helpers import FunctionalTestBase, reset_db, submit_and_follow
+from ckan.tests.helpers import FunctionalTestBase, reset_db
 
 from ckanext.subscribe import email_auth
 from ckanext.subscribe import model as subscribe_model

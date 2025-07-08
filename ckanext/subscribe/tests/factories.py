@@ -8,9 +8,9 @@ import ckan.tests.factories as ckan_factories
 import factory
 from ckan import model
 from ckan.lib.dictization import table_dictize
-from ckanext.activity.model.activity import Activity
 
 import ckanext.subscribe.model
+from ckanext.activity.model import Activity as BaseActivity
 from ckanext.subscribe import dictization
 
 
@@ -19,7 +19,8 @@ class Subscription(factory.Factory):
     action.
     """
 
-    FACTORY_FOR = ckanext.subscribe.model.Subscription
+    class Meta:
+        model = ckanext.subscribe.model.Subscription
 
     id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
@@ -66,7 +67,8 @@ class Subscription(factory.Factory):
 class SubscriptionLowLevel(factory.Factory):
     """A factory class for creating subscription object directly"""
 
-    FACTORY_FOR = ckanext.subscribe.model.Subscription
+    class Meta:
+        model = ckanext.subscribe.model.Subscription
 
     id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
@@ -108,7 +110,8 @@ class SubscriptionLowLevel(factory.Factory):
 class Activity(factory.Factory):
     """A factory class for creating CKAN activity objects."""
 
-    FACTORY_FOR = Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -142,7 +145,8 @@ class DatasetActivity(factory.Factory):
     """A factory class for creating a CKAN dataset and associated activity
     object."""
 
-    FACTORY_FOR = Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -164,9 +168,7 @@ class DatasetActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(Activity)
-            .filter_by(object_id=dataset["id"])
-            .first()
+            model.Session.query(Activity).filter_by(object_id=dataset["id"]).first()
         )
 
         if kwargs:
@@ -183,7 +185,8 @@ class GroupActivity(factory.Factory):
     """A factory class for creating a CKAN group and associated activity
     object."""
 
-    FACTORY_FOR = Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -222,7 +225,8 @@ class OrganizationActivity(factory.Factory):
     """A factory class for creating a CKAN org and associated activity
     object."""
 
-    FACTORY_FOR = Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):

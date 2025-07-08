@@ -177,27 +177,27 @@ class TestSubscribeSignup(unittest.TestCase):
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_dataset_doesnt_exist(self, send_request_email):
-        with assert_raises(ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             helpers.call_action(
                 "subscribe_signup",
                 {},
                 email="bob@example.com",
                 dataset_id="doesnt-exist",
             )
-        assert_in("dataset_id': [u'Not found", str(cm.exception.error_dict))
+        self.assertIn("dataset_id': [u'Not found", str(cm.exception.error_dict))
 
         assert not send_request_email.called
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_group_doesnt_exist(self, send_request_email):
-        with assert_raises(ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             helpers.call_action(
                 "subscribe_signup",
                 {},
                 email="bob@example.com",
                 group_id="doesnt-exist",
             )
-        assert_in(
+        self.assertIn(
             "group_id': [u'That group name or ID does not exist",
             str(cm.exception.error_dict),
         )
@@ -209,7 +209,7 @@ class TestSubscribeSignup(unittest.TestCase):
         dataset = factories.Dataset()
         group = factories.Group()
 
-        with assert_raises(ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             helpers.call_action(
                 "subscribe_signup",
                 {},
@@ -217,7 +217,7 @@ class TestSubscribeSignup(unittest.TestCase):
                 dataset_id=dataset["id"],
                 group_id=group["id"],
             )
-        assert_in(
+        self.assertIn(
             'Must not specify more than one of: "dataset_id", "group_id"'
             ' or "organization_id"',
             str(cm.exception.error_dict),
@@ -339,7 +339,7 @@ class TestSubscribeVerify(object):
             .filter_by(email="bob@example.com")
             .all()
         )
-        assert_in(send_confirmation_email.call_args[0], login_codes)
+        self.assertIn(send_confirmation_email.call_args[0], login_codes)
         subscribe_model.LoginCode.validate_code(send_confirmation_email.call_args[0])
         self.assertEqual(subscription["verified"], True)
         self.assertEqual(subscription["object_type"], "dataset")
@@ -359,13 +359,13 @@ class TestSubscribeVerify(object):
             + datetime.timedelta(hours=1),
         )
 
-        with assert_raises(ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             subscription = helpers.call_action(
                 "subscribe_verify",
                 {},
                 code="wrong_code",
             )
-        assert_in(
+        self.assertIn(
             "That validation code is not recognized", str(cm.exception.error_dict)
         )
 
@@ -384,13 +384,13 @@ class TestSubscribeVerify(object):
             - datetime.timedelta(hours=1),  # in the past
         )
 
-        with assert_raises(ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             subscription = helpers.call_action(
                 "subscribe_verify",
                 {},
                 code="the_code",
             )
-        assert_in("That validation code has expired", str(cm.exception.error_dict))
+        self.assertIn("That validation code has expired", str(cm.exception.error_dict))
 
         subscription = subscribe_model.Subscription.get(subscription["id"])
         self.assertEqual(subscription.verified, False)
