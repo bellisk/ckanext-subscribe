@@ -66,7 +66,7 @@ jobs:
           ckan -c test.ini db pending-migrations --apply
 
       - name: Run tests
-        run: nosetests --ckan --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.subscribe --cover-inclusive --cover-erase --cover-tests ckanext/subscribe
+        run: pytest --ckan-ini=test.ini --cov=ckanext.dcat --cov-report=term-missing --cov-append --disable-warnings ckanext/subscribe/tests
 
       - name: Coveralls
         run: |
