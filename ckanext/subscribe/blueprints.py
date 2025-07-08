@@ -5,7 +5,6 @@ from ckan import model
 from ckan.common import g
 from ckan.lib.mailer import MailerException
 from ckan.plugins.toolkit import (
-    BaseController,
     ObjectNotFound,
     ValidationError,
     _,
