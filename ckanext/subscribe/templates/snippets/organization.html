@@ -15,7 +15,7 @@
   {% if c.user %}
     {{ super() }}
   {% else %}
-    {% resource 'subscribe/subscribe.css' %}
+    {% asset 'subscribe/css/subscribe.css' %}
     <div class="nums">
       {% import 'macros/form.html' as form %}
       <!-- {{ form.errors(error_summary) }} -->
