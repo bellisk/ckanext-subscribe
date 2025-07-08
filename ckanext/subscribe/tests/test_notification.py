@@ -1,12 +1,12 @@
 # encoding: utf-8
 
 import datetime
+import unittest
 
 import mock
 from ckan import model
 from ckan.tests import helpers
 from ckan.tests.factories import Dataset, Group, Organization
-from nose.tools import assert_equal, assert_in
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe import notification as subscribe_notification
@@ -24,10 +24,8 @@ from ckanext.subscribe.notification import (
 )
 from ckanext.subscribe.tests import factories
 
-eq = assert_equal
 
-
-class TestSendAnyImmediateNotifications(object):
+class TestSendAnyImmediateNotifications(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -41,23 +39,23 @@ class TestSendAnyImmediateNotifications(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(""))
-        eq(email, "bob@example.com")
-        eq(len(notifications), 1)
-        eq(
+        self.assertEqual(type(code), type(""))
+        self.assertEqual(email, "bob@example.com")
+        self.assertEqual(len(notifications), 1)
+        self.assertEqual(
             [
                 (a["activity_type"], a["data"]["package"]["id"])
                 for a in notifications[0]["activities"]
             ],
             [("new package", dataset["id"])],
         )
-        eq(notifications[0]["subscription"]["id"], subscription["id"])
+        self.assertEqual(notifications[0]["subscription"]["id"], subscription["id"])
         assert time_since_emails_last_sent(
             Frequency.IMMEDIATE.value
         ) < datetime.timedelta(seconds=1)
 
 
-class TestGetImmediateNotifications(object):
+class TestGetImmediateNotifications(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -70,8 +68,8 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(list(notifies.keys()), [subscription["email"]])
-        eq(
+        self.assertEqual(list(notifies.keys()), [subscription["email"]])
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "new package", dataset["id"])],
         )
@@ -86,8 +84,8 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(list(notifies.keys()), [subscription["email"]])
-        eq(
+        self.assertEqual(list(notifies.keys()), [subscription["email"]])
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "new package", dataset["id"])],
         )
@@ -102,8 +100,8 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(list(notifies.keys()), [subscription["email"]])
-        eq(
+        self.assertEqual(list(notifies.keys()), [subscription["email"]])
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "new package", dataset["id"])],
         )
@@ -116,7 +114,7 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activity_already_notified_not_notified_again(self):
         dataset = factories.DatasetActivity(
@@ -131,7 +129,7 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activity_before_the_subscription_is_not_notified(self):
         dataset = Dataset()
@@ -143,7 +141,7 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "changed package", dataset["id"])],
         )
@@ -170,11 +168,13 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(set(notifies.keys()), set(("user@a.com", "user@b.com", "user@b.com")))
+        self.assertEqual(
+            set(notifies.keys()), set(("user@a.com", "user@b.com", "user@b.com"))
+        )
         from pprint import pprint
 
         pprint(_get_activities(notifies))
-        eq(
+        self.assertEqual(
             set(_get_activities(notifies)),
             set(
                 (
@@ -196,7 +196,7 @@ class TestGetImmediateNotifications(object):
 
         notifies = get_immediate_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
 
 def _create_dataset_and_activity(activity_in_minutes_ago=[]):
@@ -215,7 +215,7 @@ def _create_dataset_and_activity(activity_in_minutes_ago=[]):
     return dataset
 
 
-class TestSendWeeklyNotificationsIfItsTimeTo(object):
+class TestSendWeeklyNotificationsIfItsTimeTo(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -231,17 +231,17 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(""))
-        eq(email, "bob@example.com")
-        eq(len(notifications), 1)
-        eq(
+        self.assertEqual(type(code), type(""))
+        self.assertEqual(email, "bob@example.com")
+        self.assertEqual(len(notifications), 1)
+        self.assertEqual(
             [
                 (a["activity_type"], a["data"]["package"]["id"])
                 for a in notifications[0]["activities"]
             ],
             [("new package", dataset["id"])],
         )
-        eq(notifications[0]["subscription"]["id"], subscription["id"])
+        self.assertEqual(notifications[0]["subscription"]["id"], subscription["id"])
         assert time_since_emails_last_sent(Frequency.WEEKLY.value) < datetime.timedelta(
             seconds=1
         )
@@ -257,7 +257,7 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
         )
 
 
-class TestGetWeeklyNotifications(object):
+class TestGetWeeklyNotifications(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -272,8 +272,8 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(list(notifies.keys()), [subscription["email"]])
-        eq(
+        self.assertEqual(list(notifies.keys()), [subscription["email"]])
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "new package", dataset["id"])],
         )
@@ -284,7 +284,7 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_daily_frequency_subscriptions_of_an_org_are_not_included(self):
         org = Organization()
@@ -293,7 +293,7 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_immediate_frequency_subscriptions_are_not_included(self):
         dataset = factories.DatasetActivity()
@@ -301,7 +301,7 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_immediate_frequency_subscriptions_of_an_group_are_not_included(self):
         group = Group()
@@ -310,7 +310,7 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activities_older_than_a_week_are_not_notified(self):
         dataset = factories.DatasetActivity(
@@ -320,7 +320,7 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activities_already_notified_are_not_notified_again(self):
         dataset = factories.DatasetActivity(
@@ -334,10 +334,10 @@ class TestGetWeeklyNotifications(object):
 
         notifies = get_weekly_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
 
-class TestSendDailyNotificationsIfItsTimeTo(object):
+class TestSendDailyNotificationsIfItsTimeTo(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -353,17 +353,17 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(""))
-        eq(email, "bob@example.com")
-        eq(len(notifications), 1)
-        eq(
+        self.assertEqual(type(code), type(""))
+        self.assertEqual(email, "bob@example.com")
+        self.assertEqual(len(notifications), 1)
+        self.assertEqual(
             [
                 (a["activity_type"], a["data"]["package"]["id"])
                 for a in notifications[0]["activities"]
             ],
             [("new package", dataset["id"])],
         )
-        eq(notifications[0]["subscription"]["id"], subscription["id"])
+        self.assertEqual(notifications[0]["subscription"]["id"], subscription["id"])
         assert time_since_emails_last_sent(Frequency.DAILY.value) < datetime.timedelta(
             seconds=1
         )
@@ -379,7 +379,7 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
         )
 
 
-class TestGetDailyNotifications(object):
+class TestGetDailyNotifications(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -394,8 +394,8 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(list(notifies.keys()), [subscription["email"]])
-        eq(
+        self.assertEqual(list(notifies.keys()), [subscription["email"]])
+        self.assertEqual(
             _get_activities(notifies),
             [("bob@example.com", "new package", dataset["id"])],
         )
@@ -406,7 +406,7 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_immediate_frequency_subscriptions_are_not_included(self):
         dataset = factories.DatasetActivity()
@@ -414,7 +414,7 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activities_older_than_a_day_are_not_notified(self):
         dataset = factories.DatasetActivity(
@@ -424,7 +424,7 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
     def test_activities_already_notified_are_not_notified_again(self):
         dataset = factories.DatasetActivity(
@@ -438,7 +438,7 @@ class TestGetDailyNotifications(object):
 
         notifies = get_daily_notifications()
 
-        eq(_get_activities(notifies), [])
+        self.assertEqual(_get_activities(notifies), [])
 
 
 def _get_activities(notifications_by_email):
@@ -456,9 +456,9 @@ def _get_activities(notifications_by_email):
     return activities
 
 
-class TestMostRecentWeeklyNotification(object):
+class TestMostRecentWeeklyNotification(unittest.TestCase):
     def test_earlier_that_week(self):
-        eq(
+        self.assertEqual(
             most_recent_weekly_notification_datetime(
                 datetime.datetime(2020, 1, 25)
             ),  # a saturday
@@ -466,7 +466,7 @@ class TestMostRecentWeeklyNotification(object):
         )
 
     def test_later_that_week(self):
-        eq(
+        self.assertEqual(
             most_recent_weekly_notification_datetime(
                 datetime.datetime(2020, 1, 23)
             ),  # a thursday
@@ -474,7 +474,7 @@ class TestMostRecentWeeklyNotification(object):
         )
 
     def test_same_day_of_week_earlier_in_the_day(self):
-        eq(
+        self.assertEqual(
             most_recent_weekly_notification_datetime(
                 datetime.datetime(2020, 1, 24, 8, 0)
             ),  # a friday
@@ -482,7 +482,7 @@ class TestMostRecentWeeklyNotification(object):
         )
 
     def test_same_day_of_week_later_in_the_day(self):
-        eq(
+        self.assertEqual(
             most_recent_weekly_notification_datetime(
                 datetime.datetime(2020, 1, 24, 10, 0)
             ),  # a friday
@@ -490,7 +490,7 @@ class TestMostRecentWeeklyNotification(object):
         )
 
 
-class TestSendEmails(object):
+class TestSendEmails(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -516,7 +516,7 @@ class TestSendEmails(object):
         mail_recipient.assert_called_once()
         body = mail_recipient.call_args[1]["body"]
         print(body)
-        assert_in("new dataset", body)
+        self.assertIn("new dataset", body)
 
 
 def time_since_emails_last_sent(frequency):

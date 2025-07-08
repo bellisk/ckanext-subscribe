@@ -1,14 +1,13 @@
 # encoding: utf-8
 
 import datetime
+import unittest
 
 import ckan.plugins.toolkit as tk
 import mock
 from ckan import model
 from ckan.plugins.toolkit import ValidationError
 from ckan.tests import factories, helpers
-from nose.tools import assert_equal as eq
-from nose.tools import assert_in, assert_raises
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.tests.factories import (
@@ -18,7 +17,7 @@ from ckanext.subscribe.tests.factories import (
 )
 
 
-class TestSubscribeSignup(object):
+class TestSubscribeSignup(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
 
@@ -34,13 +33,13 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "dataset")
-        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
-        eq(subscription["verified"], False)
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "dataset")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, dataset["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], False)
         assert "verification_code" not in subscription
         subscription_obj = model.Session.query(subscribe_model.Subscription).get(
             subscription["id"]
@@ -59,9 +58,9 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "dataset")
-        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "dataset")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, dataset["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_group_id(self, send_request_email):
@@ -75,9 +74,9 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "group")
-        eq(send_request_email.call_args[0][0].object_id, group["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "group")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, group["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_group_name(self, send_request_email):
@@ -91,9 +90,9 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "group")
-        eq(send_request_email.call_args[0][0].object_id, group["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "group")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, group["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_org_id(self, send_request_email):
@@ -107,9 +106,9 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "organization")
-        eq(send_request_email.call_args[0][0].object_id, org["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "organization")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, org["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_org_name(self, send_request_email):
@@ -123,9 +122,9 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "organization")
-        eq(send_request_email.call_args[0][0].object_id, org["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "organization")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, org["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_skip_verification(self, send_request_email):
@@ -140,10 +139,10 @@ class TestSubscribeSignup(object):
         )
 
         assert not send_request_email.called
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
-        eq(subscription["verified"], True)
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], True)
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_resend_verification(self, send_request_email):
@@ -164,15 +163,17 @@ class TestSubscribeSignup(object):
         )
 
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].id, existing_subscription["id"])
-        eq(send_request_email.call_args[0][0].object_type, "dataset")
-        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(
+            send_request_email.call_args[0][0].id, existing_subscription["id"]
+        )
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "dataset")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, dataset["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
         assert send_request_email.call_args[0][0].verification_code != "original_code"
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
-        eq(subscription["verified"], False)
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], False)
 
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_dataset_doesnt_exist(self, send_request_email):
@@ -261,15 +262,15 @@ class TestRecaptchaOfSubscribeSignup(object):
 
         # Asserting that the email verification function was called once
         send_request_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "dataset")
-        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "dataset")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, dataset["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
 
         # Asserting that the subscription was created with the correct details
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
-        eq(subscription["verified"], False)
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], False)
         assert "verification_code" not in subscription
 
         # Checking that the subscription object exists in the database
@@ -329,7 +330,7 @@ class TestSubscribeVerify(object):
         )
 
         send_confirmation_email.assert_called_once()
-        eq(
+        self.assertEqual(
             send_confirmation_email.call_args[1]["subscription"].email,
             "bob@example.com",
         )
@@ -340,10 +341,10 @@ class TestSubscribeVerify(object):
         )
         assert_in(send_confirmation_email.call_args[0], login_codes)
         subscribe_model.LoginCode.validate_code(send_confirmation_email.call_args[0])
-        eq(subscription["verified"], True)
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], True)
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
         assert "verification_code" not in subscription
 
     def test_wrong_code(self):
@@ -369,7 +370,7 @@ class TestSubscribeVerify(object):
         )
 
         subscription = subscribe_model.Subscription.get(subscription["id"])
-        eq(subscription.verified, False)
+        self.assertEqual(subscription.verified, False)
 
     def test_code_expired(self):
         dataset = factories.Dataset()
@@ -392,7 +393,7 @@ class TestSubscribeVerify(object):
         assert_in("That validation code has expired", str(cm.exception.error_dict))
 
         subscription = subscribe_model.Subscription.get(subscription["id"])
-        eq(subscription.verified, False)
+        self.assertEqual(subscription.verified, False)
 
 
 class TestSubscribeAndVerify(object):
@@ -421,13 +422,13 @@ class TestSubscribeAndVerify(object):
 
         send_request_email.assert_called_once()
         send_confirmation_email.assert_called_once()
-        eq(send_request_email.call_args[0][0].object_type, "dataset")
-        eq(send_request_email.call_args[0][0].object_id, dataset["id"])
-        eq(send_request_email.call_args[0][0].email, "bob@example.com")
-        eq(subscription["object_type"], "dataset")
-        eq(subscription["object_id"], dataset["id"])
-        eq(subscription["email"], "bob@example.com")
-        eq(subscription["verified"], True)
+        self.assertEqual(send_request_email.call_args[0][0].object_type, "dataset")
+        self.assertEqual(send_request_email.call_args[0][0].object_id, dataset["id"])
+        self.assertEqual(send_request_email.call_args[0][0].email, "bob@example.com")
+        self.assertEqual(subscription["object_type"], "dataset")
+        self.assertEqual(subscription["object_id"], dataset["id"])
+        self.assertEqual(subscription["email"], "bob@example.com")
+        self.assertEqual(subscription["verified"], True)
         login_code = send_confirmation_email.call_args[0]
         subscribe_model.LoginCode.validate_code(login_code)
 
@@ -450,7 +451,7 @@ class TestSubscribeListSubscriptions(object):
             email="bob@example.com",
         )
 
-        eq([sub["object_id"] for sub in sub_list], [dataset["id"]])
+        self.assertEqual([sub["object_id"] for sub in sub_list], [dataset["id"]])
 
     def test_dataset_details(self):
         dataset = factories.Dataset()
@@ -478,11 +479,11 @@ class TestSubscribeListSubscriptions(object):
             email="bob@example.com",
         )
 
-        eq(
+        self.assertEqual(
             set(sub["object_id"] for sub in sub_list),
             set([dataset["id"], group["id"], org["id"]]),
         )
-        eq(
+        self.assertEqual(
             set(sub["object_link"] for sub in sub_list),
             set(
                 [
@@ -492,7 +493,7 @@ class TestSubscribeListSubscriptions(object):
                 ]
             ),
         )
-        eq(
+        self.assertEqual(
             set(sub.get("object_name") for sub in sub_list),
             set([dataset["name"], group["name"], org["name"]]),
         )
@@ -528,7 +529,7 @@ class TestUnsubscribe(object):
             {},
             email="bob@example.com",
         )
-        eq([sub["object_id"] for sub in sub_list], [dataset2["id"]])
+        self.assertEqual([sub["object_id"] for sub in sub_list], [dataset2["id"]])
 
     def test_group(self):
         group = factories.Group()
@@ -556,7 +557,7 @@ class TestUnsubscribe(object):
             {},
             email="bob@example.com",
         )
-        eq([sub["object_id"] for sub in sub_list], [group2["id"]])
+        self.assertEqual([sub["object_id"] for sub in sub_list], [group2["id"]])
 
     def test_org(self):
         org = factories.Organization()
@@ -584,7 +585,7 @@ class TestUnsubscribe(object):
             {},
             email="bob@example.com",
         )
-        eq([sub["object_id"] for sub in sub_list], [org2["id"]])
+        self.assertEqual([sub["object_id"] for sub in sub_list], [org2["id"]])
 
 
 class TestUnsubscribeAll(object):
@@ -616,7 +617,7 @@ class TestUnsubscribeAll(object):
             {},
             email="bob@example.com",
         )
-        eq([sub["object_id"] for sub in sub_list], [])
+        self.assertEqual([sub["object_id"] for sub in sub_list], [])
 
 
 class TestSendAnyNotifications(object):
@@ -636,17 +637,17 @@ class TestSendAnyNotifications(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        eq(type(code), type(""))
-        eq(email, "bob@example.com")
-        eq(len(notifications), 1)
-        eq(
+        self.assertEqual(type(code), type(""))
+        self.assertEqual(email, "bob@example.com")
+        self.assertEqual(len(notifications), 1)
+        self.assertEqual(
             [
                 (a["activity_type"], a["data"]["package"]["id"])
                 for a in notifications[0]["activities"]
             ],
             [("new package", dataset["id"])],
         )
-        eq(notifications[0]["subscription"]["id"], subscription["id"])
+        self.assertEqual(notifications[0]["subscription"]["id"], subscription["id"])
 
 
 class TestUpdate(object):
@@ -667,7 +668,7 @@ class TestUpdate(object):
             frequency="DAILY",
         )
 
-        eq(subscription["frequency"], "DAILY")
+        self.assertEqual(subscription["frequency"], "DAILY")
 
     def test_frequency_not_specified(self):
         subscription = Subscription(
@@ -682,4 +683,4 @@ class TestUpdate(object):
             id=subscription["id"],
         )
 
-        eq(subscription["frequency"], "WEEKLY")  # unchanged
+        self.assertEqual(subscription["frequency"], "WEEKLY")  # unchanged

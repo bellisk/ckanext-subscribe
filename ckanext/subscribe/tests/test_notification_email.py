@@ -1,11 +1,11 @@
 # encoding: utf-8
 
 import datetime
+import unittest
 
 import ckan.tests.factories as ckan_factories
 import mock
 from ckan.tests import helpers
-from nose.tools import assert_equal, assert_in
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
@@ -18,10 +18,8 @@ from ckanext.subscribe.notification_email import (
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_notification_email_contents
 
-eq = assert_equal
 
-
-class TestSendNotificationEmail(object):
+class TestSendNotificationEmail(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -47,17 +45,17 @@ class TestSendNotificationEmail(object):
         mail_recipient.assert_called_once()
         body = mail_recipient.call_args[1]["body"]
         print(body)
-        assert_in(dataset["title"], body)
-        assert_in(f"http://test.ckan.net/dataset/{dataset['id']}", body)
-        assert_in("new dataset", body)
+        self.assertIn(dataset["title"], body)
+        self.assertIn(f"http://test.ckan.net/dataset/{dataset['id']}", body)
+        self.assertIn("new dataset", body)
         body = mail_recipient.call_args[1]["body_html"]
         print(body)
-        assert_in(dataset["title"], body)
-        assert_in(f"http://test.ckan.net/dataset/{dataset['id']}", body)
-        assert_in("new dataset", body)
+        self.assertIn(dataset["title"], body)
+        self.assertIn(f"http://test.ckan.net/dataset/{dataset['id']}", body)
+        self.assertIn("new dataset", body)
 
 
-class TestGetNotificationEmailContents(object):
+class TestGetNotificationEmailContents(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -105,15 +103,15 @@ class TestGetNotificationEmailContents(object):
         )
         email = get_notification_email_contents(email_vars)
         # Check we link to the dataset, not just the org
-        assert_in(f"http://test.ckan.net/dataset/{dataset['name']}", email[1])
-        assert_in(
+        self.assertIn(f"http://test.ckan.net/dataset/{dataset['name']}", email[1])
+        self.assertIn(
             f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">"
             f"Test Dataset</a>",
             email[2],
         )
 
 
-class TestGetNotificationEmailVars(object):
+class TestGetNotificationEmailVars(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -135,7 +133,7 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
+        self.assertEqual(
             email_vars["notifications"],
             [
                 {
@@ -172,7 +170,7 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
+        self.assertEqual(
             email_vars["notifications"],
             [
                 {
@@ -209,7 +207,7 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
+        self.assertEqual(
             email_vars["notifications"],
             [
                 {
@@ -302,21 +300,23 @@ CUSTOM_ACTIVITY = {
 }
 
 
-class TestDatasetLinkFromActivity(object):
+class TestDatasetLinkFromActivity(unittest.TestCase):
     def test_basic(self):
-        eq(
+        self.assertEqual(
             dataset_link_from_activity(CHANGED_PACKAGE_ACTIVITY),
             helpers.literal('<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
         )
 
     def test_custom_activity(self):
         # don't want an exception
-        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), helpers.literal(""))
+        self.assertEqual(
+            dataset_link_from_activity(CUSTOM_ACTIVITY), helpers.literal("")
+        )
 
 
-class TestDatasetHrefFromActivity(object):
+class TestDatasetHrefFromActivity(unittest.TestCase):
     def test_basic(self):
-        eq(
+        self.assertEqual(
             dataset_href_from_activity(CHANGED_PACKAGE_ACTIVITY),
             "http://test.ckan.net/dataset/stream",
         )

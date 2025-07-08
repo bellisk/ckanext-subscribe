@@ -1,20 +1,18 @@
 # encoding: utf-8
 
 import datetime
+import unittest
 
 import mock
 from ckan.tests.factories import Dataset, Group, Organization
 from ckan.tests.helpers import FunctionalTestBase, reset_db, submit_and_follow
-from nose.tools import assert_equal, assert_in
 
 from ckanext.subscribe import email_auth
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.tests.factories import Subscription, SubscriptionLowLevel
 
-eq = assert_equal
 
-
-class TestSignupSubmit(FunctionalTestBase):
+class TestSignupSubmit(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         reset_db()
@@ -30,7 +28,7 @@ class TestSignupSubmit(FunctionalTestBase):
             status=302,
         )
         assert mock_mailer.called
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True",
         )
@@ -44,7 +42,7 @@ class TestSignupSubmit(FunctionalTestBase):
             status=302,
         )
         assert mock_mailer.called
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/group/{group['name']}?__no_cache__=True",
         )
@@ -58,7 +56,7 @@ class TestSignupSubmit(FunctionalTestBase):
             status=302,
         )
         assert mock_mailer.called
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True",
         )
@@ -154,10 +152,10 @@ class TestVerifySubscription(FunctionalTestBase):
         response = self._get_test_app().post(
             "/subscribe/verify", params={"code": "unknown_code"}, status=302
         )
-        eq(response.location, "http://test.ckan.net/?__no_cache__=True")
+        self.assertEqual(response.location, "http://test.ckan.net/?__no_cache__=True")
 
 
-class TestManage(FunctionalTestBase):
+class TestManage(unittest.TestCase):
     @classmethod
     def setup_class(cls):
         reset_db()
@@ -177,7 +175,7 @@ class TestManage(FunctionalTestBase):
             "/subscribe/manage", params={"code": code}, status=200
         )
 
-        assert_in(dataset["title"], response.body.decode("utf8"))
+        self.assertIn(dataset["title"], response.body.decode("utf8"))
 
     def test_no_code(self):
         response = self._get_test_app().get(
@@ -223,7 +221,7 @@ class TestUpdate(FunctionalTestBase):
             "http://test.ckan.net/subscribe/manage?code="
         )
         response = response.follow()
-        assert_in('<option value="DAILY" selected>', response.body.decode("utf8"))
+        self.assertIn('<option value="DAILY" selected>', response.body.decode("utf8"))
 
     def test_form_submit(self):
         Subscription(
@@ -240,7 +238,9 @@ class TestUpdate(FunctionalTestBase):
         form["frequency"] = "IMMEDIATE"
         response = submit_and_follow(self._get_test_app(), form, {}, "save")
 
-        assert_in('<option value="IMMEDIATE" selected>', response.body.decode("utf8"))
+        self.assertIn(
+            '<option value="IMMEDIATE" selected>', response.body.decode("utf8")
+        )
 
     def test_another_code(self):
         subscription = Subscription(
@@ -282,7 +282,7 @@ class TestUnsubscribe(FunctionalTestBase):
             status=302,
         )
 
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True",
         )
@@ -302,7 +302,7 @@ class TestUnsubscribe(FunctionalTestBase):
             status=302,
         )
 
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/group/{group['name']}?__no_cache__=True",
         )
@@ -322,7 +322,7 @@ class TestUnsubscribe(FunctionalTestBase):
             status=302,
         )
 
-        assert_equal(
+        self.assertEqual(
             response.location,
             f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True",
         )
@@ -365,7 +365,7 @@ class TestUnsubscribe(FunctionalTestBase):
             f"http://test.ckan.net/dataset/{dataset['name']}"
         )
         response = response.follow()
-        assert_in(
+        self.assertIn(
             "Error unsubscribing: That user is not subscribed to that object",
             response.body.decode("utf8"),
         )
@@ -376,7 +376,7 @@ class TestUnsubscribe(FunctionalTestBase):
             "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
         )
 
-        eq(response.location, "http://test.ckan.net/?__no_cache__=True")
+        self.assertEqual(response.location, "http://test.ckan.net/?__no_cache__=True")
 
 
 class TestUnsubscribeAll(FunctionalTestBase):
@@ -399,9 +399,9 @@ class TestUnsubscribeAll(FunctionalTestBase):
             "/subscribe/unsubscribe-all", params={"code": code}, status=302
         )
 
-        assert_equal(response.location, "http://test.ckan.net/?__no_cache__=True")
+        self.assertEqual(response.location, "http://test.ckan.net/?__no_cache__=True")
         response = response.follow()
-        assert_in(
+        self.assertIn(
             "You are no longer subscribed to notifications from CKAN",
             response.body.decode("utf8"),
         )
@@ -434,7 +434,7 @@ class TestUnsubscribeAll(FunctionalTestBase):
 
         assert response.location.startswith("http://test.ckan.net/")
         response = response.follow()
-        assert_in(
+        self.assertIn(
             "Error unsubscribing: That user has no subscriptions",
             response.body.decode("utf8"),
         )
@@ -445,7 +445,7 @@ class TestUnsubscribeAll(FunctionalTestBase):
             "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
         )
 
-        eq(response.location, "http://test.ckan.net/?__no_cache__=True")
+        self.assertEqual(response.location, "http://test.ckan.net/?__no_cache__=True")
 
 
 class TestRequestManageCode(FunctionalTestBase):
@@ -471,7 +471,7 @@ class TestRequestManageCode(FunctionalTestBase):
         response = submit_and_follow(self._get_test_app(), form, {}, "save")
 
         mail_recipient.assert_called_once()
-        assert_equal(response.request.path, "/")
+        self.assertEqual(response.request.path, "/")
 
     def test_no_email(self):
         self._get_test_app().post(
@@ -486,7 +486,7 @@ class TestRequestManageCode(FunctionalTestBase):
             status=200,
         )
 
-        assert_in(
+        self.assertIn(
             "Email malformed-email is not a valid format", response.body.decode("utf8")
         )
 
@@ -497,7 +497,7 @@ class TestRequestManageCode(FunctionalTestBase):
             status=200,
         )
 
-        assert_in(
+        self.assertIn(
             "That email address does not have any subscriptions",
             response.body.decode("utf8"),
         )

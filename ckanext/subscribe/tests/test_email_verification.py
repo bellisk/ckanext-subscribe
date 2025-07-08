@@ -1,9 +1,8 @@
-# encoding: utf-8
+import unittest
 
 from ckan import plugins as p
 from ckan.tests import factories as ckan_factories
 from ckan.tests import helpers
-from nose.tools import assert_equal
 
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.email_verification import get_verification_email_vars
@@ -13,7 +12,7 @@ from ckanext.subscribe.utils import get_footer_contents, get_verification_email_
 config = p.toolkit.config
 
 
-class TestEmailVerification(object):
+class TestEmailVerification(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
         subscribe_model.setup()
@@ -27,16 +26,16 @@ class TestEmailVerification(object):
 
         email_vars = get_verification_email_vars(subscription)
 
-        assert_equal(email_vars["site_title"], config["ckan.site_title"])
-        assert_equal(email_vars["site_url"], "http://test.ckan.net")
-        assert_equal(email_vars["object_title"], "Test Dataset")
-        assert_equal(email_vars["object_type"], "dataset")
-        assert_equal(email_vars["email"], "bob@example.com")
-        assert_equal(
+        self.assertEqual(email_vars["site_title"], config["ckan.site_title"])
+        self.assertEqual(email_vars["site_url"], "http://test.ckan.net")
+        self.assertEqual(email_vars["object_title"], "Test Dataset")
+        self.assertEqual(email_vars["object_type"], "dataset")
+        self.assertEqual(email_vars["email"], "bob@example.com")
+        self.assertEqual(
             email_vars["verification_link"],
             "http://test.ckan.net/subscribe/verify?code=testcode",
         )
-        assert_equal(
+        self.assertEqual(
             email_vars["object_link"],
             f"http://test.ckan.net/dataset/{dataset['id']}",
         )
@@ -56,7 +55,7 @@ class TestEmailVerification(object):
             email_vars
         )
 
-        assert_equal(subject, "Confirm your request for CKAN subscription")
+        self.assertEqual(subject, "Confirm your request for CKAN subscription")
         assert body_plain_text.strip().startswith(
             "CKAN subscription requested"
         ), body_plain_text.strip()
