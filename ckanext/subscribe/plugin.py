@@ -5,6 +5,7 @@ import ckan.plugins.toolkit as tk
 
 import ckanext.subscribe.helpers as subscribe_helpers
 from ckanext.subscribe import action, auth
+from ckanext.subscribe.blueprints import subscribe_blueprint
 from ckanext.subscribe.interfaces import ISubscribe
 
 
@@ -14,6 +15,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(ISubscribe, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IBlueprint, inherit=True)
 
     # IConfigurer
 
@@ -58,3 +60,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
             "get_recaptcha_publickey": subscribe_helpers.get_recaptcha_publickey,
             "apply_recaptcha": subscribe_helpers.apply_recaptcha,
         }
+
+    # IBlueprint
+    def get_blueprint(self):
+        return [subscribe_blueprint]
