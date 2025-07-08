@@ -5,6 +5,7 @@ import unittest
 
 import ckan.plugins.toolkit as tk
 import mock
+import pytest
 from ckan import model
 from ckan.plugins.toolkit import ValidationError
 from ckan.tests import factories, helpers
@@ -17,6 +18,9 @@ from ckanext.subscribe.tests.factories import (
 )
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestSubscribeSignup(unittest.TestCase):
     def setup(self):
         helpers.reset_db()
@@ -227,6 +231,9 @@ class TestSubscribeSignup(unittest.TestCase):
 
 
 # The reCAPTCHA tests
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestRecaptchaOfSubscribeSignup(object):
     def setup(self):
         helpers.reset_db()
@@ -306,6 +313,9 @@ class TestRecaptchaOfSubscribeSignup(object):
             assert False, "ValidationError not raised"
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestSubscribeVerify(object):
     def setup(self):
         helpers.reset_db()
@@ -396,6 +406,9 @@ class TestSubscribeVerify(object):
         self.assertEqual(subscription.verified, False)
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestSubscribeAndVerify(object):
     def setup(self):
         helpers.reset_db()
@@ -433,6 +446,9 @@ class TestSubscribeAndVerify(object):
         subscribe_model.LoginCode.validate_code(login_code)
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestSubscribeListSubscriptions(object):
     def setup(self):
         helpers.reset_db()
@@ -499,6 +515,9 @@ class TestSubscribeListSubscriptions(object):
         )
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestUnsubscribe(object):
     def setup(self):
         helpers.reset_db()
@@ -588,6 +607,9 @@ class TestUnsubscribe(object):
         self.assertEqual([sub["object_id"] for sub in sub_list], [org2["id"]])
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestUnsubscribeAll(object):
     def setup(self):
         helpers.reset_db()
@@ -620,6 +642,9 @@ class TestUnsubscribeAll(object):
         self.assertEqual([sub["object_id"] for sub in sub_list], [])
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestSendAnyNotifications(object):
     def setup(self):
         helpers.reset_db()
@@ -650,6 +675,9 @@ class TestSendAnyNotifications(object):
         self.assertEqual(notifications[0]["subscription"]["id"], subscription["id"])
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.usefixtures("with_plugins")
+@pytest.mark.usefixtures("clean_db")
 class TestUpdate(object):
     def setup(self):
         helpers.reset_db()
