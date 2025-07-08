@@ -8,6 +8,7 @@ import ckan.tests.factories as ckan_factories
 import factory
 from ckan import model
 from ckan.lib.dictization import table_dictize
+from ckanext.activity.model.activity import Activity
 
 import ckanext.subscribe.model
 from ckanext.subscribe import dictization
@@ -107,7 +108,7 @@ class SubscriptionLowLevel(factory.Factory):
 class Activity(factory.Factory):
     """A factory class for creating CKAN activity objects."""
 
-    FACTORY_FOR = model.Activity
+    FACTORY_FOR = Activity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -141,7 +142,7 @@ class DatasetActivity(factory.Factory):
     """A factory class for creating a CKAN dataset and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    FACTORY_FOR = Activity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -163,7 +164,7 @@ class DatasetActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity)
+            model.Session.query(Activity)
             .filter_by(object_id=dataset["id"])
             .first()
         )
@@ -182,7 +183,7 @@ class GroupActivity(factory.Factory):
     """A factory class for creating a CKAN group and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    FACTORY_FOR = Activity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -204,7 +205,7 @@ class GroupActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity).filter_by(object_id=group["id"]).first()
+            model.Session.query(Activity).filter_by(object_id=group["id"]).first()
         )
 
         if kwargs:
@@ -221,7 +222,7 @@ class OrganizationActivity(factory.Factory):
     """A factory class for creating a CKAN org and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    FACTORY_FOR = Activity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -243,7 +244,7 @@ class OrganizationActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity).filter_by(object_id=org["id"]).first()
+            model.Session.query(Activity).filter_by(object_id=org["id"]).first()
         )
 
         if kwargs:
