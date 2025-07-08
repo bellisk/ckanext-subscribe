@@ -28,11 +28,11 @@ subscribe_blueprint = Blueprint("subscribe", __name__, url_prefix="/subscribe")
 
 def _redirect_back_to_subscribe_page(object_name, object_type):
     if object_type == "dataset":
-        return redirect_to(controller="package", action="read", id=object_name)
+        return redirect_to("package.read", id=object_name)
     elif object_type == "group":
-        return redirect_to(controller="group", action="read", id=object_name)
+        return redirect_to("group.read", id=object_name)
     elif object_type == "organization":
-        return redirect_to(controller="organization", action="read", id=object_name)
+        return redirect_to("organization.read", id=object_name)
     else:
         return redirect_to("home")
 
@@ -41,18 +41,16 @@ def _redirect_back_to_subscribe_page_from_request(data_dict):
     if data_dict.get("dataset_id"):
         dataset_obj = model.Package.get(data_dict["dataset_id"])
         return redirect_to(
-            controller="package",
-            action="read",
+            "package.read",
             id=dataset_obj.name if dataset_obj else data_dict["dataset_id"],
         )
     elif data_dict.get("group_id"):
         group_obj = model.Group.get(data_dict["group_id"])
-        controller = (
+        group_type = (
             "organization" if group_obj and group_obj.is_organization else "group"
         )
         return redirect_to(
-            controller=controller,
-            action="read",
+            f"{group_type}.read",
             id=group_obj.name if group_obj else data_dict["group_id"],
         )
     else:
@@ -61,8 +59,7 @@ def _redirect_back_to_subscribe_page_from_request(data_dict):
 
 def _request_manage_code_form():
     return redirect_to(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="request_manage_code",
+        "subscribe.request_manage_code",
     )
 
 
