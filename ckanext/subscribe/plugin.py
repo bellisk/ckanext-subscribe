@@ -23,7 +23,7 @@ class SubscribePlugin(plugins.SingletonPlugin):
         tk.add_template_directory(config_, "templates")
         tk.add_public_directory(config_, "public")
         # Register WebAssets
-        tk.add_resource("public", "subscribe")
+        tk.add_resource("assets", "subscribe")
 
     # IActions
 
