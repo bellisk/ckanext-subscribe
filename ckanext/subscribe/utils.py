@@ -71,14 +71,12 @@ def get_email_vars(code, subscription=None, email=None):
     assert code
     assert subscription or email
     unsubscribe_all_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="unsubscribe_all",
+        "subscribe.unsubscribe_all",
         code=code,
         qualified=True,
     )
     manage_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         code=code,
         qualified=True,
     )
@@ -96,18 +94,12 @@ def get_email_vars(code, subscription=None, email=None):
         else:
             subscription_object = model.Group.get(subscription.object_id)
         object_link = p.toolkit.url_for(
-            controller=(
-                "package"
-                if subscription.object_type == "dataset"
-                else subscription.object_type
-            ),
-            action="read",
+            f"{subscription.object_type}.read",
             id=subscription.object_id,
             qualified=True,
         )
         unsubscribe_link = p.toolkit.url_for(
-            controller="ckanext.subscribe.controller:SubscribeController",
-            action="unsubscribe",
+            "subscribe.unsubscribe",
             code=code,
             qualified=True,
             **{subscription.object_type: subscription.object_id},
