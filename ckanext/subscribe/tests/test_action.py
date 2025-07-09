@@ -617,7 +617,7 @@ class TestSendAnyNotifications(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications = send_notification_email.call_args[0]
-        assert type(code) == type("")
+        assert type(code) is type("")
         assert email == "bob@example.com"
         assert len(notifications) == 1
         assert [
