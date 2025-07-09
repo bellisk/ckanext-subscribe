@@ -64,7 +64,7 @@ def _request_manage_code_form():
 
 def signup():
     # validate inputs
-    email = request.POST.get("email")
+    email = request.form.get("email")
     if not email:
         abort(400, _("No email address supplied"))
     email = email.strip()
@@ -80,10 +80,10 @@ def signup():
     # create subscription
     data_dict = {
         "email": email,
-        "dataset_id": request.POST.get("dataset"),
-        "group_id": request.POST.get("group"),
-        "organization_id": request.POST.get("organization"),
-        "g_recaptcha_response": request.POST.get("g-recaptcha-response"),
+        "dataset_id": request.form.get("dataset"),
+        "group_id": request.form.get("group"),
+        "organization_id": request.form.get("organization"),
+        "g_recaptcha_response": request.form.get("g-recaptcha-response"),
     }
     context = {
         "model": model,
@@ -138,8 +138,7 @@ def verify_subscription():
     code = email_auth.create_code(subscription["email"])
 
     return redirect_to(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         code=code,
     )
 
@@ -235,8 +234,7 @@ def update():
         h.flash_success(_("Subscription updated"))
 
     return redirect_to(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         code=code,
     )
 
@@ -335,8 +333,7 @@ def unsubscribe_all():
         )
         return redirect_to("home")
     return redirect_to(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         code=code,
     )
 
