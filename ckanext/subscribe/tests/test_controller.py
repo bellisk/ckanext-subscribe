@@ -49,8 +49,9 @@ class TestSignupSubmit(object):
         assert response.location == f"http://test.ckan.net/organization/{org['name']}"
 
     def test_get_not_post(self, app):
-        response = app.get("/subscribe/signup", status=400)
-        assert "No email address supplied" in response.body
+        # This url can only receive POST requests
+        response = app.get("/subscribe/signup", status=404)
+        assert "The requested URL was not found on the server" in response.body
 
     def test_object_not_specified(self, app):
         response = app.post(
