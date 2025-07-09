@@ -276,8 +276,8 @@ def get_daily_notifications(notification_datetime=None):
 
 def get_subscribed_to_activities(include_activity_from, objects_subscribed_to_keys):
     activities = []
-    for subscribe_interface_implementaion in p.PluginImplementations(ISubscribe):
-        activities = subscribe_interface_implementaion.get_activities(
+    for subscribe_interface_implementation in p.PluginImplementations(ISubscribe):
+        activities = subscribe_interface_implementation.get_activities(
             include_activity_from, objects_subscribed_to_keys
         )
     return activities
