@@ -21,9 +21,6 @@ from ckanext.subscribe.tests.factories import (
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSubscribeSignup(unittest.TestCase):
-    def setup(self):
-        helpers.reset_db()
-
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_basic(self, send_request_email):
         dataset = factories.Dataset()
@@ -234,7 +231,6 @@ class TestSubscribeSignup(unittest.TestCase):
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestRecaptchaOfSubscribeSignup(object):
     def setup(self):
-        helpers.reset_db()
         tk.config["ckanext.subscribe.apply_recaptcha"] = "true"
 
     def teardown(self):
@@ -314,9 +310,6 @@ class TestRecaptchaOfSubscribeSignup(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSubscribeVerify(object):
-    def setup(self):
-        helpers.reset_db()
-
     @mock.patch("ckanext.subscribe.email_auth.send_subscription_confirmation_email")
     def test_basic(self, send_confirmation_email):
         dataset = factories.Dataset()
@@ -406,9 +399,6 @@ class TestSubscribeVerify(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSubscribeAndVerify(object):
-    def setup(self):
-        helpers.reset_db()
-
     @mock.patch("ckanext.subscribe.email_auth.send_subscription_confirmation_email")
     @mock.patch("ckanext.subscribe.email_verification.send_request_email")
     def test_basic(self, send_request_email, send_confirmation_email):
@@ -445,9 +435,6 @@ class TestSubscribeAndVerify(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSubscribeListSubscriptions(object):
-    def setup(self):
-        helpers.reset_db()
-
     def test_basic(self):
         dataset = factories.Dataset()
         Subscription(
@@ -513,9 +500,6 @@ class TestSubscribeListSubscriptions(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribe(object):
-    def setup(self):
-        helpers.reset_db()
-
     def test_basic(self):
         dataset = factories.Dataset()
         dataset2 = factories.Dataset()
@@ -604,9 +588,6 @@ class TestUnsubscribe(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribeAll(object):
-    def setup(self):
-        helpers.reset_db()
-
     def test_basic(self):
         dataset = factories.Dataset()
         dataset2 = factories.Dataset()
@@ -638,9 +619,6 @@ class TestUnsubscribeAll(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSendAnyNotifications(object):
-    def setup(self):
-        helpers.reset_db()
-
     # Lots of overlap here with:
     # test_notification.py:TestSendAnyImmediateNotifications
     @mock.patch("ckanext.subscribe.notification_email.send_notification_email")
@@ -670,9 +648,6 @@ class TestSendAnyNotifications(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUpdate(object):
-    def setup(self):
-        helpers.reset_db()
-
     def test_basic(self):
         subscription = Subscription(
             email="bob@example.com",
