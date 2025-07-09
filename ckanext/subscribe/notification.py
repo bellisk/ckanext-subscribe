@@ -4,10 +4,10 @@ from collections import defaultdict
 import ckan.plugins.toolkit as toolkit
 from ckan import model
 from ckan import plugins as p
-from ckan.lib.dictization import model_dictize
 from ckan.model import Group, Member, Package
 
 from ckanext.activity.email_notifications import string_to_timedelta
+from ckanext.activity.model import activity as model_activity
 from ckanext.subscribe import dictization, email_auth, notification_email
 from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe.model import Frequency, Subscribe, Subscription
@@ -321,7 +321,7 @@ def dictize_notifications(subscription_activities):
     notifications_dictized = []
     for subscription, activities in list(subscription_activities.items()):
         subscription_dict = dictization.dictize_subscription(subscription, context)
-        activity_dicts = model_dictize.activity_list_dictize(activities, context)
+        activity_dicts = model_activity.activity_list_dictize(activities, context)
         notifications_dictized.append(
             {
                 "subscription": subscription_dict,
