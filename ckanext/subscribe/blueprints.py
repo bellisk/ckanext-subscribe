@@ -368,10 +368,16 @@ def request_manage_code():
     return render("subscribe/request_manage_code.html", extra_vars={"email": email})
 
 
-subscribe_blueprint.add_url_rule("/signup", view_func=signup)
+subscribe_blueprint.add_url_rule("/signup", view_func=signup, methods=["POST"])
 subscribe_blueprint.add_url_rule("/verify", view_func=verify_subscription)
 subscribe_blueprint.add_url_rule("/manage", view_func=manage)
-subscribe_blueprint.add_url_rule("/update", view_func=update)
-subscribe_blueprint.add_url_rule("/unsubscribe", view_func=unsubscribe)
-subscribe_blueprint.add_url_rule("/unsubscribe_all", view_func=unsubscribe_all)
-subscribe_blueprint.add_url_rule("/request_manage_code", view_func=request_manage_code)
+subscribe_blueprint.add_url_rule("/update", view_func=update, methods=["POST"])
+subscribe_blueprint.add_url_rule(
+    "/unsubscribe", view_func=unsubscribe, methods=["POST", "GET"]
+)
+subscribe_blueprint.add_url_rule(
+    "/unsubscribe_all", view_func=unsubscribe_all, methods=["POST", "GET"]
+)
+subscribe_blueprint.add_url_rule(
+    "/request_manage_code", view_func=request_manage_code, methods=["POST", "GET"]
+)
