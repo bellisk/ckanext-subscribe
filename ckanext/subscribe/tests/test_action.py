@@ -228,14 +228,9 @@ class TestSubscribeSignup(unittest.TestCase):
 
 # The reCAPTCHA tests
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckanext.subscribe.apply_recaptcha", "true")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestRecaptchaOfSubscribeSignup(object):
-    def setup(self):
-        tk.config["ckanext.subscribe.apply_recaptcha"] = "true"
-
-    def teardown(self):
-        tk.config["ckanext.subscribe.apply_recaptcha"] = "false"
-
     # mock the _verify_recaptcha function and test both
     # successful and unsuccessful reCAPTCHA verification scenarios
     @mock.patch("requests.post")
