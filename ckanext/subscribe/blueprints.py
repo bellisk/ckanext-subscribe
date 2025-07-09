@@ -376,7 +376,7 @@ subscribe_blueprint.add_url_rule(
     "/unsubscribe", view_func=unsubscribe, methods=["POST", "GET"]
 )
 subscribe_blueprint.add_url_rule(
-    "/unsubscribe_all", view_func=unsubscribe_all, methods=["POST", "GET"]
+    "/unsubscribe-all", view_func=unsubscribe_all, methods=["POST", "GET"]
 )
 subscribe_blueprint.add_url_rule(
     "/request_manage_code", view_func=request_manage_code, methods=["POST", "GET"]
