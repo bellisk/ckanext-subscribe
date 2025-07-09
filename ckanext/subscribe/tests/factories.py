@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import datetime
 
 import ckan.lib.dictization.model_dictize as model_dictize

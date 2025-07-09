@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 # For sending HTML emails. Based on core ckan's mailer
 
 import smtplib

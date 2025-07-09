@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from ckan.plugins.toolkit import _, auth_allow_anonymous_access, check_access
 
 

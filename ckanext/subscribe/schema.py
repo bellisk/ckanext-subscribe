@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import ckan.plugins as p
 from ckan.common import _
 
