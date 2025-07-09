@@ -1,6 +1,5 @@
 import datetime
 
-import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.plugins as p
 import ckan.tests.factories as ckan_factories
 import factory
@@ -9,6 +8,7 @@ from ckan.lib.dictization import table_dictize
 
 import ckanext.subscribe.model
 from ckanext.activity.model import Activity as BaseActivity
+from ckanext.activity.model import activity as model_activity
 from ckanext.subscribe import dictization
 
 
@@ -128,7 +128,7 @@ class Activity(factory.Factory):
         activity_dict = p.toolkit.get_action("activity_create")(context, kwargs)
 
         # to set the timestamp we need to edit the object
-        activity = model.Session.query(model.Activity).get(activity_dict["id"])
+        activity = model.Session.query(BaseActivity).get(activity_dict["id"])
         if kwargs.get("timestamp"):
             activity.timestamp = kwargs["timestamp"]
             model.repo.commit()
@@ -136,7 +136,7 @@ class Activity(factory.Factory):
         if kwargs.get("return_object"):
             return activity
 
-        return model_dictize.activity_dictize(activity, context)
+        return model_activity.activity_dictize(activity, context)
 
 
 class DatasetActivity(factory.Factory):
