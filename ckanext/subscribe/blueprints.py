@@ -185,7 +185,7 @@ def manage():
 
 
 def update():
-    code = request.POST.get("code")
+    code = request.form.get("code")
     if not code:
         h.flash_error("Code not supplied")
         log.debug("No code supplied")
@@ -197,7 +197,7 @@ def update():
         log.debug(f"Code is invalid: {exp}")
         return _request_manage_code_form()
 
-    subscription_id = request.POST.get("id")
+    subscription_id = request.form.get("id")
     if not subscription_id:
         abort(400, _("No id supplied"))
     subscription = model.Session.query(subscribe_model.Subscription).get(
@@ -210,7 +210,7 @@ def update():
         log.debug("Code is invalid for that subscription")
         return _request_manage_code_form()
 
-    frequency = request.POST.get("frequency")
+    frequency = request.form.get("frequency")
     if not frequency:
         abort(400, _("No frequency supplied"))
 
@@ -339,7 +339,7 @@ def unsubscribe_all():
 
 
 def request_manage_code():
-    email = request.POST.get("email")
+    email = request.form.get("email")
     if not email:
         return render("subscribe/request_manage_code.html", extra_vars={})
 
