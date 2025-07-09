@@ -3,7 +3,6 @@
 import datetime
 import unittest
 
-import ckan.plugins.toolkit as tk
 import mock
 import pytest
 from ckan import model
