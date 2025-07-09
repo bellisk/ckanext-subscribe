@@ -59,7 +59,7 @@ def get_notification_email_vars(code, email, notifications):
                 )
             )
         # get the package/group's name & title
-        object_type_ = subscription["object_type"].replace("dataset", "package")
+        object_type_ = subscription["object_type"]
         try:
             # activity['data'] should have the package/group table
             obj = notification["activities"][0]["data"][object_type_]
@@ -74,8 +74,7 @@ def get_notification_email_vars(code, email, notifications):
             object_name = obj.name
             object_title = obj.title
         object_link = p.toolkit.url_for(
-            controller=object_type_,
-            action="read",
+            f"{object_type_}.read",
             id=subscription["object_id"],  # prefer id because it is invariant
             qualified=True,
         )

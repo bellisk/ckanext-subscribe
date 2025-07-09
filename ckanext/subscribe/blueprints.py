@@ -27,7 +27,7 @@ subscribe_blueprint = Blueprint("subscribe", __name__, url_prefix="/subscribe")
 
 def _redirect_back_to_subscribe_page(object_name, object_type):
     if object_type == "dataset":
-        return redirect_to("package.read", id=object_name)
+        return redirect_to("dataset.read", id=object_name)
     elif object_type == "group":
         return redirect_to("group.read", id=object_name)
     elif object_type == "organization":
@@ -40,7 +40,7 @@ def _redirect_back_to_subscribe_page_from_request(data_dict):
     if data_dict.get("dataset_id"):
         dataset_obj = model.Package.get(data_dict["dataset_id"])
         return redirect_to(
-            "package.read",
+            "dataset.read",
             id=dataset_obj.name if dataset_obj else data_dict["dataset_id"],
         )
     elif data_dict.get("group_id"):
