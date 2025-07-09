@@ -166,7 +166,7 @@ class DatasetActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(Activity).filter_by(object_id=dataset["id"]).first()
+            model.Session.query(BaseActivity).filter_by(object_id=dataset["id"]).first()
         )
 
         if kwargs:
@@ -206,7 +206,7 @@ class GroupActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(Activity).filter_by(object_id=group["id"]).first()
+            model.Session.query(BaseActivity).filter_by(object_id=group["id"]).first()
         )
 
         if kwargs:
@@ -246,7 +246,7 @@ class OrganizationActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(Activity).filter_by(object_id=org["id"]).first()
+            model.Session.query(BaseActivity).filter_by(object_id=org["id"]).first()
         )
 
         if kwargs:
