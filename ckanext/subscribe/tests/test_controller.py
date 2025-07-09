@@ -9,7 +9,7 @@ from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.tests.factories import Subscription, SubscriptionLowLevel
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSignupSubmit(object):
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
@@ -99,7 +99,7 @@ class TestSignupSubmit(object):
         assert "Email supplied is invalid" in response.body
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestVerifySubscription(object):
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
@@ -134,7 +134,7 @@ class TestVerifySubscription(object):
         assert response.history[0].location == "http://test.ckan.net/"
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestManage(object):
     def test_basic(self, app):
@@ -175,7 +175,7 @@ class TestManage(object):
         )
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUpdate(object):
     def test_submit(self, app):
@@ -236,7 +236,7 @@ class TestUpdate(object):
         )
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.ckan_config("ckan.site_url", "http://test.ckan.net")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribe(object):
@@ -356,7 +356,7 @@ class TestUnsubscribe(object):
         assert response.location == "http://test.ckan.net/"
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.ckan_config("ckan.site_url", "http://test.ckan.net")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribeAll(object):
@@ -429,7 +429,7 @@ class TestUnsubscribeAll(object):
         assert response.location == "http://test.ckan.net/"
 
 
-@pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestRequestManageCode(object):
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
