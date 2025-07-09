@@ -21,6 +21,7 @@ class TestSignupSubmit(object):
             "/subscribe/signup",
             params={"email": "bob@example.com", "dataset": dataset["id"]},
             status=302,
+            follow_redirects=False,
         )
         assert mock_mailer.called
         assert response.location == f"http://test.ckan.net/dataset/{dataset['name']}"
@@ -32,6 +33,7 @@ class TestSignupSubmit(object):
             "/subscribe/signup",
             params={"email": "bob@example.com", "group": group["id"]},
             status=302,
+            follow_redirects=False,
         )
         assert mock_mailer.called
         assert response.location == f"http://test.ckan.net/group/{group['name']}"
@@ -43,6 +45,7 @@ class TestSignupSubmit(object):
             "/subscribe/signup",
             params={"email": "bob@example.com", "group": org["id"]},
             status=302,
+            follow_redirects=False,
         )
         assert mock_mailer.called
         assert response.location == f"http://test.ckan.net/organization/{org['name']}"
@@ -123,7 +126,10 @@ class TestVerifySubscription(object):
 
     def test_wrong_code(self, app):
         response = app.post(
-            "/subscribe/verify", params={"code": "unknown_code"}, status=302
+            "/subscribe/verify",
+            params={"code": "unknown_code"},
+            status=302,
+            follow_redirects=False,
         )
         assert response.location == "http://test.ckan.net/"
 
@@ -145,14 +151,24 @@ class TestManage(object):
         assert dataset["title"] in response.body
 
     def test_no_code(self, app):
-        response = app.get("/subscribe/manage", params={"code": ""}, status=302)
+        response = app.get(
+            "/subscribe/manage",
+            params={"code": ""},
+            status=302,
+            follow_redirects=False,
+        )
 
         assert response.location.startswith(
             "http://test.ckan.net/subscribe/request_manage_code"
         )
 
     def test_bad_code(self, app):
-        response = app.get("/subscribe/manage", params={"code": "bad-code"}, status=302)
+        response = app.get(
+            "/subscribe/manage",
+            params={"code": "bad-code"},
+            status=302,
+            follow_redirects=False,
+        )
 
         assert response.location.startswith(
             "http://test.ckan.net/subscribe/request_manage_code"
@@ -173,28 +189,32 @@ class TestUpdate(object):
         response = app.post(
             "/subscribe/update",
             params={"code": code, "id": subscription["id"], "frequency": "daily"},
-            status=302,
         )
 
-        assert response.location.startswith(
+        assert len(response.history) == 1
+        assert 302 == response.history[0].status_code
+        assert response.history[0].location.startswith(
             "http://test.ckan.net/subscribe/manage?code="
         )
-        response = response.follow()
         assert '<option value="DAILY" selected>' in response.body
 
     def test_form_submit(self, app):
-        Subscription(
+        subscription = Subscription(
             email="bob@example.com",
             frequency="WEEKLY",
             skip_verification=True,
         )
         code = email_auth.create_code("bob@example.com")
 
-        response = app.get("/subscribe/manage", params={"code": code}, status=200)
-        form = response.forms["frequency-form"]
-        form["frequency"] = "IMMEDIATE"
-        response = app.post("/subscribe/manage", data=form, headers={})
+        app.get("/subscribe/manage", params={"code": code}, status=200)
 
+        form = {
+            "code": code,
+            "id": subscription["id"],
+            "frequency": "IMMEDIATE",
+            "save": "",
+        }
+        response = app.post("/subscribe/update", data=form, headers={})
         assert '<option value="IMMEDIATE" selected>' in response.body
 
     def test_another_code(self, app):
@@ -209,6 +229,7 @@ class TestUpdate(object):
             "/subscribe/update",
             params={"code": code, "id": subscription["id"], "frequency": "daily"},
             status=302,
+            follow_redirects=False,
         )
         assert response.location.startswith(
             "http://test.ckan.net/subscribe/request_manage_code"
@@ -255,6 +276,7 @@ class TestUnsubscribe(object):
             "/subscribe/unsubscribe",
             params={"code": code, "group": group["id"]},
             status=302,
+            follow_redirects=False,
         )
 
         assert response.location == f"http://test.ckan.net/group/{group['name']}"
@@ -272,6 +294,7 @@ class TestUnsubscribe(object):
             "/subscribe/unsubscribe",
             params={"code": code, "organization": org["id"]},
             status=302,
+            follow_redirects=False,
         )
 
         assert response.location == f"http://test.ckan.net/organization/{org['name']}"
@@ -282,6 +305,7 @@ class TestUnsubscribe(object):
             "/subscribe/unsubscribe",
             params={"code": "", "dataset": dataset["id"]},
             status=302,
+            follow_redirects=False,
         )
 
         assert response.location.startswith(
@@ -294,6 +318,7 @@ class TestUnsubscribe(object):
             "/subscribe/unsubscribe",
             params={"code": "bad-code", "dataset": dataset["id"]},
             status=302,
+            follow_redirects=False,
         )
 
         assert response.location.startswith(
@@ -307,13 +332,13 @@ class TestUnsubscribe(object):
         response = app.get(
             "/subscribe/unsubscribe",
             params={"code": code, "dataset": dataset["id"]},
-            status=302,
         )
 
-        assert response.location.startswith(
+        assert len(response.history) == 1
+        assert 302 == response.history[0].status_code
+        assert response.history[0].location.startswith(
             f"http://test.ckan.net/dataset/{dataset['name']}"
         )
-        response = response.follow()
         assert (
             "Error unsubscribing: That user is not subscribed to that object"
             in response.body
@@ -322,7 +347,10 @@ class TestUnsubscribe(object):
     def test_no_object(self, app):
         code = email_auth.create_code("bob@example.com")
         response = app.get(
-            "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
+            "/subscribe/unsubscribe",
+            params={"code": code, "dataset": ""},
+            status=302,
+            follow_redirects=False,
         )
 
         assert response.location == "http://test.ckan.net/"
@@ -353,7 +381,10 @@ class TestUnsubscribeAll(object):
 
     def test_no_code(self, app):
         response = app.get(
-            "/subscribe/unsubscribe-all", params={"code": ""}, status=302
+            "/subscribe/unsubscribe-all",
+            params={"code": ""},
+            status=302,
+            follow_redirects=False,
         )
 
         assert response.location.startswith(
@@ -362,7 +393,10 @@ class TestUnsubscribeAll(object):
 
     def test_bad_code(self, app):
         response = app.get(
-            "/subscribe/unsubscribe-all", params={"code": "bad-code"}, status=302
+            "/subscribe/unsubscribe-all",
+            params={"code": "bad-code"},
+            status=302,
+            follow_redirects=False,
         )
 
         assert response.location.startswith(
@@ -374,17 +408,22 @@ class TestUnsubscribeAll(object):
         code = email_auth.create_code("bob@example.com")
 
         response = app.get(
-            "/subscribe/unsubscribe-all", params={"code": code}, status=302
+            "/subscribe/unsubscribe-all",
+            params={"code": code},
         )
 
-        assert response.location.startswith("http://test.ckan.net/")
-        response = response.follow()
+        assert len(response.history) == 1
+        assert 302 == response.history[0].status_code
+        assert response.history[0].location.startswith("http://test.ckan.net/")
         assert "Error unsubscribing: That user has no subscriptions" in response.body
 
     def test_no_object(self, app):
         code = email_auth.create_code("bob@example.com")
         response = app.get(
-            "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
+            "/subscribe/unsubscribe",
+            params={"code": code, "dataset": ""},
+            status=302,
+            follow_redirects=False,
         )
 
         assert response.location == "http://test.ckan.net/"
