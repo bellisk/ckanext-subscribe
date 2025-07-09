@@ -33,7 +33,7 @@ def _redirect_back_to_subscribe_page(object_name, object_type):
     elif object_type == "organization":
         return redirect_to("organization.read", id=object_name)
     else:
-        return redirect_to("home")
+        return redirect_to("home.index")
 
 
 def _redirect_back_to_subscribe_page_from_request(data_dict):
@@ -53,7 +53,7 @@ def _redirect_back_to_subscribe_page_from_request(data_dict):
             id=group_obj.name if group_obj else data_dict["group_id"],
         )
     else:
-        return redirect_to("home")
+        return redirect_to("home.index")
 
 
 def _request_manage_code_form():
@@ -132,7 +132,7 @@ def verify_subscription():
         subscription = get_action("subscribe_verify")(context, data_dict)
     except ValidationError as err:
         h.flash_error(_(f"Error subscribing: {err.error_dict['message']}"))
-        return redirect_to("home")
+        return redirect_to("home.index")
 
     h.flash_success(_("Subscription confirmed"))
     code = email_auth.create_code(subscription["email"])
@@ -331,7 +331,7 @@ def unsubscribe_all():
                 f"{config.get('ckan.site_title')}"
             )
         )
-        return redirect_to("home")
+        return redirect_to("home.index")
     return redirect_to(
         "subscribe.manage",
         code=code,
@@ -364,7 +364,7 @@ def request_manage_code():
         )
     else:
         h.flash_success(_(f"An access link has been emailed to: {email}"))
-        return redirect_to("home")
+        return redirect_to("home.index")
     return render("subscribe/request_manage_code.html", extra_vars={"email": email})
 
 
