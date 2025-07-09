@@ -4,7 +4,7 @@ from enum import Enum
 
 from ckan import model
 from ckan.model.domain_object import DomainObject
-from ckan.model.meta import Session, mapper, metadata
+from ckan.model.meta import Session, mapper
 from ckan.model.types import make_uuid
 from ckan.plugins.toolkit import BaseModel
 from sqlalchemy import Column, types
