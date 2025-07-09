@@ -1,16 +1,8 @@
-import logging
-import os
-
+# encoding: utf-8
 import ckan.plugins as p
 from ckan import model
+from ckan.model import Activity
 from jinja2 import Template
-
-HARVEST_USER = "harvest"
-MIGRATION_USER = "migration"
-
-log = logging.getLogger(__name__)
-
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 config = p.toolkit.config
 
@@ -260,43 +252,10 @@ To confirm this email subscription, click this link:
 
 
 def filter_activities(include_activity_from, objects_subscribed_to_keys):
-    try:
-        # Build a context that bypasses permission checks
-        context = {
-            "model": model,
-            "ignore_auth": True,
-        }
-        # Prepare parameters for the activity_list action
-        params = {
-            "since": include_activity_from.isoformat(),
-            "object_ids": list(objects_subscribed_to_keys),
-            "limit": 1000,
-        }
-
-        # Call the CKAN action to get recent activities
-        result = p.toolkit.get_action("activity_list")(context, params)
-        items = result.get("items", [])
-
-        # Fetch user ids for users to exclude
-        no_notification_user_ids = set()
-        for username in (HARVEST_USER, MIGRATION_USER):
-            try:
-                user = p.toolkit.get_action("user_show")(context, {"id": username})
-                no_notification_user_ids.add(user["id"])
-            except p.toolkit.ObjectNotFound:
-                log.warning(
-                    f"User '{username}' not found, skipping filter for this user."
-                )
-
-        # Filter out activities by no-notification users
-        filtered_activities = [
-            activity
-            for activity in items
-            if activity.get("user_id") not in no_notification_user_ids
-        ]
-
-        return filtered_activities
-
-    except Exception as e:
-        log.exception(f"Error filtering activities since {include_activity_from}: {e}")
-        return []
+    activities = (
+        model.Session.query(Activity)
+        .filter(Activity.timestamp > include_activity_from)
+        .filter(Activity.object_id.in_(objects_subscribed_to_keys))
+        .all()
+    )
+    return activities
