@@ -115,22 +115,23 @@ class TestVerifySubscription(object):
             + datetime.timedelta(hours=1),
         )
 
-        response = app.post(
-            "/subscribe/verify", params={"code": "verify_code"}, status=302
-        )
+        response = app.get("/subscribe/verify", params={"code": "verify_code"})
         assert mock_mailer.called
-        assert response.location.startswith(
+
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith(
             "http://test.ckan.net/subscribe/manage?code="
         )
 
     def test_wrong_code(self, app):
-        response = app.post(
+        response = app.get(
             "/subscribe/verify",
             params={"code": "unknown_code"},
-            status=302,
-            follow_redirects=False,
         )
-        assert response.location == "http://test.ckan.net/"
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.history[0].location == "http://test.ckan.net/"
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
