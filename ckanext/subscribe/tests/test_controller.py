@@ -23,10 +23,7 @@ class TestSignupSubmit(object):
             status=302,
         )
         assert mock_mailer.called
-        assert (
-            response.location
-            == f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True"
-        )
+        assert response.location == f"http://test.ckan.net/dataset/{dataset['name']}"
 
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
     def test_signup_to_group_ok(self, mock_mailer, app):
@@ -37,10 +34,7 @@ class TestSignupSubmit(object):
             status=302,
         )
         assert mock_mailer.called
-        assert (
-            response.location
-            == f"http://test.ckan.net/group/{group['name']}?__no_cache__=True"
-        )
+        assert response.location == f"http://test.ckan.net/group/{group['name']}"
 
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
     def test_signup_to_org_ok(self, mock_mailer, app):
@@ -51,38 +45,38 @@ class TestSignupSubmit(object):
             status=302,
         )
         assert mock_mailer.called
-        assert (
-            response.location
-            == f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True"
-        )
+        assert response.location == f"http://test.ckan.net/organization/{org['name']}"
 
     def test_get_not_post(self, app):
         response = app.get("/subscribe/signup", status=400)
-        response.mustcontain("No email address supplied")
+        assert "No email address supplied" in response.body
 
     def test_object_not_specified(self, app):
         response = app.post(
             "/subscribe/signup",
             params={"email": "bob@example.com"},  # no dataset or group
-            status=302,
-        ).follow()
-        response.mustcontain(
-            "Error subscribing: Must specify one of: " "&#34;dataset_id&#34;"
+            status=200,
+        )
+        assert (
+            "Error subscribing: Must specify one of: "
+            "&#34;dataset_id&#34;" in response.body
         )
 
     def test_dataset_missing(self, app):
         response = app.post(
             "/subscribe/signup",
             params={"email": "bob@example.com", "dataset": "unknown"},
-        ).follow(status=404)
-        response.mustcontain("Dataset not found")
+            status=404,
+        )
+        assert "Dataset not found" in response.body
 
     def test_group_missing(self, app):
         response = app.post(
             "/subscribe/signup",
             params={"email": "bob@example.com", "group": "unknown"},
-        ).follow(status=404)
-        response.mustcontain("Group not found")
+            status=404,
+        )
+        assert "Group not found" in response.body
 
     def test_empty_email(self, app):
         dataset = Dataset()
@@ -91,7 +85,7 @@ class TestSignupSubmit(object):
             params={"email": "", "dataset": dataset["id"]},
             status=400,
         )
-        response.mustcontain("No email address supplied")
+        assert "No email address supplied" in response.body
 
     def test_bad_email(self, app):
         dataset = Dataset()
@@ -100,7 +94,7 @@ class TestSignupSubmit(object):
             params={"email": "invalid email", "dataset": dataset["id"]},
             status=400,
         )
-        response.mustcontain("Email supplied is invalid")
+        assert "Email supplied is invalid" in response.body
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
@@ -131,7 +125,7 @@ class TestVerifySubscription(object):
         response = app.post(
             "/subscribe/verify", params={"code": "unknown_code"}, status=302
         )
-        assert response.location == "http://test.ckan.net/?__no_cache__=True"
+        assert response.location == "http://test.ckan.net/"
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
@@ -148,7 +142,7 @@ class TestManage(object):
 
         response = app.get("/subscribe/manage", params={"code": code}, status=200)
 
-        assert dataset["title"] in response.body.decode("utf8")
+        assert dataset["title"] in response.body
 
     def test_no_code(self, app):
         response = app.get("/subscribe/manage", params={"code": ""}, status=302)
@@ -186,7 +180,7 @@ class TestUpdate(object):
             "http://test.ckan.net/subscribe/manage?code="
         )
         response = response.follow()
-        assert '<option value="DAILY" selected>' in response.body.decode("utf8")
+        assert '<option value="DAILY" selected>' in response.body
 
     def test_form_submit(self, app):
         Subscription(
@@ -201,7 +195,7 @@ class TestUpdate(object):
         form["frequency"] = "IMMEDIATE"
         response = app.post("/subscribe/manage", data=form, headers={})
 
-        assert '<option value="IMMEDIATE" selected>' in response.body.decode("utf8")
+        assert '<option value="IMMEDIATE" selected>' in response.body
 
     def test_another_code(self, app):
         subscription = Subscription(
@@ -222,6 +216,7 @@ class TestUpdate(object):
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.site_url", "http://test.ckan.net")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribe(object):
     def test_basic(self, app):
@@ -236,13 +231,16 @@ class TestUnsubscribe(object):
         response = app.get(
             "/subscribe/unsubscribe",
             params={"code": code, "dataset": dataset["id"]},
-            status=302,
         )
 
+        # Check that we were redirected to the dataset page with a flash success message
+        assert len(response.history) == 1
+        assert 302 == response.history[0].status_code
         assert (
-            response.location
-            == f"http://test.ckan.net/dataset/{dataset['name']}?__no_cache__=True"
+            f"http://test.ckan.net/dataset/{dataset['name']}"
+            == response.history[0].location
         )
+        assert "You are no longer subscribed to this dataset" in response.body
 
     def test_group(self, app):
         group = Group()
@@ -259,10 +257,7 @@ class TestUnsubscribe(object):
             status=302,
         )
 
-        assert (
-            response.location
-            == f"http://test.ckan.net/group/{group['name']}?__no_cache__=True"
-        )
+        assert response.location == f"http://test.ckan.net/group/{group['name']}"
 
     def test_org(self, app):
         org = Organization()
@@ -279,10 +274,7 @@ class TestUnsubscribe(object):
             status=302,
         )
 
-        assert (
-            response.location
-            == f"http://test.ckan.net/organization/{org['name']}?__no_cache__=True"
-        )
+        assert response.location == f"http://test.ckan.net/organization/{org['name']}"
 
     def test_no_code(self, app):
         dataset = Dataset()
@@ -324,7 +316,7 @@ class TestUnsubscribe(object):
         response = response.follow()
         assert (
             "Error unsubscribing: That user is not subscribed to that object"
-            in response.body.decode("utf8")
+            in response.body
         )
 
     def test_no_object(self, app):
@@ -333,10 +325,11 @@ class TestUnsubscribe(object):
             "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
         )
 
-        assert response.location == "http://test.ckan.net/?__no_cache__=True"
+        assert response.location == "http://test.ckan.net/"
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
+@pytest.mark.ckan_config("ckan.site_url", "http://test.ckan.net")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestUnsubscribeAll(object):
     def test_basic(self, app):
@@ -348,15 +341,14 @@ class TestUnsubscribeAll(object):
         )
         code = email_auth.create_code("bob@example.com")
 
-        response = app.get(
-            "/subscribe/unsubscribe-all", params={"code": code}, status=302
-        )
+        response = app.get("/subscribe/unsubscribe-all", params={"code": code})
 
-        assert response.location == "http://test.ckan.net/?__no_cache__=True"
-        response = response.follow()
+        # Check that we were redirected to the home page with a flash success message
+        assert len(response.history) == 1
+        assert 302 == response.history[0].status_code
+        assert "http://test.ckan.net/" == response.history[0].location
         assert (
-            "You are no longer subscribed to notifications from CKAN"
-            in response.body.decode("utf8")
+            "You are no longer subscribed to notifications from CKAN" in response.body
         )
 
     def test_no_code(self, app):
@@ -387,10 +379,7 @@ class TestUnsubscribeAll(object):
 
         assert response.location.startswith("http://test.ckan.net/")
         response = response.follow()
-        assert (
-            "Error unsubscribing: That user has no subscriptions"
-            in response.body.decode("utf8")
-        )
+        assert "Error unsubscribing: That user has no subscriptions" in response.body
 
     def test_no_object(self, app):
         code = email_auth.create_code("bob@example.com")
@@ -398,7 +387,7 @@ class TestUnsubscribeAll(object):
             "/subscribe/unsubscribe", params={"code": code, "dataset": ""}, status=302
         )
 
-        assert response.location == "http://test.ckan.net/?__no_cache__=True"
+        assert response.location == "http://test.ckan.net/"
 
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe")
@@ -413,10 +402,9 @@ class TestRequestManageCode(object):
             skip_verification=True,
         )
 
-        response = app.get("/subscribe/request_manage_code")
-        form = response.forms["request-manage-code-form"]
-        form["email"] = "bob@example.com"
+        app.get("/subscribe/request_manage_code", status=200)
 
+        form = {"email": "bob@example.com"}
         response = app.post("/subscribe/request_manage_code", data=form, headers={})
 
         mail_recipient.assert_called_once()
@@ -433,9 +421,7 @@ class TestRequestManageCode(object):
             status=200,
         )
 
-        assert "Email malformed-email is not a valid format" in response.body.decode(
-            "utf8"
-        )
+        assert "Email malformed-email is not a valid format" in response.body
 
     def test_unknown_email(self, app):
         response = app.post(
@@ -444,7 +430,4 @@ class TestRequestManageCode(object):
             status=200,
         )
 
-        assert (
-            "That email address does not have any subscriptions"
-            in response.body.decode("utf8")
-        )
+        assert "That email address does not have any subscriptions" in response.body
