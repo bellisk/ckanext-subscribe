@@ -34,8 +34,7 @@ class TestSendAnyImmediateNotifications(object):
         send_any_immediate_notifications()
 
         send_notification_email.assert_called_once()
-        code, email, notifications, email_type = \
-            send_notification_email.call_args[0]
+        code, email, notifications, email_type = send_notification_email.call_args[0]
         assert isinstance(code, str)
         assert email == "bob@example.com"
         assert len(notifications) == 1
@@ -266,8 +265,8 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
         assert email == "bob@example.com"
         assert len(notifications) == 1
         assert [
-                (a["activity_type"], a["data"]["package"]["id"])
-                for a in notifications[0]["activities"]
+            (a["activity_type"], a["data"]["package"]["id"])
+            for a in notifications[0]["activities"]
         ] == [("new package", dataset["id"])]
         assert notifications[0]["subscription"]["id"] == subscription["id"]
         assert time_since_emails_last_sent(Frequency.WEEKLY.value) < datetime.timedelta(

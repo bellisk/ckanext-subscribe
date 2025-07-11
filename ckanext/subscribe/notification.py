@@ -48,8 +48,12 @@ def send_any_immediate_notifications():
     if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (immediate frequency)")
     else:
-        log.debug(f"sending {len(notifications_by_email)} notification emails (immediate frequency)")        
-        log.debug(f"sending {len(deletions_by_email)} deletion emails (immediate frequency)")
+        log.debug(
+            f"sending {len(notifications_by_email)} notification emails (immediate frequency)"
+        )
+        log.debug(
+            f"sending {len(deletions_by_email)} deletion emails (immediate frequency)"
+        )
         send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time
@@ -71,8 +75,12 @@ def send_weekly_notifications_if_its_time_to():
     if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (weekly frequency)")
     else:
-        log.debug(f"sending {len(notifications_by_email)} notification emails (weekly frequency)")
-        log.debug(f"sending {len(deletions_by_email)} deletion emails (weekly frequency)")
+        log.debug(
+            f"sending {len(notifications_by_email)} notification emails (weekly frequency)"
+        )
+        log.debug(
+            f"sending {len(deletions_by_email)} deletion emails (weekly frequency)"
+        )
         send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time
@@ -94,8 +102,12 @@ def send_daily_notifications_if_its_time_to():
     if not notifications_by_email and not deletions_by_email:
         log.debug("no emails to send (daily frequency)")
     else:
-        log.debug(f"sending {len(notifications_by_email)} notification emails (daily frequency)")
-        log.debug(f"sending {len(deletions_by_email)} deletion emails (daily frequency)")
+        log.debug(
+            f"sending {len(notifications_by_email)} notification emails (daily frequency)"
+        )
+        log.debug(
+            f"sending {len(deletions_by_email)} deletion emails (daily frequency)"
+        )
         send_emails(notifications_by_email, deletions_by_email)
 
     # record that notifications are 'all done' up to this time

@@ -8,7 +8,6 @@ from ckan import model
 @pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSubscribeSignupToDataset(object):
-
     def test_no_user_specified(self):
         dataset = factories.Dataset(state="deleted")
         context = {"model": model}
