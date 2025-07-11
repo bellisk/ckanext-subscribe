@@ -33,8 +33,9 @@ class TestSendAnyImmediateNotifications(object):
         send_any_immediate_notifications()
 
         send_notification_email.assert_called_once()
-        code, email, notifications, email_type = send_notification_email.call_args[0]
-        assert type(code) is type("")
+        code, email, notifications, email_type = \
+            send_notification_email.call_args[0]
+        assert isinstance(code, str)
         assert email == "bob@example.com"
         assert len(notifications) == 1
         assert (
