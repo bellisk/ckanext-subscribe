@@ -261,7 +261,7 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
         code, email, notifications, email_type = send_notification_email.call_args[0]
-        assert type(code) is type("")
+        assert isinstance(code, str)
         assert email == "bob@example.com"
         assert len(notifications) == 1
         assert [
@@ -378,8 +378,8 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
 
         send_notification_email.assert_called_once()
 
-        ode, email, notifications, email_type = send_notification_email.call_args[0]
-        assert type(code) is type("")
+        code, email, notifications, email_type = send_notification_email.call_args[0]
+        assert isinstance(code, str)
         assert email == "bob@example.com"
         assert len(notifications) == 1
         assert (
