@@ -3,6 +3,7 @@ import datetime
 import mock
 import pytest
 from ckan import model
+from ckan.tests import helpers
 from ckan.tests.factories import Dataset, Group, Organization
 
 from ckanext.subscribe import model as subscribe_model
