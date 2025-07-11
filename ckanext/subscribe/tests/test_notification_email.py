@@ -131,6 +131,7 @@ class TestGetNotificationEmailVars(object):
                     "activities": [
                         {
                             "activity_type": "new dataset",
+                            "dataset_id": dataset["id"],
                             "dataset_href": f"http://test.ckan.net/dataset/{dataset['name']}",
                             "dataset_link": literal(
                                 f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">{dataset['title']}</a>"
@@ -168,6 +169,7 @@ class TestGetNotificationEmailVars(object):
                     "activities": [
                         {
                             "activity_type": "new group",
+                            "dataset_id": group["id"],
                             "dataset_href": "",
                             "dataset_link": "",
                             "timestamp": activity.timestamp,
@@ -205,6 +207,7 @@ class TestGetNotificationEmailVars(object):
                     "activities": [
                         {
                             "activity_type": "new organization",
+                            "dataset_id": org["id"],
                             "dataset_href": "",
                             "dataset_link": "",
                             "timestamp": activity.timestamp,

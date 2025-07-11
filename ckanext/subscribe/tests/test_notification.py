@@ -33,7 +33,7 @@ class TestSendAnyImmediateNotifications(object):
         send_any_immediate_notifications()
 
         send_notification_email.assert_called_once()
-        code, email, notifications = send_notification_email.call_args[0]
+        code, email, notifications, email_type = send_notification_email.call_args[0]
         assert type(code) is type("")
         assert email == "bob@example.com"
         assert len(notifications) == 1
@@ -52,6 +52,44 @@ class TestSendAnyImmediateNotifications(object):
 
 @pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
+class TestGetDeletions(object):
+    def setup(self):
+        helpers.reset_db()
+        subscribe_model.setup()
+        subscribe_notification._config = {}
+
+    def test_basic(self):
+        dataset = factories.DatasetActivity(activity_type="deleted package")
+        _ = factories.DatasetActivity()  # decoy
+        subscription = factories.Subscription(dataset_id=dataset["id"])
+
+        notifies, deletions = get_immediate_notifications()
+
+        assert list(deletions.keys()) == [subscription["email"]]
+        assert _get_activities(deletions) == [
+            ("bob@example.com", "deleted package", dataset["id"])
+        ]
+
+    def test_get_separate_mails(self):
+        dataset = factories.DatasetActivity(activity_type="changed package")
+        _ = factories.DatasetActivity()  # decoy
+        dataset_deleted = factories.DatasetActivity(activity_type="deleted package")
+        _ = factories.DatasetActivity()  # decoy
+        subscription_update = factories.Subscription(dataset_id=dataset["id"])
+        subscription_delete = factories.Subscription(dataset_id=dataset_deleted["id"])
+
+        notifies, deletions = get_immediate_notifications()
+
+        assert list(notifies.keys()) == [subscription_update["email"]]
+        assert list(deletions.keys()) == [subscription_delete["email"]]
+        assert _get_activities(notifies) == [
+            ("bob@example.com", "changed package", dataset["id"])
+        ]
+        assert _get_activities(deletions) == [
+            ("bob@example.com", "deleted package", dataset_deleted["id"])
+        ]
+
+
 class TestGetImmediateNotifications(object):
     def setup(self):
         subscribe_notification._config = {}
@@ -61,7 +99,7 @@ class TestGetImmediateNotifications(object):
         _ = factories.DatasetActivity()  # decoy
         subscription = factories.Subscription(dataset_id=dataset["id"])
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert list(notifies.keys()) == [subscription["email"]]
         assert (
@@ -77,7 +115,7 @@ class TestGetImmediateNotifications(object):
         )
         dataset = Dataset(owner_org=org["id"])
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert list(notifies.keys()) == [subscription["email"]]
         assert (
@@ -93,7 +131,7 @@ class TestGetImmediateNotifications(object):
         )
         dataset = Dataset(groups=[{"id": group["id"]}])
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert list(notifies.keys()) == [subscription["email"]]
         assert (
@@ -107,7 +145,7 @@ class TestGetImmediateNotifications(object):
         )
         factories.Subscription(dataset_id=dataset["id"])
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -122,7 +160,7 @@ class TestGetImmediateNotifications(object):
         model.Session.commit()
         factories.Subscription(dataset_id=dataset["id"])
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -134,7 +172,7 @@ class TestGetImmediateNotifications(object):
         )
         factories.Activity(object_id=dataset["id"], activity_type="changed package")
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert (
             _get_activities(notifies)
@@ -161,7 +199,7 @@ class TestGetImmediateNotifications(object):
             created=datetime.datetime.now() - datetime.timedelta(hours=2),
         )
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert set(notifies.keys()) == set(("user@a.com", "user@b.com", "user@b.com"))
         from pprint import pprint
@@ -187,7 +225,7 @@ class TestGetImmediateNotifications(object):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset["id"], frequency="weekly")
 
-        notifies = get_immediate_notifications()
+        notifies, deletions = get_immediate_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -221,17 +259,14 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
         send_weekly_notifications_if_its_time_to()
 
         send_notification_email.assert_called_once()
-        code, email, notifications = send_notification_email.call_args[0]
+        code, email, notifications, email_type = send_notification_email.call_args[0]
         assert type(code) is type("")
         assert email == "bob@example.com"
         assert len(notifications) == 1
-        assert (
-            [
+        assert [
                 (a["activity_type"], a["data"]["package"]["id"])
                 for a in notifications[0]["activities"]
-            ]
-            == [("new package", dataset["id"])],
-        )
+        ] == [("new package", dataset["id"])]
         assert notifications[0]["subscription"]["id"] == subscription["id"]
         assert time_since_emails_last_sent(Frequency.WEEKLY.value) < datetime.timedelta(
             seconds=1
@@ -261,7 +296,7 @@ class TestGetWeeklyNotifications(object):
             dataset_id=dataset["id"], frequency="weekly"
         )
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert list(notifies.keys()) == [subscription["email"]]
         assert (
@@ -273,7 +308,7 @@ class TestGetWeeklyNotifications(object):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset["id"], frequency="daily")
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -282,7 +317,7 @@ class TestGetWeeklyNotifications(object):
         factories.Subscription(organization_id=org["id"], frequency="daily")
         Dataset(owner_org=org["id"])
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -290,16 +325,16 @@ class TestGetWeeklyNotifications(object):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset["id"], frequency="immediate")
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
-    def test_immediate_frequency_subscriptions_of_an_group_are_not_included(self):
+    def test_immediate_frequency_subscriptions_of_a_group_are_not_included(self):
         group = Group()
         factories.Subscription(group_id=group["id"], frequency="immediate")
         Dataset(groups=[{"id": group["id"]}])
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -309,7 +344,7 @@ class TestGetWeeklyNotifications(object):
         )
         factories.Subscription(dataset_id=dataset["id"], frequency="weekly")
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -323,7 +358,7 @@ class TestGetWeeklyNotifications(object):
         )
         model.Session.commit()
 
-        notifies = get_weekly_notifications()
+        notifies, deletions = get_weekly_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -341,7 +376,8 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
         send_daily_notifications_if_its_time_to()
 
         send_notification_email.assert_called_once()
-        code, email, notifications = send_notification_email.call_args[0]
+
+        ode, email, notifications, email_type = send_notification_email.call_args[0]
         assert type(code) is type("")
         assert email == "bob@example.com"
         assert len(notifications) == 1
@@ -381,7 +417,7 @@ class TestGetDailyNotifications(object):
             dataset_id=dataset["id"], frequency="daily"
         )
 
-        notifies = get_daily_notifications()
+        notifies, deletions = get_daily_notifications()
 
         assert list(notifies.keys()) == [subscription["email"]]
         assert (
@@ -393,7 +429,7 @@ class TestGetDailyNotifications(object):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset["id"], frequency="weekly")
 
-        notifies = get_daily_notifications()
+        notifies, deletions = get_daily_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -401,7 +437,7 @@ class TestGetDailyNotifications(object):
         dataset = factories.DatasetActivity()
         factories.Subscription(dataset_id=dataset["id"], frequency="immediate")
 
-        notifies = get_daily_notifications()
+        notifies, deletions = get_daily_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -411,7 +447,7 @@ class TestGetDailyNotifications(object):
         )
         factories.Subscription(dataset_id=dataset["id"], frequency="daily")
 
-        notifies = get_daily_notifications()
+        notifies, deletions = get_daily_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -425,7 +461,7 @@ class TestGetDailyNotifications(object):
         )
         model.Session.commit()
 
-        notifies = get_daily_notifications()
+        notifies, deletions = get_daily_notifications()
 
         assert _get_activities(notifies) == []
 
@@ -500,7 +536,7 @@ class TestSendEmails(object):
             "bob@example.com": dictize_notifications(subscription_activities)
         }
 
-        send_emails(notifications_by_email)
+        send_emails(notifications_by_email, {})
 
         mail_recipient.assert_called_once()
         body = mail_recipient.call_args[1]["body"]
