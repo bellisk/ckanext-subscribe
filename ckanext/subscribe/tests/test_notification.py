@@ -3,11 +3,9 @@ import datetime
 import mock
 import pytest
 from ckan import model
-from ckan.tests import helpers
 from ckan.tests.factories import Dataset, Group, Organization
 
 from ckanext.subscribe import model as subscribe_model
-from ckanext.subscribe import notification as subscribe_notification
 from ckanext.subscribe.model import Frequency
 from ckanext.subscribe.notification import (
     dictize_notifications,
@@ -54,11 +52,6 @@ class TestSendAnyImmediateNotifications(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetDeletions(object):
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-        subscribe_notification._config = {}
-
     def test_basic(self):
         dataset = factories.DatasetActivity(activity_type="deleted package")
         _ = factories.DatasetActivity()  # decoy
@@ -91,10 +84,9 @@ class TestGetDeletions(object):
         ]
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetImmediateNotifications(object):
-    def setup(self):
-        subscribe_notification._config = {}
-
     def test_basic(self):
         dataset = factories.DatasetActivity()
         _ = factories.DatasetActivity()  # decoy
@@ -287,9 +279,6 @@ class TestSendWeeklyNotificationsIfItsTimeTo(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetWeeklyNotifications(object):
-    def setup(self):
-        subscribe_notification._config = {}
-
     def test_basic(self):
         dataset = factories.DatasetActivity()
         _ = factories.DatasetActivity()  # decoy
@@ -408,9 +397,6 @@ class TestSendDailyNotificationsIfItsTimeTo(object):
 @pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
 @pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetDailyNotifications(object):
-    def setup(self):
-        subscribe_notification._config = {}
-
     def test_basic(self):
         dataset = factories.DatasetActivity()
         _ = factories.DatasetActivity()  # decoy
