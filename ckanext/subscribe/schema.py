@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import ckan.plugins as p
 from ckan.common import _
 
@@ -17,9 +15,15 @@ boolean_validator = get_validator("boolean_validator")
 
 def one_package_or_group_or_org(key, data, errors, context):
     num_objects_specified = len(
-        filter(
-            None,
-            [data[("dataset_id",)], data[("group_id",)], data[("organization_id",)]],
+        list(
+            filter(
+                None,
+                [
+                    data[("dataset_id",)],
+                    data[("group_id",)],
+                    data[("organization_id",)],
+                ],
+            )
         )
     )
     if num_objects_specified > 1:
@@ -41,52 +45,51 @@ def frequency_name_to_int(name, context):
     except KeyError:
         raise Invalid(
             _(
-                "Frequency must be one of: {}".format(
-                    " ".join(f.name.lower() for f in Frequency)
-                )
+                f"Frequency must be one of: "
+                f"{' '.join(f.name.lower() for f in Frequency)}"
             )
         )
 
 
 def subscribe_schema():
     return {
-        u"__before": [one_package_or_group_or_org],
-        u"dataset_id": [ignore_empty, package_id_or_name_exists],
-        u"group_id": [ignore_empty, group_id_or_name_exists],
-        u"organization_id": [ignore_empty, group_id_or_name_exists],
-        u"email": [email],
-        u"frequency": [ignore_empty, frequency_name_to_int],
-        u"skip_verification": [boolean_validator],
-        u"g_recaptcha_response": [ignore_empty],
+        "__before": [one_package_or_group_or_org],
+        "dataset_id": [ignore_empty, package_id_or_name_exists],
+        "group_id": [ignore_empty, group_id_or_name_exists],
+        "organization_id": [ignore_empty, group_id_or_name_exists],
+        "email": [email],
+        "frequency": [ignore_empty, frequency_name_to_int],
+        "skip_verification": [boolean_validator],
+        "g_recaptcha_response": [ignore_empty],
     }
 
 
 def update_schema():
     return {
-        u"id": [subscription_id_exists],
-        u"frequency": [ignore_empty, frequency_name_to_int],
+        "id": [subscription_id_exists],
+        "frequency": [ignore_empty, frequency_name_to_int],
     }
 
 
 def unsubscribe_schema():
     return {
-        u"__before": [one_package_or_group_or_org],
-        u"dataset_id": [ignore_empty, package_id_or_name_exists],
-        u"group_id": [ignore_empty, group_id_or_name_exists],
-        u"organization_id": [ignore_empty, group_id_or_name_exists],
-        u"email": [email],
+        "__before": [one_package_or_group_or_org],
+        "dataset_id": [ignore_empty, package_id_or_name_exists],
+        "group_id": [ignore_empty, group_id_or_name_exists],
+        "organization_id": [ignore_empty, group_id_or_name_exists],
+        "email": [email],
     }
 
 
 def unsubscribe_all_schema():
     return {
-        u"email": [email],
+        "email": [email],
     }
 
 
 def request_manage_code_schema():
     return {
-        u"email": [email],
+        "email": [email],
     }
 
 

@@ -4,41 +4,12 @@ from enum import Enum
 
 from ckan import model
 from ckan.model.domain_object import DomainObject
-from ckan.model.meta import Session, mapper, metadata
+from ckan.model.meta import Session
 from ckan.model.types import make_uuid
-from sqlalchemy import Column, Table, types
+from ckan.plugins.toolkit import BaseModel
+from sqlalchemy import Column, types
 
 log = logging.getLogger(__name__)
-
-__all__ = [
-    "Subscription",
-    "subscription_table",
-]
-
-subscription_table = None
-login_code_table = None
-subscribe_table = None
-
-
-def setup():
-
-    if subscription_table is None:
-        define_tables()
-        log.debug("Subscription tables defined in memory")
-
-    if not model.package_table.exists():
-        log.debug("Subscription table creation deferred")
-        return
-
-    if not subscription_table.exists():
-
-        # Create each table individually rather than
-        # using metadata.create_all()
-        subscription_table.create()
-        login_code_table.create()
-        subscribe_table.create()
-
-        log.debug("Subscription tables created")
 
 
 class _DomainObject(DomainObject):
@@ -67,7 +38,7 @@ class _DomainObject(DomainObject):
         return self.__repr__().encode("ascii", "ignore")
 
 
-class Subscription(_DomainObject):
+class Subscription(_DomainObject, BaseModel):
     """A subscription is a record of a user saying they want to get
     notifications about a particular domain object.
     """
@@ -86,16 +57,25 @@ class Subscription(_DomainObject):
     #
     # The LoginCode.code does not invalidate previous ones, for convenience.
 
+    __tablename__ = "subscription"
+
+    id = Column("id", types.UnicodeText, primary_key=True, default=make_uuid)
+    email = Column("email", types.UnicodeText, nullable=False)
+    # object_type is: dataset, group or organization
+    object_type = Column("object_type", types.UnicodeText, nullable=False)
+    object_id = Column("object_id", types.UnicodeText, nullable=False)
+    verified = Column("verified", types.Boolean, default=False)
+    verification_code = Column("verification_code", types.UnicodeText)
+    verification_code_expires = Column("verification_code_expires", types.DateTime)
+    created = Column("created", types.DateTime, default=datetime.datetime.utcnow)
+    # frequency is: immediate, daily, weekly
+    frequency = Column("frequency", types.Integer)
+
     def __repr__(self):
         return (
-            "<Subscription id={} email={} object_type={} verified={} "
-            "frequency={}>".format(
-                self.id,
-                self.email,
-                self.object_type,
-                self.verified,
-                Frequency(self.frequency).name,
-            )
+            f"<Subscription id={self.id} email={self.email} "
+            f"object_type={self.object_type} verified={self.verified} "
+            f"frequency={Frequency(self.frequency).name}>"
         )
 
 
@@ -105,16 +85,24 @@ class Frequency(Enum):
     WEEKLY = 3
 
 
-class LoginCode(_DomainObject):
+class LoginCode(_DomainObject, BaseModel):
     """A login code is sent out in an email to let the user click to login
     without password. A user can have multiple codes at once - new ones don't
     invalidate or overwrite each other (to avoid confusion, acknowledging this
     is at the expense of some security).
     """
 
+    __tablename__ = "subscribe_login_code"
+
+    id = Column("id", types.UnicodeText, primary_key=True, default=make_uuid)
+    email = Column("email", types.UnicodeText, nullable=False)
+    code = Column("code", types.UnicodeText, nullable=False)
+    expires = Column("expires", types.DateTime)
+
     def __repr__(self):
-        return "<LoginCode id={} email={} code={}... expires={}>".format(
-            self.id, self.email, self.code[:4], self.expires
+        return (
+            f"<LoginCode id={self.id} email={self.email} "
+            f"code={self.code[:4]}... expires={self.expires}>"
         )
 
     @classmethod
@@ -129,11 +117,17 @@ class LoginCode(_DomainObject):
         return login_code
 
 
-class Subscribe(_DomainObject):
+class Subscribe(_DomainObject, BaseModel):
     """General state"""
 
+    __tablename__ = "subscribe"
+
+    id = Column("id", types.UnicodeText, primary_key=True, default=make_uuid)
+    frequency = Column("frequency", types.Integer)
+    emails_last_sent = Column("emails_last_sent", types.DateTime, nullable=False)
+
     def __repr__(self):
-        return "<Subscribe email_last_sent={}>".format(self.email_last_sent)
+        return f"<Subscribe email_last_sent={self.email_last_sent}>"
 
     @classmethod
     def set_emails_last_sent(cls, frequency, emails_last_sent):
@@ -157,55 +151,3 @@ class Subscribe(_DomainObject):
             )
         except AttributeError:
             return None
-
-
-def define_tables():
-
-    global subscription_table, login_code_table, subscribe_table
-
-    subscription_table = Table(
-        "subscription",
-        metadata,
-        Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-        Column("email", types.UnicodeText, nullable=False),
-        Column("object_type", types.UnicodeText, nullable=False),
-        # object_type is: dataset, group or organization
-        Column("object_id", types.UnicodeText, nullable=False),
-        Column("verified", types.Boolean, default=False),
-        Column("verification_code", types.UnicodeText),
-        Column("verification_code_expires", types.DateTime),
-        Column("created", types.DateTime, default=datetime.datetime.utcnow),
-        # frequency is: immediate, daily, weekly
-        Column("frequency", types.Integer),
-    )
-
-    login_code_table = Table(
-        "subscribe_login_code",
-        metadata,
-        Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-        Column("email", types.UnicodeText, nullable=False),
-        Column("code", types.UnicodeText, nullable=False),
-        Column("expires", types.DateTime),
-    )
-
-    subscribe_table = Table(
-        "subscribe",
-        metadata,
-        # just stores one row for each frequency now
-        Column("id", types.UnicodeText, primary_key=True, default=make_uuid),
-        Column("frequency", types.Integer),
-        Column("emails_last_sent", types.DateTime, nullable=False),
-    )
-
-    mapper(
-        Subscription,
-        subscription_table,
-    )
-    mapper(
-        LoginCode,
-        login_code_table,
-    )
-    mapper(
-        Subscribe,
-        subscribe_table,
-    )

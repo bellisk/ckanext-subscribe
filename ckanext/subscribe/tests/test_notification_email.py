@@ -1,13 +1,12 @@
-# encoding: utf-8
-
 import datetime
 
 import ckan.tests.factories as ckan_factories
 import mock
-from ckan.tests import helpers
-from nose.tools import assert_equal, assert_in
-from webhelpers.html import literal
+import pytest
+from ckan import model
+from ckan.lib.helpers import literal
 
+from ckanext.activity.model import activity as model_activity
 from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.notification import dictize_notifications
 from ckanext.subscribe.notification_email import (
@@ -19,14 +18,10 @@ from ckanext.subscribe.notification_email import (
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_notification_email_contents
 
-eq = assert_equal
 
-
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestSendNotificationEmail(object):
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-
     @mock.patch("ckanext.subscribe.mailer.mail_recipient")
     def test_basic(self, mail_recipient):
         dataset, activity = factories.DatasetActivity(
@@ -48,21 +43,19 @@ class TestSendNotificationEmail(object):
         mail_recipient.assert_called_once()
         body = mail_recipient.call_args[1]["body"]
         print(body)
-        assert_in(dataset["title"], body)
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["id"]), body)
-        assert_in("new dataset", body)
+        assert dataset["title"] in body
+        assert f"http://test.ckan.net/dataset/{dataset['id']}" in body
+        assert "new dataset" in body
         body = mail_recipient.call_args[1]["body_html"]
         print(body)
-        assert_in(dataset["title"], body)
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["id"]), body)
-        assert_in("new dataset", body)
+        assert dataset["title"] in body
+        assert f"http://test.ckan.net/dataset/{dataset['id']}" in body
+        assert "new dataset" in body
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetNotificationEmailContents(object):
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-
     def test_basic(self):
         dataset, activity = factories.DatasetActivity(
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
@@ -83,15 +76,13 @@ class TestGetNotificationEmailContents(object):
         # just check there are no exceptions
 
     def test_org(self):
-        from ckan import model
-
         org = ckan_factories.Organization()
         subscribe_model.Subscribe.set_emails_last_sent(
             subscribe_model.Frequency.IMMEDIATE.value, datetime.datetime.now()
         )
         dataset = ckan_factories.Dataset(owner_org=org["id"])
         activity = (
-            model.Session.query(model.Activity)
+            model.Session.query(model_activity.Activity)
             .filter_by(object_id=dataset["id"])
             .first()
         )
@@ -106,20 +97,16 @@ class TestGetNotificationEmailContents(object):
         )
         email = get_notification_email_contents(email_vars)
         # Check we link to the dataset, not just the org
-        assert_in("http://test.ckan.net/dataset/{}".format(dataset["name"]), email[1])
-        assert_in(
-            '<a href="http://test.ckan.net/dataset/{}">Test Dataset</a>'.format(
-                dataset["name"]
-            ),
-            email[2],
+        assert f"http://test.ckan.net/dataset/{dataset['name']}" in email[1]
+        assert (
+            f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">"
+            f"Test Dataset</a>" in email[2],
         )
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestGetNotificationEmailVars(object):
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-
     def test_basic(self):
         dataset, activity = factories.DatasetActivity(
             timestamp=datetime.datetime.now() - datetime.timedelta(minutes=10),
@@ -137,31 +124,25 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
-            email_vars["notifications"],
-            [
+        assert (
+            email_vars["notifications"]
+            == [
                 {
                     "activities": [
                         {
-                            "activity_type": u"new dataset",
+                            "activity_type": "new dataset",
                             "dataset_id": dataset["id"],
-                            "dataset_href": "http://test.ckan.net/dataset/{}".format(
-                                dataset["name"]
-                            ),
+                            "dataset_href": f"http://test.ckan.net/dataset/{dataset['name']}",
                             "dataset_link": literal(
-                                u'<a href="http://test.ckan.net/dataset/{}">{}</a>'.format(
-                                    dataset["name"], dataset["title"]
-                                )
+                                f"<a href=\"http://test.ckan.net/dataset/{dataset['name']}\">{dataset['title']}</a>"
                             ),
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/dataset/{}".format(
-                        dataset["id"]
-                    ),
+                    "object_link": f"http://test.ckan.net/dataset/{dataset['id']}",
                     "object_name": dataset["name"],
                     "object_title": dataset["title"],
-                    "object_type": u"dataset",
+                    "object_type": "dataset",
                 }
             ],
         )
@@ -181,23 +162,23 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
-            email_vars["notifications"],
-            [
+        assert (
+            email_vars["notifications"]
+            == [
                 {
                     "activities": [
                         {
-                            "activity_type": u"new group",
+                            "activity_type": "new group",
                             "dataset_id": group["id"],
-                            "dataset_href": u"",
-                            "dataset_link": u"",
+                            "dataset_href": "",
+                            "dataset_link": "",
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/group/{}".format(group["id"]),
+                    "object_link": f"http://test.ckan.net/group/{group['id']}",
                     "object_name": group["name"],
                     "object_title": group["title"],
-                    "object_type": u"group",
+                    "object_type": "group",
                 }
             ],
         )
@@ -219,25 +200,23 @@ class TestGetNotificationEmailVars(object):
             code="the-code", email="bob@example.com", notifications=notifications
         )
 
-        eq(
-            email_vars["notifications"],
-            [
+        assert (
+            email_vars["notifications"]
+            == [
                 {
                     "activities": [
                         {
-                            "activity_type": u"new organization",
+                            "activity_type": "new organization",
                             "dataset_id": org["id"],
-                            "dataset_href": u"",
-                            "dataset_link": u"",
+                            "dataset_href": "",
+                            "dataset_link": "",
                             "timestamp": activity.timestamp,
                         }
                     ],
-                    "object_link": "http://test.ckan.net/organization/{}".format(
-                        org["id"]
-                    ),
+                    "object_link": f"http://test.ckan.net/organization/{org['id']}",
                     "object_name": org["name"],
                     "object_title": org["title"],
-                    "object_type": u"organization",
+                    "object_type": "organization",
                 }
             ],
         )
@@ -315,21 +294,25 @@ CUSTOM_ACTIVITY = {
 }
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestDatasetLinkFromActivity(object):
     def test_basic(self):
-        eq(
-            dataset_link_from_activity(CHANGED_PACKAGE_ACTIVITY),
-            literal(u'<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
+        assert (
+            dataset_link_from_activity(CHANGED_PACKAGE_ACTIVITY)
+            == literal('<a href="http://test.ckan.net/dataset/stream">Stream</a>'),
         )
 
     def test_custom_activity(self):
         # don't want an exception
-        eq(dataset_link_from_activity(CUSTOM_ACTIVITY), literal(u""))
+        assert dataset_link_from_activity(CUSTOM_ACTIVITY) == literal("")
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestDatasetHrefFromActivity(object):
     def test_basic(self):
-        eq(
-            dataset_href_from_activity(CHANGED_PACKAGE_ACTIVITY),
-            "http://test.ckan.net/dataset/stream",
+        assert (
+            dataset_href_from_activity(CHANGED_PACKAGE_ACTIVITY)
+            == "http://test.ckan.net/dataset/stream",
         )

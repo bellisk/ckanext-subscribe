@@ -4,10 +4,10 @@ from collections import defaultdict
 import ckan.plugins.toolkit as toolkit
 from ckan import model
 from ckan import plugins as p
-from ckan.lib.dictization import model_dictize
-from ckan.lib.email_notifications import string_to_timedelta
 from ckan.model import Group, Member, Package
 
+from ckanext.activity.email_notifications import string_to_timedelta
+from ckanext.activity.model import activity as model_activity
 from ckanext.subscribe import dictization, email_auth, notification_email
 from ckanext.subscribe.interfaces import ISubscribe
 from ckanext.subscribe.model import Frequency, Subscribe, Subscription
@@ -49,14 +49,10 @@ def send_any_immediate_notifications():
         log.debug("no emails to send (immediate frequency)")
     else:
         log.debug(
-            "sending {} notification emails (immediate frequency)".format(
-                len(notifications_by_email)
-            )
+            f"sending {len(notifications_by_email)} notification emails (immediate frequency)"
         )
         log.debug(
-            "sending {} deletion emails (immediate frequency)".format(
-                len(deletions_by_email)
-            )
+            f"sending {len(deletions_by_email)} deletion emails (immediate frequency)"
         )
         send_emails(notifications_by_email, deletions_by_email)
 
@@ -80,14 +76,10 @@ def send_weekly_notifications_if_its_time_to():
         log.debug("no emails to send (weekly frequency)")
     else:
         log.debug(
-            "sending {} notification emails (weekly frequency)".format(
-                len(notifications_by_email)
-            )
+            f"sending {len(notifications_by_email)} notification emails (weekly frequency)"
         )
         log.debug(
-            "sending {} deletion emails (weekly frequency)".format(
-                len(deletions_by_email)
-            )
+            f"sending {len(deletions_by_email)} deletion emails (weekly frequency)"
         )
         send_emails(notifications_by_email, deletions_by_email)
 
@@ -111,14 +103,10 @@ def send_daily_notifications_if_its_time_to():
         log.debug("no emails to send (daily frequency)")
     else:
         log.debug(
-            "sending {} notification emails (daily frequency)".format(
-                len(notifications_by_email)
-            )
+            f"sending {len(notifications_by_email)} notification emails (daily frequency)"
         )
         log.debug(
-            "sending {} deletion emails (daily frequency)".format(
-                len(deletions_by_email)
-            )
+            f"sending {len(deletions_by_email)} deletion emails (daily frequency)"
         )
         send_emails(notifications_by_email, deletions_by_email)
 
@@ -152,7 +140,7 @@ def get_immediate_notifications(notification_datetime=None):
         include_activity_from = now - catch_up_period
 
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}, {}
@@ -270,7 +258,7 @@ def get_weekly_notifications(notification_datetime=None):
         include_activity_from = now - week
 
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}, {}
@@ -302,7 +290,7 @@ def get_daily_notifications(notification_datetime=None):
     else:
         include_activity_from = now - day
     activities = get_subscribed_to_activities(
-        include_activity_from, objects_subscribed_to.keys()
+        include_activity_from, list(objects_subscribed_to.keys())
     )
     if not activities:
         return {}, {}
@@ -315,8 +303,8 @@ def get_daily_notifications(notification_datetime=None):
 
 def get_subscribed_to_activities(include_activity_from, objects_subscribed_to_keys):
     activities = []
-    for subscribe_interface_implementaion in p.PluginImplementations(ISubscribe):
-        activities = subscribe_interface_implementaion.get_activities(
+    for subscribe_interface_implementation in p.PluginImplementations(ISubscribe):
+        activities = subscribe_interface_implementation.get_activities(
             include_activity_from, objects_subscribed_to_keys
         )
     return activities
@@ -345,7 +333,7 @@ def get_notifications_by_email(
 
     # dictize
     notifications_by_email_dictized = defaultdict(list)
-    for email, subscription_activities in notifications.items():
+    for email, subscription_activities in list(notifications.items()):
         notifications_by_email_dictized[email] = dictize_notifications(
             subscription_activities
         )
@@ -361,9 +349,9 @@ def dictize_notifications(subscription_activities):
     """
     context = {"model": model, "session": model.Session}
     notifications_dictized = []
-    for subscription, activities in subscription_activities.items():
+    for subscription, activities in list(subscription_activities.items()):
         subscription_dict = dictization.dictize_subscription(subscription, context)
-        activity_dicts = model_dictize.activity_list_dictize(activities, context)
+        activity_dicts = model_activity.activity_list_dictize(activities, context)
         notifications_dictized.append(
             {
                 "subscription": subscription_dict,
@@ -374,7 +362,7 @@ def dictize_notifications(subscription_activities):
 
 
 def send_emails(notifications_by_email, deletions_by_email):
-    for email, notifications in notifications_by_email.items():
+    for email, notifications in list(notifications_by_email.items()):
         code = email_auth.create_code(email)
         notification_email.send_notification_email(
             code, email, notifications, "notification"

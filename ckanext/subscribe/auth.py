@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from ckan.plugins.toolkit import _, auth_allow_anonymous_access, check_access
 
 
@@ -19,7 +17,7 @@ def subscribe_signup(context, data_dict):
         group = model.Group.get(group_id)
         check_access("group_show", context, {"id": group.id})
     else:
-        return {"success": False, "msg": _(u"No object specified")}
+        return {"success": False, "msg": _("No object specified")}
 
     if (
         skip_verification
@@ -27,7 +25,7 @@ def subscribe_signup(context, data_dict):
         and skip_verification not in ("false", "f", "no", "n", "0")
     ):
         # sysadmins only
-        return {"success": False, "msg": _(u"Not authorized to skip verification")}
+        return {"success": False, "msg": _("Not authorized to skip verification")}
 
     return {"success": True}
 

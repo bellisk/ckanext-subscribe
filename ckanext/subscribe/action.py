@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import datetime
 import logging
 
@@ -79,7 +77,7 @@ def subscribe_signup(context, data_dict):
             raise tk.ValidationError("Invalid reCAPTCHA. Please try again.")
         log.info("reCAPTCHA verification passed.")
 
-    _check_access(u"subscribe_signup", context, data_dict)
+    _check_access("subscribe_signup", context, data_dict)
 
     data = {
         "email": data_dict["email"],
@@ -130,7 +128,7 @@ def subscribe_signup(context, data_dict):
         try:
             email_verification.send_request_email(subscription)
         except MailerException as exc:
-            log.error("Could not email manage code: {}".format(exc))
+            log.error(f"Could not email manage code: {exc}")
             raise
 
     subscription_dict = dictization.dictize_subscription(subscription, context)
@@ -150,7 +148,7 @@ def subscribe_verify(context, data_dict):
     model = context["model"]
     user = context["user"]
 
-    _check_access(u"subscribe_verify", context, data_dict)
+    _check_access("subscribe_verify", context, data_dict)
 
     code = p.toolkit.get_or_bust(data_dict, "code")
     subscription = (
@@ -194,7 +192,7 @@ def subscribe_update(context, data_dict):
     """
     model = context["model"]
 
-    _check_access(u"subscribe_update", context, data_dict)
+    _check_access("subscribe_update", context, data_dict)
 
     id_ = p.toolkit.get_or_bust(data_dict, "id")
     subscription = model.Session.query(Subscription).get(id_)
@@ -218,7 +216,7 @@ def subscribe_list_subscriptions(context, data_dict):
     """
     model = context["model"]
 
-    _check_access(u"subscribe_list_subscriptions", context, data_dict)
+    _check_access("subscribe_list_subscriptions", context, data_dict)
     email = p.toolkit.get_or_bust(data_dict, "email")
 
     subscription_objs = (
@@ -235,19 +233,17 @@ def subscribe_list_subscriptions(context, data_dict):
             subscription["object_name"] = package.name
             subscription["object_title"] = package.title
             subscription["object_link"] = p.toolkit.url_for(
-                controller="package", action="read", id=package.name
+                "dataset.read", id=package.name
             )
         elif group and not group.is_organization:
             subscription["object_name"] = group.name
             subscription["object_title"] = group.title
-            subscription["object_link"] = p.toolkit.url_for(
-                controller="group", action="read", id=group.name
-            )
+            subscription["object_link"] = p.toolkit.url_for("group.read", id=group.name)
         elif group and group.is_organization:
             subscription["object_name"] = group.name
             subscription["object_title"] = group.title
             subscription["object_link"] = p.toolkit.url_for(
-                controller="organization", action="read", id=group.name
+                "organization.read", id=group.name
             )
         subscriptions.append(subscription)
     return subscriptions
@@ -272,7 +268,7 @@ def subscribe_unsubscribe(context, data_dict):
     """
     model = context["model"]
 
-    _check_access(u"subscribe_unsubscribe", context, data_dict)
+    _check_access("subscribe_unsubscribe", context, data_dict)
 
     data = {"email": p.toolkit.get_or_bust(data_dict, "email"), "user": context["user"]}
     if data_dict.get("dataset_id"):
@@ -315,7 +311,7 @@ def subscribe_unsubscribe_all(context, data_dict):
     """
     model = context["model"]
 
-    _check_access(u"subscribe_unsubscribe_all", context, data_dict)
+    _check_access("subscribe_unsubscribe_all", context, data_dict)
 
     data = {"email": p.toolkit.get_or_bust(data_dict, "email"), "user": context["user"]}
 
@@ -340,7 +336,7 @@ def subscribe_request_manage_code(context, data_dict):
     """
     model = context["model"]
 
-    _check_access(u"subscribe_request_manage_code", context, data_dict)
+    _check_access("subscribe_request_manage_code", context, data_dict)
 
     email = data_dict["email"]
 
@@ -356,7 +352,7 @@ def subscribe_request_manage_code(context, data_dict):
     try:
         email_auth.send_manage_email(manage_code, email=email)
     except MailerException as exc:
-        log.error("Could not email manage code: {}".format(exc))
+        log.error(f"Could not email manage code: {exc}")
         raise
 
     return None

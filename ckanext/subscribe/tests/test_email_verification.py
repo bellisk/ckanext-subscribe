@@ -1,11 +1,7 @@
-# encoding: utf-8
-
+import pytest
 from ckan import plugins as p
 from ckan.tests import factories as ckan_factories
-from ckan.tests import helpers
-from nose.tools import assert_equal
 
-from ckanext.subscribe import model as subscribe_model
 from ckanext.subscribe.email_verification import get_verification_email_vars
 from ckanext.subscribe.tests import factories
 from ckanext.subscribe.utils import get_footer_contents, get_verification_email_contents
@@ -13,13 +9,11 @@ from ckanext.subscribe.utils import get_footer_contents, get_verification_email_
 config = p.toolkit.config
 
 
+@pytest.mark.ckan_config("ckan.plugins", "subscribe activity")
+@pytest.mark.usefixtures("with_plugins", "clean_db")
 class TestEmailVerification(object):
-    def setup(self):
-        helpers.reset_db()
-        subscribe_model.setup()
-
     def test_get_verification_email_vars(self):
-        dataset = ckan_factories.Dataset()
+        dataset = ckan_factories.Dataset(title="Test Dataset")
         subscription = factories.Subscription(
             dataset_id=dataset["id"], return_object=True
         )
@@ -27,18 +21,17 @@ class TestEmailVerification(object):
 
         email_vars = get_verification_email_vars(subscription)
 
-        assert_equal(email_vars["site_title"], config["ckan.site_title"])
-        assert_equal(email_vars["site_url"], "http://test.ckan.net")
-        assert_equal(email_vars["object_title"], "Test Dataset")
-        assert_equal(email_vars["object_type"], "dataset")
-        assert_equal(email_vars["email"], "bob@example.com")
-        assert_equal(
-            email_vars["verification_link"],
-            "http://test.ckan.net/subscribe/verify?code=testcode",
+        assert email_vars["site_title"] == config["ckan.site_title"]
+        assert email_vars["site_url"] == "http://test.ckan.net"
+        assert email_vars["object_title"] == "Test Dataset"
+        assert email_vars["object_type"] == "dataset"
+        assert email_vars["email"] == "bob@example.com"
+        assert (
+            email_vars["verification_link"]
+            == "http://test.ckan.net/subscribe/verify?code=testcode"
         )
-        assert_equal(
-            email_vars["object_link"],
-            "http://test.ckan.net/dataset/{}".format(dataset["id"]),
+        assert (
+            email_vars["object_link"] == f"http://test.ckan.net/dataset/{dataset['id']}"
         )
 
     def test_get_verification_email_contents(self):
@@ -56,7 +49,7 @@ class TestEmailVerification(object):
             email_vars
         )
 
-        assert_equal(subject, "Confirm your request for CKAN subscription")
+        assert subject == "Confirm your request for CKAN subscription"
         assert body_plain_text.strip().startswith(
             "CKAN subscription requested"
         ), body_plain_text.strip()

@@ -1,8 +1,9 @@
 # encoding: utf-8
 import ckan.plugins as p
 from ckan import model
-from ckan.model import Activity
 from jinja2 import Template
+
+from ckanext.activity.model import Activity
 
 config = p.toolkit.config
 
@@ -23,8 +24,7 @@ def get_footer_contents(email_vars, subscription=None):
         )
     html_lines.append('<a href="{manage_link}">Manage settings</a>')
     html_footer = "\n".join(
-        '<p style="font-size:10px;line-height:200%;text-align:center;'
-        'color:#9EA3A8=;padding-top:0px">{line}</p>'.format(line=line)
+        f'<p style="font-size:10px;line-height:200%;text-align:center;color:#9EA3A8=;padding-top:0px">{line}</p>'
         for line in html_lines
     ).format(**email_vars)
 
@@ -64,14 +64,12 @@ def get_email_vars(code, subscription=None, email=None):
     assert code
     assert subscription or email
     unsubscribe_all_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="unsubscribe_all",
+        "subscribe.unsubscribe_all",
         code=code,
         qualified=True,
     )
     manage_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         code=code,
         qualified=True,
     )
@@ -89,19 +87,15 @@ def get_email_vars(code, subscription=None, email=None):
         else:
             subscription_object = model.Group.get(subscription.object_id)
         object_link = p.toolkit.url_for(
-            controller="package"
-            if subscription.object_type == "dataset"
-            else subscription.object_type,
-            action="read",
+            f"{subscription.object_type}.read",
             id=subscription.object_id,
             qualified=True,
         )
         unsubscribe_link = p.toolkit.url_for(
-            controller="ckanext.subscribe.controller:SubscribeController",
-            action="unsubscribe",
+            "subscribe.unsubscribe",
             code=code,
             qualified=True,
-            **{subscription.object_type: subscription.object_id}
+            **{subscription.object_type: subscription.object_id},
         )
         extra_vars.update(
             object_type=subscription.object_type,
