@@ -1,8 +1,5 @@
-# encoding: utf-8
-
 import datetime
 
-import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.plugins as p
 import ckan.tests.factories as ckan_factories
 import factory
@@ -10,6 +7,8 @@ from ckan import model
 from ckan.lib.dictization import table_dictize
 
 import ckanext.subscribe.model
+from ckanext.activity.model import Activity as BaseActivity
+from ckanext.activity.model import activity as model_activity
 from ckanext.subscribe import dictization
 
 
@@ -18,9 +17,10 @@ class Subscription(factory.Factory):
     action.
     """
 
-    FACTORY_FOR = ckanext.subscribe.model.Subscription
+    class Meta:
+        model = ckanext.subscribe.model.Subscription
 
-    id = factory.Sequence(lambda n: "test_sub_{n}".format(n=n))
+    id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
     return_object = False
     created = datetime.datetime.now() - datetime.timedelta(hours=1)
@@ -65,9 +65,10 @@ class Subscription(factory.Factory):
 class SubscriptionLowLevel(factory.Factory):
     """A factory class for creating subscription object directly"""
 
-    FACTORY_FOR = ckanext.subscribe.model.Subscription
+    class Meta:
+        model = ckanext.subscribe.model.Subscription
 
-    id = factory.Sequence(lambda n: "test_sub_{n}".format(n=n))
+    id = factory.Sequence(lambda n: f"test_sub_{n}")
     email = "bob@example.com"
     return_object = False
 
@@ -107,7 +108,8 @@ class SubscriptionLowLevel(factory.Factory):
 class Activity(factory.Factory):
     """A factory class for creating CKAN activity objects."""
 
-    FACTORY_FOR = model.Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -126,7 +128,7 @@ class Activity(factory.Factory):
         activity_dict = p.toolkit.get_action("activity_create")(context, kwargs)
 
         # to set the timestamp we need to edit the object
-        activity = model.Session.query(model.Activity).get(activity_dict["id"])
+        activity = model.Session.query(BaseActivity).get(activity_dict["id"])
         if kwargs.get("timestamp"):
             activity.timestamp = kwargs["timestamp"]
             model.repo.commit()
@@ -134,14 +136,15 @@ class Activity(factory.Factory):
         if kwargs.get("return_object"):
             return activity
 
-        return model_dictize.activity_dictize(activity, context)
+        return model_activity.activity_dictize(activity, context)
 
 
 class DatasetActivity(factory.Factory):
     """A factory class for creating a CKAN dataset and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -163,13 +166,11 @@ class DatasetActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity)
-            .filter_by(object_id=dataset["id"])
-            .first()
+            model.Session.query(BaseActivity).filter_by(object_id=dataset["id"]).first()
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
@@ -182,7 +183,8 @@ class GroupActivity(factory.Factory):
     """A factory class for creating a CKAN group and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -204,11 +206,11 @@ class GroupActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity).filter_by(object_id=group["id"]).first()
+            model.Session.query(BaseActivity).filter_by(object_id=group["id"]).first()
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 
@@ -221,7 +223,8 @@ class OrganizationActivity(factory.Factory):
     """A factory class for creating a CKAN org and associated activity
     object."""
 
-    FACTORY_FOR = model.Activity
+    class Meta:
+        model = BaseActivity
 
     @classmethod
     def _build(cls, target_class, *args, **kwargs):
@@ -243,11 +246,11 @@ class OrganizationActivity(factory.Factory):
         # the activity object is made as a byproduct
 
         activity_obj = (
-            model.Session.query(model.Activity).filter_by(object_id=org["id"]).first()
+            model.Session.query(BaseActivity).filter_by(object_id=org["id"]).first()
         )
 
         if kwargs:
-            for k, v in kwargs.items():
+            for k, v in list(kwargs.items()):
                 setattr(activity_obj, k, v)
             model.repo.commit_and_remove()
 

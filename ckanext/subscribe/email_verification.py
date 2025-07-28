@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import datetime
 import random
 import string
@@ -59,14 +57,12 @@ def get_verification_email_vars(subscription):
         )
 
     verification_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="verify_subscription",
+        "subscribe.verify_subscription",
         code=subscription.verification_code,
         qualified=True,
     )
     manage_link = p.toolkit.url_for(
-        controller="ckanext.subscribe.controller:SubscribeController",
-        action="manage",
+        "subscribe.manage",
         qualified=True,
     )
     email_vars.update(

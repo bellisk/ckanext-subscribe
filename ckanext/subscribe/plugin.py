@@ -1,72 +1,27 @@
-# encoding: utf-8
-
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
 
 import ckanext.subscribe.helpers as subscribe_helpers
 from ckanext.subscribe import action, auth
-from ckanext.subscribe import model as subscribe_model
+from ckanext.subscribe.blueprints import subscribe_blueprint
 from ckanext.subscribe.interfaces import ISubscribe
 
 
 class SubscribePlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
-    plugins.implements(plugins.IRoutes)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
     plugins.implements(ISubscribe, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
+    plugins.implements(plugins.IBlueprint, inherit=True)
 
     # IConfigurer
 
     def update_config(self, config_):
         tk.add_template_directory(config_, "templates")
         tk.add_public_directory(config_, "public")
-        tk.add_resource("fanstatic", "subscribe")
-
-        subscribe_model.setup()
-
-    # IRoutes
-
-    def before_map(self, map):
-        controller = "ckanext.subscribe.controller:SubscribeController"
-        map.connect(
-            "signup", "/subscribe/signup", controller=controller, action="signup"
-        )
-        map.connect(
-            "verify",
-            "/subscribe/verify",
-            controller=controller,
-            action="verify_subscription",
-        )
-        map.connect(
-            "update", "/subscribe/update", controller=controller, action="update"
-        )
-        map.connect(
-            "manage", "/subscribe/manage", controller=controller, action="manage"
-        )
-        map.connect(
-            "unsubscribe",
-            "/subscribe/unsubscribe",
-            controller=controller,
-            action="unsubscribe",
-        )
-        map.connect(
-            "unsubscribe_all",
-            "/subscribe/unsubscribe-all",
-            controller=controller,
-            action="unsubscribe_all",
-        )
-        map.connect(
-            "request_manage_code",
-            "/subscribe/request_manage_code",
-            controller=controller,
-            action="request_manage_code",
-        )
-        return map
-
-    def after_map(self, map):
-        return map
+        # Register WebAssets
+        tk.add_resource("assets", "subscribe")
 
     # IActions
 
@@ -101,6 +56,10 @@ class SubscribePlugin(plugins.SingletonPlugin):
         """Provide template helper functions"""
 
         return {
-            "get_recaptcha_publickey": subscribe_helpers.get_recaptcha_publickey,  # noqa
+            "get_recaptcha_publickey": subscribe_helpers.get_recaptcha_publickey,
             "apply_recaptcha": subscribe_helpers.apply_recaptcha,
         }
+
+    # IBlueprint
+    def get_blueprint(self):
+        return [subscribe_blueprint]

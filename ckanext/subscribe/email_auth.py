@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 """
 "Email auth" is a way to authenticate to access certain pages to
 ckanext-subscribe. It is used for changing your subscription options. Rather

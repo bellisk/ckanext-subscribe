@@ -16,7 +16,8 @@ setup(
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
     version="1.1.0",
-    description="""CKAN extension that allows users to subscribe to updates WITHOUT requiring loginn""",
+    description="""
+CKAN extension that allows users to subscribe to updates WITHOUT requiring login""",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     # The project's main homepage.
