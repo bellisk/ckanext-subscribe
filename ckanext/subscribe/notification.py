@@ -321,7 +321,9 @@ def get_notifications_by_email(
     notifications = defaultdict(lambda: defaultdict(list))
 
     if not activity_types:
-        activity_types = ["new", "changed", "updated", "created"]
+        # Valid activity_types all begin with one of: new, changed, deleted, or follow.
+        # See ckanext.activity.logic.validators for the full list.
+        activity_types = ["new", "changed"]
 
     for activity in activities:
         for subscription in objects_subscribed_to[activity.object_id]:
